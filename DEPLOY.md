@@ -1,0 +1,124 @@
+# Volento — развёртывание
+
+Интернет-магазин женских классических брюк. Бэкенд Medusa v2, витрина Next.js.
+
+## Что где живёт
+
+| Что | Где |
+|---|---|
+| Код | `/home/volento/volento` на сервере |
+| Бэкенд Medusa | `apps/backend` |
+| Витрина Next.js | `apps/storefront` |
+| Секреты бэкенда | `apps/backend/.env` (права 600, в git не попадает) |
+| Секреты витрины | `apps/storefront/.env.local` (права 600, в git не попадает) |
+| Пароли БД и админки | `/root/.volento-secrets` (только для root) |
+
+Адреса: витрина — `https://slytn.ru`, бэкенд и админка — `https://api.slytn.ru`, админка — `https://api.slytn.ru/app`.
+
+## Сервисы
+
+Все три поднимаются автоматически после перезагрузки сервера.
+
+```bash
+systemctl status medusa-server       # API + админка, порт 9000
+systemctl status medusa-worker       # фоновые задачи, порт 9001
+systemctl status volento-storefront  # витрина, порт 8000
+```
+
+Логи:
+
+```bash
+journalctl -u medusa-server -f
+journalctl -u volento-storefront -f
+```
+
+Все три слушают только `127.0.0.1` — наружу их выпускает исключительно nginx.
+
+## Обновление кода
+
+```bash
+cd /home/volento/volento
+sudo -u volento git pull
+
+# если менялся бэкенд
+cd apps/backend
+sudo -u volento env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=3072 npx medusa build
+cd .medusa/server && sudo -u volento npm install
+systemctl restart medusa-server medusa-worker
+
+# если менялась витрина
+cd /home/volento/volento/apps/storefront
+sudo -u volento npm install
+sudo -u volento env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=3072 npm run build
+systemctl restart volento-storefront
+```
+
+`NODE_OPTIONS=--max-old-space-size=3072` обязателен: на 2 ГБ памяти сборка без него падает с нехваткой памяти. Работает за счёт файла подкачки на 4 ГБ.
+
+## Миграции базы
+
+```bash
+cd /home/volento/volento/apps/backend
+sudo -u volento env NODE_ENV=production npx medusa db:migrate
+```
+
+## Переменные окружения
+
+`apps/backend/.env` — значения смотреть на сервере, здесь только имена:
+
+```
+NODE_ENV, DATABASE_URL, REDIS_URL, EVENTS_REDIS_URL, WE_REDIS_URL, CACHE_REDIS_URL,
+JWT_SECRET, COOKIE_SECRET, AUTH_MFA_ENCRYPTION_KEY,
+STORE_CORS, ADMIN_CORS, AUTH_CORS
+```
+
+Redis разделён по базам: `/0` сессии, `/1` события, `/2` движок процессов, `/3` кеш.
+
+`WORKER_MODE` и `ADMIN_DISABLED` в `.env` не задаются — их выставляют systemd-юниты, чтобы один и тот же код работал и как сервер, и как воркер.
+
+`apps/storefront/.env.local`:
+
+```
+MEDUSA_BACKEND_URL, NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY, NEXT_PUBLIC_BASE_URL,
+NEXT_PUBLIC_DEFAULT_REGION, REVALIDATE_SECRET
+```
+
+## Структура каталога
+
+Заложена сознательно, менять осторожно:
+
+- **Продукт** — модель брюк (например, «Брюки классические прямые», артикул `VLT-001`).
+- **Вариант** — модель + размер + рост. У каждого свой SKU.
+- **SKU** — формат `АРТИКУЛ-РАЗМЕР-РОСТ`, например `VLT-001-46-170`. Должен совпадать со складским посимвольно: к нему будет привязана синхронизация остатков.
+- **Остатки** ведутся на уровне варианта, на складе «Основной склад».
+- Регион «Россия», валюта — рубль.
+
+Цвет в SKU не участвует: разные цвета одной модели — это разные артикулы, то есть отдельные продукты.
+
+## Что настроено на сервере
+
+- Ubuntu 26.04, вход по SSH только по ключу, пароль отключён
+- ufw: наружу открыты только 22, 80, 443
+- PostgreSQL 18 и Redis 8 слушают только `127.0.0.1`
+- Файл подкачки 4 ГБ (`/swapfile`)
+- nginx как обратный прокси, HTTPS от Let's Encrypt с автопродлением
+- Приложение работает под пользователем `volento` без прав администратора
+
+## Особенности, о которых стоит помнить
+
+**Витрина вне общего пространства зависимостей.** Стартер Medusa рассчитан на pnpm; при установке через npm зависимости «поднимаются» в корень, и Next начинает видеть React 18 от бэкенда вместо React 19. Сборка падает с React error #31. Поэтому `apps/storefront` исключён из `workspaces` в корневом `package.json` и имеет собственный `node_modules`. Не возвращайте его в workspaces без перехода на pnpm.
+
+**Патч в `apps/storefront/src/middleware.ts`.** За обратным прокси Next не доверяет заголовку `Host` и подставляет `localhost:8000`, из-за чего витрина уходит в бесконечное перенаправление. Адрес берётся из заголовков `x-forwarded-host` / `host`, которые проставляет nginx. При обновлении стартера патч нужно накатить заново.
+
+**Кеш витрины.** Список товаров кешируется Next.js. После изменений в каталоге новые товары появляются не сразу. Немедленно — так:
+
+```bash
+rm -rf /home/volento/volento/apps/storefront/.next/cache
+systemctl restart volento-storefront
+```
+
+**Формат цен.** Витрина показывает `RUB 5,900.00` вместо `5 900 ₽` — стартер форматирует по американской локали. Правится при работе над оформлением витрины.
+
+## Ещё не сделано
+
+Оплата, доставка, письма, личный кабинет, синхронизация со складом, резервное копирование базы.
