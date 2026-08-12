@@ -176,9 +176,11 @@ export default function ProductActions({
           isLoading={isAdding}
           data-testid="add-product-button"
         >
-          {!selectedVariant && !options
-            ? "Выберите вариант"
-            : !inStock || !isValidVariant
+          {/* options это объект, поэтому !options всегда false: без этой правки
+              до выбора размера кнопка показывала "Нет в наличии" */}
+          {!selectedVariant || !isValidVariant
+            ? "Выберите размер и рост"
+            : !inStock
             ? "Нет в наличии"
             : "В корзину"}
         </Button>
