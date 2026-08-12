@@ -6,22 +6,22 @@ export type SortOptions = "price_asc" | "price_desc" | "created_at"
 
 type SortProductsProps = {
   sortBy: SortOptions
-  setQueryParams: (name: string, value: SortOptions) => void
+  setQueryParams: (name: string, value: string) => void
   "data-testid"?: string
 }
 
 const sortOptions = [
   {
     value: "created_at",
-    label: "Latest Arrivals",
+    label: "Новинки",
   },
   {
     value: "price_asc",
-    label: "Price: Low -> High",
+    label: "Цена: по возрастанию",
   },
   {
     value: "price_desc",
-    label: "Price: High -> Low",
+    label: "Цена: по убыванию",
   },
 ]
 
@@ -30,13 +30,13 @@ const SortProducts = ({
   sortBy,
   setQueryParams,
 }: SortProductsProps) => {
-  const handleChange = (value: SortOptions) => {
-    setQueryParams("sortBy", value)
+  const handleChange = (value: string) => {
+    setQueryParams("sortBy", value as SortOptions)
   }
 
   return (
     <FilterRadioGroup
-      title="Sort by"
+      title="Сортировка"
       items={sortOptions}
       value={sortBy}
       handleChange={handleChange}

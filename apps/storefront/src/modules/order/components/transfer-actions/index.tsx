@@ -1,7 +1,7 @@
 "use client"
 
 import { acceptTransferRequest, declineTransferRequest } from "@lib/data/orders"
-import { Button, Text } from "@medusajs/ui"
+import { Button, Text } from "@modules/common/components/ui"
 import { useState } from "react"
 
 type TransferStatus = "pending" | "success" | "error"
@@ -40,12 +40,12 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
     <div className="flex flex-col gap-y-4">
       {status?.accept === "success" && (
         <Text className="text-emerald-500">
-          Order transferred successfully!
+          Заказ успешно перенесён!
         </Text>
       )}
       {status?.decline === "success" && (
         <Text className="text-emerald-500">
-          Order transfer declined successfully!
+          Запрос на перенос заказа отклонён.
         </Text>
       )}
       {status?.accept !== "success" && status?.decline !== "success" && (
@@ -58,7 +58,7 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
               status?.accept === "pending" || status?.decline === "pending"
             }
           >
-            Accept transfer
+            Принять перенос
           </Button>
           <Button
             size="large"
@@ -69,7 +69,7 @@ const TransferActions = ({ id, token }: { id: string; token: string }) => {
               status?.accept === "pending" || status?.decline === "pending"
             }
           >
-            Decline transfer
+            Отклонить перенос
           </Button>
         </div>
       )}

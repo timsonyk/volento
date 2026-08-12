@@ -3,16 +3,20 @@ import { notFound } from "next/navigation"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
-import { StoreRegion } from "@medusajs/types"
+import { HttpTypes, StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { parseOptionValueIds } from "@lib/util/product-option-filters"
 
 type Props = {
   params: Promise<{ category: string[]; countryCode: string }>
-  searchParams: Promise<{
-    sortBy?: SortOptions
-    page?: string
-  }>
+  searchParams: Promise<
+    Record<string, string | string[] | undefined> & {
+      sortBy?: SortOptions
+      page?: string
+      optionValueIds?: string | string[]
+    }
+  >
 }
 
 export async function generateStaticParams() {
@@ -27,12 +31,12 @@ export async function generateStaticParams() {
   )
 
   const categoryHandles = product_categories.map(
-    (category: any) => category.handle
+    (category: HttpTypes.StoreProductCategory) => category.handle
   )
 
   const staticParams = countryCodes
     ?.map((countryCode: string | undefined) =>
-      categoryHandles.map((handle: any) => ({
+      categoryHandles.map((handle: string) => ({
         countryCode,
         category: [handle],
       }))
@@ -47,18 +51,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
-    const title = productCategory.name + " | Medusa Store"
+    const title = productCategory.name + " | Volento"
 
-    const description = productCategory.description ?? `${title} category.`
+    const description =
+      productCategory.description ?? `Категория ${productCategory.name}.`
 
     return {
-      title: `${title} | Medusa Store`,
+      title,
       description,
       alternates: {
         canonical: `${params.category.join("/")}`,
       },
     }
-  } catch (error) {
+  } catch {
     notFound()
   }
 }
@@ -67,6 +72,7 @@ export default async function CategoryPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
   const { sortBy, page } = searchParams
+  const optionValueIds = parseOptionValueIds(searchParams)
 
   const productCategory = await getCategoryByHandle(params.category)
 
@@ -80,6 +86,7 @@ export default async function CategoryPage(props: Props) {
       sortBy={sortBy}
       page={page}
       countryCode={params.countryCode}
+      optionValueIds={optionValueIds}
     />
   )
 }

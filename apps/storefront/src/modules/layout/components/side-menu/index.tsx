@@ -1,21 +1,29 @@
 "use client"
 
 import { Popover, PopoverPanel, Transition } from "@headlessui/react"
+import useToggleState from "@lib/hooks/use-toggle-state"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
-import { Text, clx, useToggleState } from "@medusajs/ui"
-import { Fragment } from "react"
-
+import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { Text, clx } from "@modules/common/components/ui"
+import { Fragment } from "react"
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
-import { HttpTypes } from "@medusajs/types"
 import { Locale } from "@lib/data/locales"
+
 
 const SideMenuItems = {
   Home: "/",
   Store: "/store",
   Account: "/account",
   Cart: "/cart",
+}
+
+const SideMenuItemLabels: Record<string, string> = {
+  Home: "Главная",
+  Store: "Каталог",
+  Account: "Личный кабинет",
+  Cart: "Корзина",
 }
 
 type SideMenuProps = {
@@ -39,7 +47,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                   data-testid="nav-menu-button"
                   className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
                 >
-                  Menu
+                  Меню
                 </Popover.Button>
               </div>
 
@@ -81,7 +89,7 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                               onClick={close}
                               data-testid={`${name.toLowerCase()}-link`}
                             >
-                              {name}
+                              {SideMenuItemLabels[name]}
                             </LocalizedClientLink>
                           </li>
                         )
@@ -126,8 +134,8 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         />
                       </div>
                       <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Medusa Store. All rights
-                        reserved.
+                        © {new Date().getFullYear()} Volento. Все права
+                        защищены.
                       </Text>
                     </div>
                   </div>

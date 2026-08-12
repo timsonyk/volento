@@ -27,13 +27,13 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
     try {
       await updateCustomer(customer)
       return { success: true, error: null }
-    } catch (error: any) {
-      return { success: false, error: error.toString() }
+    } catch (error) {
+      return { success: false, error: String(error) }
     }
   }
 
   const [state, formAction] = useActionState(updateCustomerName, {
-    error: false,
+    error: null as string | null,
     success: false,
   })
 
@@ -48,7 +48,7 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
   return (
     <form action={formAction} className="w-full overflow-visible">
       <AccountInfo
-        label="Name"
+        label="Имя и фамилия"
         currentInfo={`${customer.first_name} ${customer.last_name}`}
         isSuccess={successState}
         isError={!!state?.error}
@@ -57,14 +57,14 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
       >
         <div className="grid grid-cols-2 gap-x-4">
           <Input
-            label="First name"
+            label="Имя"
             name="first_name"
             required
             defaultValue={customer.first_name ?? ""}
             data-testid="first-name-input"
           />
           <Input
-            label="Last name"
+            label="Фамилия"
             name="last_name"
             required
             defaultValue={customer.last_name ?? ""}

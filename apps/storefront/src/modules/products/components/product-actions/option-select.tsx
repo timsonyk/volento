@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { clx } from "@medusajs/ui"
+import { clx } from "@modules/common/components/ui"
 import React from "react"
 
 type OptionSelectProps = {
@@ -23,7 +23,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-sm">Select {title}</span>
+      <span className="text-sm">Выберите {title.toLowerCase()}</span>
       <div
         className="flex flex-wrap justify-between gap-2"
         data-testid={dataTestId}

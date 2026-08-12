@@ -1,10 +1,9 @@
-import { Badge } from "@medusajs/ui"
+import { Badge } from "@modules/common/components/ui"
 
 const PaymentTest = ({ className }: { className?: string }) => {
   return (
     <Badge color="orange" className={className}>
-      <span className="font-semibold">Attention:</span> For testing purposes
-      only.
+      <span className="font-semibold">Внимание:</span> только для тестирования.
     </Badge>
   )
 }

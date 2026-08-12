@@ -1,5 +1,5 @@
 import { acceptTransferRequest } from "@lib/data/orders"
-import { Heading, Text } from "@medusajs/ui"
+import { Heading, Text } from "@modules/common/components/ui"
 import TransferImage from "@modules/order/components/transfer-image"
 
 export default async function TransferPage({
@@ -18,20 +18,20 @@ export default async function TransferPage({
         {success && (
           <>
             <Heading level="h1" className="text-xl text-zinc-900">
-              Order transfered!
+              Заказ передан!
             </Heading>
             <Text className="text-zinc-600">
-              Order {id} has been successfully transfered to the new owner.
+              Заказ {id} успешно передан новому владельцу.
             </Text>
           </>
         )}
         {!success && (
           <>
             <Text className="text-zinc-600">
-              There was an error accepting the transfer. Please try again.
+              При подтверждении передачи произошла ошибка. Попробуйте ещё раз.
             </Text>
             {error && (
-              <Text className="text-red-500">Error message: {error}</Text>
+              <Text className="text-red-500">Текст ошибки: {error}</Text>
             )}
           </>
         )}

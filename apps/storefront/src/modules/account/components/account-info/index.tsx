@@ -1,5 +1,5 @@
 import { Disclosure } from "@headlessui/react"
-import { Badge, Button, clx } from "@medusajs/ui"
+import { Badge, Button, clx } from "@modules/common/components/ui"
 import { useEffect } from "react"
 
 import useToggleState from "@lib/hooks/use-toggle-state"
@@ -22,7 +22,7 @@ const AccountInfo = ({
   isSuccess,
   isError,
   clearState,
-  errorMessage = "An error occurred, please try again",
+  errorMessage = "Произошла ошибка, попробуйте ещё раз",
   children,
   'data-testid': dataTestid
 }: AccountInfoProps) => {
@@ -63,7 +63,7 @@ const AccountInfo = ({
             data-testid="edit-button"
             data-active={state}
           >
-            {state ? "Cancel" : "Edit"}
+            {state ? "Отмена" : "Изменить"}
           </Button>
         </div>
       </div>
@@ -82,7 +82,7 @@ const AccountInfo = ({
           data-testid="success-message"
         >
           <Badge className="p-2 my-4" color="green">
-            <span>{label} updated succesfully</span>
+            <span>{label}: данные обновлены</span>
           </Badge>
         </Disclosure.Panel>
       </Disclosure>
@@ -126,7 +126,7 @@ const AccountInfo = ({
                 type="submit"
                 data-testid="save-button"
               >
-                Save changes
+                Сохранить изменения
               </Button>
             </div>
           </div>

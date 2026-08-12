@@ -1,21 +1,23 @@
 "use client"
 
-import { Heading, Text, clx } from "@medusajs/ui"
+import { Heading, Text, clx } from "@modules/common/components/ui"
 
 import PaymentButton from "../payment-button"
 import { useSearchParams } from "next/navigation"
+import { HttpTypes } from "@medusajs/types"
 
-const Review = ({ cart }: { cart: any }) => {
+const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
   const searchParams = useSearchParams()
 
   const isOpen = searchParams.get("step") === "review"
 
-  const paidByGiftcard =
-    cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
+  const paidByGiftcard = !!(
+    (cart as unknown as Record<string, unknown>)?.gift_cards && ((cart as unknown as Record<string, unknown>)?.gift_cards as unknown[])?.length > 0 && cart?.total === 0
+  )
 
   const previousStepsCompleted =
     cart.shipping_address &&
-    cart.shipping_methods.length > 0 &&
+    (cart.shipping_methods?.length ?? 0) > 0 &&
     (cart.payment_collection || paidByGiftcard)
 
   return (
@@ -30,7 +32,7 @@ const Review = ({ cart }: { cart: any }) => {
             }
           )}
         >
-          Review
+          Проверка заказа
         </Heading>
       </div>
       {isOpen && previousStepsCompleted && (
@@ -38,10 +40,10 @@ const Review = ({ cart }: { cart: any }) => {
           <div className="flex items-start gap-x-1 w-full mb-6">
             <div className="w-full">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                By clicking the Place Order button, you confirm that you have
-                read, understand and accept our Terms of Use, Terms of Sale and
-                Returns Policy and acknowledge that you have read Medusa
-                Store&apos;s Privacy Policy.
+                Нажимая кнопку Оформить заказ, вы подтверждаете, что прочитали,
+                поняли и принимаете наши Условия использования, Условия продажи
+                и Политику возврата, а также что ознакомились с Политикой
+                конфиденциальности Volento.
               </Text>
             </div>
           </div>

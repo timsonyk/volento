@@ -1,6 +1,6 @@
 "use client"
 
-import { Badge, Heading, Input, Label, Text } from "@medusajs/ui"
+import { Badge, Heading, Input, Label, Text } from "@modules/common/components/ui"
 import React from "react"
 
 import { applyPromotions } from "@lib/data/cart"
@@ -11,9 +11,7 @@ import ErrorMessage from "../error-message"
 import { SubmitButton } from "../submit-button"
 
 type DiscountCodeProps = {
-  cart: HttpTypes.StoreCart & {
-    promotions: HttpTypes.StorePromotion[]
-  }
+  cart: HttpTypes.StoreCart
 }
 
 const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
@@ -46,8 +44,8 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
 
     try {
       await applyPromotions(codes)
-    } catch (e: any) {
-      setErrorMessage(e.message)
+    } catch (e) {
+      setErrorMessage(e instanceof Error ? e.message : String(e))
     }
 
     if (input) {
@@ -66,7 +64,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
               className="txt-medium text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
               data-testid="add-discount-button"
             >
-              Add Promotion Code(s)
+              Добавить промокод
             </button>
 
             {/* <Tooltip content="You can add multiple promotion codes">
@@ -89,7 +87,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                   variant="secondary"
                   data-testid="discount-apply-button"
                 >
-                  Apply
+                  Применить
                 </SubmitButton>
               </div>
 
@@ -105,7 +103,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
           <div className="w-full flex items-center">
             <div className="flex flex-col w-full">
               <Heading className="txt-medium mb-2">
-                Promotion(s) applied:
+                Применённые промокоды:
               </Heading>
 
               {promotions.map((promotion) => {
@@ -119,7 +117,6 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                       <span className="truncate" data-testid="discount-code">
                         <Badge
                           color={promotion.is_automatic ? "green" : "grey"}
-                          size="small"
                         >
                           {promotion.code}
                         </Badge>{" "}
@@ -161,7 +158,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                       >
                         <Trash size={14} />
                         <span className="sr-only">
-                          Remove discount code from order
+                          Удалить промокод из заказа
                         </span>
                       </button>
                     )}

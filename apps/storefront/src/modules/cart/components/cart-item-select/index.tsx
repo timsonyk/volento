@@ -1,6 +1,6 @@
 "use client"
 
-import { IconBadge, clx } from "@medusajs/ui"
+import { IconBadge, clx } from "@modules/common/components/ui"
 import {
   SelectHTMLAttributes,
   forwardRef,
@@ -19,7 +19,7 @@ type NativeSelectProps = {
 } & Omit<SelectHTMLAttributes<HTMLSelectElement>, "size">
 
 const CartItemSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
-  ({ placeholder = "Select...", className, children, ...props }, ref) => {
+  ({ placeholder = "Выберите...", className, children, ...props }, ref) => {
     const innerRef = useRef<HTMLSelectElement>(null)
     const [isPlaceholder, setIsPlaceholder] = useState(false)
 

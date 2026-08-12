@@ -1,22 +1,39 @@
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
+import { Text } from "@modules/common/components/ui"
 
 type OrderDetailsProps = {
   order: HttpTypes.StoreOrder
   showStatus?: boolean
 }
 
-const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
-  const formatStatus = (str: string) => {
-    const formatted = str.split("_").join(" ")
+const statusLabels: Record<string, string> = {
+  not_fulfilled: "Не собран",
+  partially_fulfilled: "Частично собран",
+  fulfilled: "Собран",
+  partially_shipped: "Частично отправлен",
+  shipped: "Отправлен",
+  partially_delivered: "Частично доставлен",
+  delivered: "Доставлен",
+  canceled: "Отменён",
+  not_paid: "Не оплачен",
+  awaiting: "Ожидает оплаты",
+  authorized: "Оплата подтверждена",
+  partially_authorized: "Частично подтверждена",
+  captured: "Оплачен",
+  partially_refunded: "Частично возвращён",
+  refunded: "Возвращён",
+  requires_action: "Требует действия",
+  pending: "В обработке",
+  completed: "Завершён",
+}
 
-    return formatted.slice(0, 1).toUpperCase() + formatted.slice(1)
-  }
+const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
+  const formatStatus = (str: string) => statusLabels[str] ?? str
 
   return (
     <div>
       <Text>
-        We have sent the order confirmation details to{" "}
+        Мы отправили подтверждение заказа на{" "}
         <span
           className="text-ui-fg-medium-plus font-semibold"
           data-testid="order-email"
@@ -26,26 +43,26 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
         .
       </Text>
       <Text className="mt-2">
-        Order date:{" "}
+        Дата заказа:{" "}
         <span data-testid="order-date">
-          {new Date(order.created_at).toDateString()}
+          {new Date(order.created_at).toLocaleDateString("ru-RU")}
         </span>
       </Text>
       <Text className="mt-2 text-ui-fg-interactive">
-        Order number: <span data-testid="order-id">{order.display_id}</span>
+        Номер заказа: <span data-testid="order-id">{order.display_id}</span>
       </Text>
 
       <div className="flex items-center text-compact-small gap-x-4 mt-4">
         {showStatus && (
           <>
             <Text>
-              Order status:{" "}
+              Статус заказа:{" "}
               <span className="text-ui-fg-subtle " data-testid="order-status">
                 {formatStatus(order.fulfillment_status)}
               </span>
             </Text>
             <Text>
-              Payment status:{" "}
+              Статус оплаты:{" "}
               <span
                 className="text-ui-fg-subtle "
                 sata-testid="order-payment-status"

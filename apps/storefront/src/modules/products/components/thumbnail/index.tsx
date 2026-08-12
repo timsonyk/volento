@@ -1,4 +1,4 @@
-import { Container, clx } from "@medusajs/ui"
+import { Container, clx } from "@modules/common/components/ui"
 import Image from "next/image"
 import React from "react"
 
@@ -6,8 +6,7 @@ import PlaceholderImage from "@modules/common/icons/placeholder-image"
 
 type ThumbnailProps = {
   thumbnail?: string | null
-  // TODO: Fix image typings
-  images?: any[] | null
+  images?: { url?: string }[] | null
   size?: "small" | "medium" | "large" | "full" | "square"
   isFeatured?: boolean
   className?: string
@@ -53,7 +52,7 @@ const ImageOrPlaceholder = ({
   return image ? (
     <Image
       src={image}
-      alt="Thumbnail"
+      alt="Фото товара"
       className="absolute inset-0 object-cover object-center"
       draggable={false}
       quality={50}

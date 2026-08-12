@@ -3,16 +3,15 @@
 import { transferCart } from "@lib/data/customer"
 import { ExclamationCircleSolid } from "@medusajs/icons"
 import { StoreCart, StoreCustomer } from "@medusajs/types"
-import { Button } from "@medusajs/ui"
+import { Button } from "@modules/common/components/ui"
 import { useState } from "react"
-
 function CartMismatchBanner(props: {
   customer: StoreCustomer
   cart: StoreCart
 }) {
   const { customer, cart } = props
   const [isPending, setIsPending] = useState(false)
-  const [actionText, setActionText] = useState("Run transfer again")
+  const [actionText, setActionText] = useState("Повторить перенос")
 
   if (!customer || !!cart.customer_id) {
     return
@@ -21,11 +20,11 @@ function CartMismatchBanner(props: {
   const handleSubmit = async () => {
     try {
       setIsPending(true)
-      setActionText("Transferring..")
+      setActionText("Переносим..")
 
       await transferCart()
     } catch {
-      setActionText("Run transfer again")
+      setActionText("Повторить перенос")
       setIsPending(false)
     }
   }
@@ -35,7 +34,7 @@ function CartMismatchBanner(props: {
       <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
         <span className="flex items-center gap-1">
           <ExclamationCircleSolid className="inline" />
-          Something went wrong when we tried to transfer your cart
+          Не удалось перенести вашу корзину
         </span>
 
         <span>·</span>
@@ -43,7 +42,7 @@ function CartMismatchBanner(props: {
         <Button
           variant="transparent"
           className="hover:bg-transparent active:bg-transparent focus:bg-transparent disabled:text-orange-500 text-orange-950 p-0 bg-transparent"
-          size="base"
+          size="medium"
           disabled={isPending}
           onClick={handleSubmit}
         >

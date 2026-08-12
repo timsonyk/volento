@@ -11,9 +11,9 @@ type ConvertToLocaleParams = {
 export const convertToLocale = ({
   amount,
   currency_code,
-  minimumFractionDigits,
-  maximumFractionDigits,
-  locale = "en-US",
+  minimumFractionDigits = 0,
+  maximumFractionDigits = 2,
+  locale = "ru-RU",
 }: ConvertToLocaleParams) => {
   return currency_code && !isEmpty(currency_code)
     ? new Intl.NumberFormat(locale, {
