@@ -1,6 +1,12 @@
+@import "./fonts.css";
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+:root {
+  --font-display: 'Prata', Georgia, serif;
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
 
 @layer components {
   /* Подписи, рубрики, навигация: разрядка держит воздух между
