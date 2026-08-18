@@ -1,15 +1,20 @@
 /**
  * Пересоздаёт тестовый каталог по структуре «цвет = отдельный товар».
  *
- * Товар      = модель + цвет, у него свой артикул.
- * Вариант    = размер + рост, SKU = артикул-размер-рост.
- * Связь      = метка model:<КОД МОДЕЛИ> плюс поля model / color / color_hex,
- *              по ним витрина находит остальные цвета той же модели.
+ * Товар   = модель + цвет, у него свой артикул и своя съёмка.
+ * Вариант = размер + рост, SKU = артикул-размер-рост.
+ * Связь   = метка model:<КОД МОДЕЛИ> плюс поля model / article / color /
+ *           color_hex, по ним витрина собирает остальные цвета модели.
  *
- * Запускать на сервере от root: node seed-test-catalog.js
+ * Фотографии берутся из PHOTO_DIR и загружаются в бэкенд.
+ * Запуск на сервере: node seed-test-catalog.js
  */
 
+const fs = require("fs")
+const path = require("path")
+
 const BASE = "http://127.0.0.1:9000"
+const PHOTO_DIR = process.env.PHOTO_DIR || "/root/photos"
 
 const SIZES = ["44", "46", "48"]
 const HEIGHTS = ["164", "170"]
@@ -20,8 +25,27 @@ const MODELS = [
     shape: "Брюки классические прямые",
     price: 5900,
     colors: [
-      { article: "VLT-001-BLK", name: "Чёрный", hex: "#1a1a1a", handle: "bryuki-pryamye-chernye" },
-      { article: "VLT-001-BEI", name: "Бежевый", hex: "#c8b39a", handle: "bryuki-pryamye-bezhevye" },
+      {
+        article: "VLT-001-BLK",
+        name: "Чёрный",
+        hex: "#1a1a1a",
+        handle: "bryuki-pryamye-chernye",
+        photos: ["MP002XW0NQWI_20630347_2_v3_2x.webp", "MP002XW0PP6E_22451070_2_v2_2x.webp"],
+      },
+      {
+        article: "VLT-001-MLK",
+        name: "Молочный",
+        hex: "#f0ece4",
+        handle: "bryuki-pryamye-molochnye",
+        photos: ["MP002XW0VDOS_30748795_2_v2_2x.webp"],
+      },
+      {
+        article: "VLT-001-BRN",
+        name: "Коричневый",
+        hex: "#5a4636",
+        handle: "bryuki-pryamye-korichnevye",
+        photos: ["MP002XW187KK_24468142_2_v4_2x.webp"],
+      },
     ],
   },
   {
@@ -29,16 +53,28 @@ const MODELS = [
     shape: "Брюки классические зауженные",
     price: 6500,
     colors: [
-      { article: "VLT-002-BLK", name: "Чёрный", hex: "#1a1a1a", handle: "bryuki-zauzhennye-chernye" },
-      { article: "VLT-002-GRY", name: "Серый", hex: "#8c8c8c", handle: "bryuki-zauzhennye-serye" },
+      {
+        article: "VLT-002-NVY",
+        name: "Тёмно-синий",
+        hex: "#2c3a52",
+        handle: "bryuki-zauzhennye-temno-sinie",
+        photos: ["MP002XW0XD6D_27190839_2_v2_2x.webp"],
+      },
+      {
+        article: "VLT-002-BLK",
+        name: "Чёрный",
+        hex: "#1a1a1a",
+        handle: "bryuki-zauzhennye-chernye",
+        photos: ["MP002XW177JS_24014404_2_v1.webp"],
+      },
     ],
   },
 ]
 
 let TOKEN = ""
 
-async function api(method, path, body) {
-  const res = await fetch(BASE + path, {
+async function api(method, endpoint, body) {
+  const res = await fetch(BASE + endpoint, {
     method,
     headers: {
       "Content-Type": "application/json",
@@ -48,9 +84,28 @@ async function api(method, path, body) {
   })
   const json = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(`${method} ${path} -> ${res.status} ${JSON.stringify(json).slice(0, 400)}`)
+    throw new Error(`${method} ${endpoint} -> ${res.status} ${JSON.stringify(json).slice(0, 400)}`)
   }
   return json
+}
+
+async function uploadPhoto(fileName) {
+  const filePath = path.join(PHOTO_DIR, fileName)
+  const buffer = fs.readFileSync(filePath)
+
+  const form = new FormData()
+  form.append("files", new Blob([buffer], { type: "image/webp" }), fileName)
+
+  const res = await fetch(BASE + "/admin/uploads", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + TOKEN },
+    body: form,
+  })
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error(`загрузка ${fileName} -> ${res.status} ${JSON.stringify(json).slice(0, 300)}`)
+  }
+  return json.files[0].url
 }
 
 function buildVariants(article, price) {
@@ -78,7 +133,6 @@ async function main() {
     })
   ).token
 
-  // чистим прошлые тестовые товары и метки моделей
   const { products: existing } = await api("GET", "/admin/products?limit=100")
   for (const p of existing) {
     await api("DELETE", "/admin/products/" + p.id)
@@ -99,12 +153,16 @@ async function main() {
   const profile = shipping_profiles[0]
 
   for (const m of MODELS) {
-    // одна метка на модель — по ней витрина соберёт все цвета
     const { product_tag: tag } = await api("POST", "/admin/product-tags", {
       value: "model:" + m.model,
     })
 
     for (const c of m.colors) {
+      const urls = []
+      for (const photo of c.photos) {
+        urls.push(await uploadPhoto(photo))
+      }
+
       const { product } = await api("POST", "/admin/products", {
         title: `${m.shape}, ${c.name.toLowerCase()}`,
         handle: c.handle,
@@ -113,6 +171,8 @@ async function main() {
         shipping_profile_id: profile.id,
         sales_channels: [{ id: channel.id }],
         tags: [{ id: tag.id }],
+        thumbnail: urls[0],
+        images: urls.map((url) => ({ url })),
         metadata: {
           model: m.model,
           article: c.article,
@@ -125,11 +185,12 @@ async function main() {
         ],
         variants: buildVariants(c.article, m.price),
       })
-      console.log(`создан: ${product.title} (${c.article}, вариантов ${product.variants.length})`)
+      console.log(
+        `создан: ${product.title} (${c.article}, вариантов ${product.variants.length}, фото ${urls.length})`
+      )
     }
   }
 
-  // остатки на уровне варианта
   const { inventory_items } = await api("GET", "/admin/inventory-items?limit=200")
   let n = 0
   for (const item of inventory_items) {

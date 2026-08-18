@@ -31,6 +31,12 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      // фотографии товаров отдаёт наш бэкенд из /static
+      {
+        protocol: "https",
+        hostname: "api.slytn.ru",
+        pathname: "/static/**",
+      },
       {
         protocol: "https",
         hostname: "*.s3.*.amazonaws.com",
