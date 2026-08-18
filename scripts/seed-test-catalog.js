@@ -167,7 +167,8 @@ async function main() {
         title: `${m.shape}, ${c.name.toLowerCase()}`,
         handle: c.handle,
         status: "published",
-        description: `Женские классические брюки. Артикул ${c.article}.`,
+        description:
+          "Женские классические брюки прямого силуэта из плотной костюмной ткани. Стрелки заутюжены, пояс на подкладке.",
         shipping_profile_id: profile.id,
         sales_channels: [{ id: channel.id }],
         tags: [{ id: tag.id }],

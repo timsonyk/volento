@@ -11,6 +11,60 @@ type OptionSelectProps = {
   "data-testid"?: string
 }
 
+/**
+ * Рост — то, из-за чего брюки обычно не садятся, поэтому он показан
+ * вертикальной мерой с засечками, как на портновской выкройке, а не
+ * очередным рядом кнопок. Остальные опции остаются рядом.
+ */
+const VerticalMeasure: React.FC<{
+  values: string[]
+  current?: string
+  disabled: boolean
+  onSelect: (value: string) => void
+  dataTestId?: string
+}> = ({ values, current, disabled, onSelect, dataTestId }) => (
+  <div className="relative pl-4" data-testid={dataTestId}>
+    <span
+      aria-hidden
+      className="absolute bottom-2 left-0 top-2 w-px bg-rule"
+    />
+    <div className="flex flex-col">
+      {values.map((v) => {
+        const selected = v === current
+        return (
+          <button
+            key={v}
+            type="button"
+            onClick={() => onSelect(v)}
+            disabled={disabled}
+            aria-pressed={selected}
+            data-testid="option-button"
+            className="group flex items-center gap-x-3 py-2 text-left disabled:opacity-40"
+          >
+            <span
+              aria-hidden
+              className={clx(
+                "-ml-4 block h-px transition-all duration-200",
+                selected
+                  ? "w-4 bg-ink"
+                  : "w-2 bg-rule group-hover:w-3 group-hover:bg-muted"
+              )}
+            />
+            <span
+              className={clx(
+                "text-sm tabular-nums transition-colors",
+                selected ? "text-ink" : "text-muted group-hover:text-ink"
+              )}
+            >
+              {v}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  </div>
+)
+
 const OptionSelect: React.FC<OptionSelectProps> = ({
   option,
   current,
@@ -19,36 +73,45 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   "data-testid": dataTestId,
   disabled,
 }) => {
-  const filteredOptions = (option.values ?? []).map((v) => v.value)
+  const values = (option.values ?? []).map((v) => v.value)
+  const isHeight = title.toLowerCase() === "рост"
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-sm">Выберите {title.toLowerCase()}</span>
-      <div
-        className="flex flex-wrap justify-between gap-2"
-        data-testid={dataTestId}
-      >
-        {filteredOptions.map((v) => {
-          return (
+      <span className="label-type text-muted">
+        Выберите {title.toLowerCase()}
+      </span>
+
+      {isHeight ? (
+        <VerticalMeasure
+          values={values}
+          current={current}
+          disabled={disabled}
+          onSelect={(v) => updateOption(option.id, v)}
+          dataTestId={dataTestId}
+        />
+      ) : (
+        <div className="flex flex-wrap gap-2" data-testid={dataTestId}>
+          {values.map((v) => (
             <button
-              onClick={() => updateOption(option.id, v)}
               key={v}
-              className={clx(
-                "border-ui-border-base bg-ui-bg-subtle border text-small-regular h-10 rounded-rounded p-2 flex-1 ",
-                {
-                  "border-ui-border-interactive": v === current,
-                  "hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150":
-                    v !== current,
-                }
-              )}
+              type="button"
+              onClick={() => updateOption(option.id, v)}
               disabled={disabled}
+              aria-pressed={v === current}
               data-testid="option-button"
+              className={clx(
+                "min-w-[3.25rem] border px-4 py-3 text-sm tabular-nums transition-colors duration-200 disabled:opacity-40",
+                v === current
+                  ? "border-ink bg-ink text-paper"
+                  : "border-rule text-ink hover:border-ink"
+              )}
             >
               {v}
             </button>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

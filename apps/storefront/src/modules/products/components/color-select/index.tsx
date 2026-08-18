@@ -38,7 +38,7 @@ const ColorSelect = async ({ product, countryCode }: ColorSelectProps) => {
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-sm">
+      <span className="label-type text-muted">
         Цвет{currentColor ? `: ${currentColor.toLowerCase()}` : ""}
       </span>
       <div className="flex flex-wrap gap-3" data-testid="product-colors">
@@ -55,10 +55,10 @@ const ColorSelect = async ({ product, countryCode }: ColorSelectProps) => {
               aria-current={isCurrent ? "true" : undefined}
               data-testid="color-option"
               className={clx(
-                "h-8 w-8 rounded-full border",
+                "h-8 w-8 rounded-full border transition-shadow duration-200",
                 isCurrent
-                  ? "border-ui-border-interactive ring-1 ring-ui-border-interactive"
-                  : "border-ui-border-base hover:shadow-elevation-card-rest transition-shadow ease-in-out duration-150"
+                  ? "border-paper ring-1 ring-ink"
+                  : "border-rule hover:ring-1 hover:ring-muted"
               )}
               style={{
                 backgroundColor: (c.metadata?.color_hex as string) || "#e5e5e5",
