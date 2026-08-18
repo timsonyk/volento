@@ -20,6 +20,24 @@ module.exports = defineConfig({
   },
   modules: [
     {
+      // Фотографии товаров. upload_dir вынесен из .medusa/server:
+      // сборка стирает эту папку целиком, и снимки исчезли бы при обновлении.
+      // Отдаёт файлы nginx, Medusa только пишет их на диск.
+      resolve: "@medusajs/medusa/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/file-local",
+            id: "local",
+            options: {
+              upload_dir: process.env.UPLOAD_DIR,
+              backend_url: process.env.UPLOAD_URL,
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.EVENTS_REDIS_URL,
