@@ -19,6 +19,11 @@ type Props = {
   >
 }
 
+// Страница читает куки (корзина, регион), поэтому статически собраться
+// не может: Next падает с DYNAMIC_SERVER_USAGE. Для каталога с живыми
+// остатками динамический рендер и так уместнее.
+export const dynamic = "force-dynamic"
+
 export async function generateStaticParams() {
   const product_categories = await listCategories()
 
