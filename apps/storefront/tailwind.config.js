@@ -20,6 +20,13 @@ module.exports = {
         padding: "padding-top padding-right padding-bottom padding-left",
       },
       colors: {
+        // Гамма строго чёрно-белая: цветного акцента нет, его роль
+        // выполняет инверсия — белое по чёрному.
+        ink: "#0B0B0B",
+        paper: "#FFFFFF",
+        mist: "#F1F1F1",
+        rule: "#E2E2E2",
+        muted: "#767676",
         grey: {
           0: "#FFFFFF",
           5: "#F9FAFB",
@@ -58,7 +65,9 @@ module.exports = {
         "3xl": "2rem",
       },
       fontFamily: {
+        display: ["var(--font-display)", "Georgia", "serif"],
         sans: [
+          "var(--font-sans)",
           "Inter",
           "-apple-system",
           "BlinkMacSystemFont",

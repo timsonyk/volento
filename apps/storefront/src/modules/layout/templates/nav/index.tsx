@@ -1,7 +1,8 @@
+import Image from "next/image"
 import { Suspense } from "react"
 
-import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
+import { listLocales } from "@lib/data/locales"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -16,40 +17,58 @@ export default async function Nav() {
   ])
 
   return (
-    <div className="sticky top-0 inset-x-0 z-50 group">
-      <header className="relative h-16 mx-auto border-b duration-200 bg-white border-ui-border-base">
-        <nav className="content-container txt-xsmall-plus text-ui-fg-subtle flex items-center justify-between w-full h-full text-small-regular">
-          <div className="flex-1 basis-0 h-full flex items-center">
-            <div className="h-full">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+    <div className="sticky inset-x-0 top-0 z-50 group">
+      <header className="mx-auto border-b border-rule bg-paper">
+        <nav className="content-container flex h-16 w-full items-center justify-between small:h-24">
+          {/* слева: разделы каталога */}
+          <div className="flex h-full flex-1 basis-0 items-center gap-x-8">
+            <div className="h-full small:hidden">
+              <SideMenu
+                regions={regions}
+                locales={locales}
+                currentLocale={currentLocale}
+              />
             </div>
-          </div>
-
-          <div className="flex items-center h-full">
             <LocalizedClientLink
-              href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
+              href="/store"
+              className="label-type link-underline hidden text-ink small:inline-block"
               data-testid="nav-store-link"
             >
-              Volento
+              Каталог
             </LocalizedClientLink>
           </div>
 
-          <div className="flex items-center gap-x-6 h-full flex-1 basis-0 justify-end">
-            <div className="hidden small:flex items-center gap-x-6 h-full">
-              <LocalizedClientLink
-                className="hover:text-ui-fg-base"
-                href="/account"
-                data-testid="nav-account-link"
-              >
-                Личный кабинет
-              </LocalizedClientLink>
-            </div>
+          {/* по центру: логотип */}
+          <LocalizedClientLink
+            href="/"
+            aria-label="Volento — на главную"
+            className="flex items-center"
+            data-testid="nav-home-link"
+          >
+            <Image
+              src="/volento-logo.png"
+              alt="Volento"
+              width={2691}
+              height={632}
+              priority
+              className="h-[18px] w-auto small:h-[26px]"
+            />
+          </LocalizedClientLink>
+
+          {/* справа: кабинет и корзина */}
+          <div className="flex h-full flex-1 basis-0 items-center justify-end gap-x-8">
+            <LocalizedClientLink
+              href="/account"
+              className="label-type link-underline hidden text-ink small:inline-block"
+              data-testid="nav-account-link"
+            >
+              Кабинет
+            </LocalizedClientLink>
             <Suspense
               fallback={
                 <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2"
                   href="/cart"
+                  className="label-type link-underline text-ink"
                   data-testid="nav-cart-link"
                 >
                   Корзина (0)

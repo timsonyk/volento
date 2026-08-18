@@ -2,6 +2,42 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@layer components {
+  /* Подписи, рубрики, навигация: разрядка держит воздух между
+     плотной антиквой заголовков и мелким интерфейсным текстом. */
+  .label-type {
+    @apply font-sans text-[11px] uppercase leading-none tracking-[0.16em];
+  }
+
+  /* Ссылка с подчёркиванием, растущим от наведения */
+  .link-underline {
+    @apply relative inline-block;
+  }
+  .link-underline::after {
+    content: "";
+    @apply absolute bottom-[-2px] left-0 h-px w-0 bg-current transition-all duration-300;
+  }
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    @apply w-full;
+  }
+}
+
+@layer base {
+  :focus-visible {
+    @apply outline-none ring-1 ring-ink ring-offset-2 ring-offset-paper;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @layer utilities {
   /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
