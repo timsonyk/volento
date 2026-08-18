@@ -25,7 +25,8 @@ export default async function Nav() {
       {/* промо-полоса: одно сообщение, как на референсе */}
       <div className="bg-ink py-2 text-center">
         <span className="label-type text-paper/90">
-          Подбор по размеру и росту
+          {/* Заглушка: заменить на настоящее предложение до запуска */}
+          До 31 августа — −20% на вторую пару
         </span>
       </div>
 
