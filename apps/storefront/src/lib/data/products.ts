@@ -8,7 +8,9 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
-export const SYSTEM_TAG = "system"
+// Метка служебных записей (баннер главной). Не экспортируем: файл помечен
+// "use server", там разрешены только асинхронные функции.
+const SYSTEM_TAG = "system"
 
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {
