@@ -23,10 +23,10 @@ export default async function Nav() {
   return (
     <div className="sticky inset-x-0 top-0 z-50">
       {/* промо-полоса: одно сообщение, как на референсе */}
-      <div className="bg-ink py-2 text-center">
+      <div className="flex h-[26px] items-center justify-center bg-ink">
         <span className="label-type text-paper/90">
           {/* Заглушка: заменить на настоящее предложение до запуска */}
-          До 31 августа — −20% на вторую пару
+          До 31 августа −20% на вторую пару
         </span>
       </div>
 
