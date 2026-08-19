@@ -10,6 +10,10 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  *
  * Если товара или картинок нет, показываем файл из репозитория, чтобы
  * главная не осталась пустой.
+ *
+ * Картинка растягивается на весь экран и обрезается по краям, поэтому
+ * формат баннера важен: 2560x1440 для компьютера, 1080x1920 для телефона.
+ * Значимое держать в середине — края срезаются на узких экранах.
  */
 const BANNER_HANDLE = "home-banner"
 const FALLBACK = "/banner.jpg"
@@ -41,7 +45,7 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
   }
 
   return (
-    <section className={`relative w-full overflow-hidden ${HERO_HEIGHT}`}>
+    <section className={`relative w-full overflow-hidden bg-mist ${HERO_HEIGHT}`}>
       <LocalizedClientLink
         href="/store"
         aria-label="Volento — классические брюки с характером. Перейти в каталог"
