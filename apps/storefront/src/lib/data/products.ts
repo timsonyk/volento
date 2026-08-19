@@ -8,6 +8,8 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
+export const SYSTEM_TAG = "system"
+
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {
   options?: string[]
@@ -79,12 +81,22 @@ export const listProducts = async ({
       }
     )
     .then(({ products, count }) => {
+      // Служебные записи (баннер главной) хранятся товарами, чтобы их можно
+      // было менять из админки. В каталоге им делать нечего — прячем везде,
+      // кроме запроса по конкретному handle, которым их и достают.
+      const visible = queryParams?.handle
+        ? products
+        : products.filter(
+            (p) => !p.tags?.some((t) => t.value === SYSTEM_TAG)
+          )
+      const hidden = products.length - visible.length
+
       const nextPage = count > offset + limit ? pageParam + 1 : null
 
       return {
         response: {
-          products,
-          count,
+          products: visible,
+          count: count - hidden,
         },
         nextPage: nextPage,
         queryParams,
