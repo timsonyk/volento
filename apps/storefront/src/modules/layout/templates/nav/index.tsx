@@ -31,7 +31,7 @@ export default async function Nav() {
       </div>
 
       <header className="border-b border-rule bg-paper">
-        <nav className="content-container flex h-16 w-full items-center justify-between small:h-24">
+        <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">
           <div className="flex h-full flex-1 basis-0 items-center gap-x-8">
             <div className="h-full small:hidden">
               <SideMenu
