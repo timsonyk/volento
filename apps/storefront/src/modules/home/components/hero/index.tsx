@@ -18,8 +18,8 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 const BANNER_HANDLE = "home-banner"
 const FALLBACK = "/banner.jpg"
 
-// высота шапки: промо-полоса 26 px + навигация 51.2 / 76.8 px
-const HERO_HEIGHT = "h-[calc(100svh-77px)] small:h-[calc(100svh-103px)]"
+// высота шапки, которую вычитаем из экрана:
+// промо-полоса 26 px + навигация 51.2 px (телефон) / 76.8 px (компьютер)
 
 const Hero = async ({ countryCode }: { countryCode: string }) => {
   let desktop = FALLBACK
@@ -44,32 +44,70 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
     // баннер не критичен: при недоступном бэкенде показываем запасной файл
   }
 
+  const hasMobileBanner = Boolean(mobile)
+
   return (
-    <section className={`relative w-full overflow-hidden bg-mist ${HERO_HEIGHT}`}>
-      <LocalizedClientLink
-        href="/store"
-        aria-label="Volento — классические брюки с характером. Перейти в каталог"
-        className="block h-full w-full"
-        data-testid="hero-banner"
-      >
-        <Image
-          src={mobile ?? desktop}
-          alt="Volento — классические брюки с характером"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center small:hidden"
-        />
-        <Image
-          src={desktop}
-          alt="Volento — классические брюки с характером"
-          fill
-          priority
-          sizes="100vw"
-          className="hidden object-cover object-center small:block"
-        />
-      </LocalizedClientLink>
-    </section>
+    <>
+      {/* Телефон */}
+      {hasMobileBanner ? (
+        <section className="relative w-full overflow-hidden bg-mist h-[calc(100svh-77px)] small:hidden">
+          <LocalizedClientLink
+            href="/store"
+            aria-label="Volento — классические брюки с характером. Перейти в каталог"
+            className="block h-full w-full"
+            data-testid="hero-banner"
+          >
+            <Image
+              src={mobile!}
+              alt="Volento — классические брюки с характером"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+          </LocalizedClientLink>
+        </section>
+      ) : (
+        // Пока для телефона не загружен свой баннер, показываем картинку
+        // целиком: широкий баннер во весь экран обрезается до фрагмента.
+        <section className="w-full bg-mist small:hidden">
+          <LocalizedClientLink
+            href="/store"
+            aria-label="Volento — классические брюки с характером. Перейти в каталог"
+            className="block"
+            data-testid="hero-banner"
+          >
+            <Image
+              src={desktop}
+              alt="Volento — классические брюки с характером"
+              width={1080}
+              height={450}
+              priority
+              sizes="100vw"
+              className="h-auto w-full"
+            />
+          </LocalizedClientLink>
+        </section>
+      )}
+
+      {/* Компьютер */}
+      <section className="relative hidden w-full overflow-hidden bg-mist h-[calc(100svh-103px)] small:block">
+        <LocalizedClientLink
+          href="/store"
+          aria-label="Volento — классические брюки с характером. Перейти в каталог"
+          className="block h-full w-full"
+        >
+          <Image
+            src={desktop}
+            alt="Volento — классические брюки с характером"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+        </LocalizedClientLink>
+      </section>
+    </>
   )
 }
 
