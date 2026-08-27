@@ -24,7 +24,7 @@ export default async function Home(props: {
   return (
     <>
       <Hero countryCode={countryCode} />
-      <LatestProducts region={region} />
+      <LatestProducts region={region} countryCode={countryCode} />
       <CategoryTiles region={region} />
     </>
   )

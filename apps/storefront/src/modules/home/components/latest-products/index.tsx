@@ -1,25 +1,28 @@
-import { listProducts } from "@lib/data/products"
+import { listModelColors, listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductPreview from "@modules/products/components/product-preview"
 
 /**
- * Товарная сетка на главной. Коллекции у нас пока не заведены, поэтому
- * показываем последние добавленные модели, а не пустой блок.
+ * Лента новинок сразу после баннера: карточки уходят за правый край и
+ * прокручиваются вбок, как на референсе. Цвета моделей берутся одним
+ * запросом на всю ленту, а не по запросу на карточку.
  */
 export default async function LatestProducts({
   region,
+  countryCode,
 }: {
   region: HttpTypes.StoreRegion
+  countryCode: string
 }) {
   const {
     response: { products },
   } = await listProducts({
     regionId: region.id,
     queryParams: {
-      limit: 8,
+      limit: 12,
       order: "-created_at",
-      fields: "*variants.calculated_price,+metadata",
+      fields: "*variants.calculated_price,+metadata,+tags",
     },
   })
 
@@ -27,9 +30,11 @@ export default async function LatestProducts({
     return null
   }
 
+  const colorsByModel = await listModelColors({ products, countryCode })
+
   return (
-    <section className="content-container py-14 small:py-20">
-      <div className="mb-10 flex items-baseline justify-between border-b border-rule pb-6">
+    <section className="py-14 small:py-20">
+      <div className="content-container mb-8 flex items-baseline justify-between border-b border-rule pb-6">
         <h2 className="font-display text-2xl leading-tight text-ink small:text-3xl">
           Новинки
         </h2>
@@ -41,10 +46,17 @@ export default async function LatestProducts({
         </LocalizedClientLink>
       </div>
 
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-12 small:grid-cols-4 small:gap-x-6">
+      <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-3 overflow-x-auto px-6 pb-1">
         {products.map((product) => (
-          <li key={product.id}>
-            <ProductPreview product={product} region={region} />
+          <li
+            key={product.id}
+            className="w-[68%] shrink-0 snap-start xsmall:w-[44%] small:w-[23%]"
+          >
+            <ProductPreview
+              product={product}
+              region={region}
+              colors={colorsByModel[product.metadata?.model as string]}
+            />
           </li>
         ))}
       </ul>

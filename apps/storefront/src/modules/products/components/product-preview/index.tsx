@@ -1,12 +1,13 @@
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { ModelColor } from "types/global"
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 
 /**
- * Название товара приходит с цветом в конце («…, чёрный»), а цвет мы
- * показываем отдельной строкой. Убираем повтор, если он есть.
+ * Название приходит с цветом в конце («…, чёрный»), а цвет показан
+ * кружками — убираем повтор.
  */
 function stripColor(title: string, color?: string) {
   if (!color) {
@@ -21,14 +22,19 @@ function stripColor(title: string, color?: string) {
 export default async function ProductPreview({
   product,
   isFeatured,
+  colors,
   region: _region,
 }: {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
+  colors?: ModelColor[]
   region: HttpTypes.StoreRegion
 }) {
   const { cheapestPrice } = getProductPrice({ product })
   const color = product.metadata?.color as string | undefined
+
+  // кружки внутри ссылки на карточку — только показывают, какие цвета есть
+  const swatches = (colors ?? []).length > 1 ? colors! : []
 
   return (
     <LocalizedClientLink
@@ -43,23 +49,44 @@ export default async function ProductPreview({
           isFeatured={isFeatured}
         />
 
-        <div className="mt-4 flex items-baseline justify-between gap-x-4 border-t border-rule pt-3">
-          <h3
-            className="text-sm leading-snug text-ink"
-            data-testid="product-title"
-          >
-            {stripColor(product.title, color)}
-          </h3>
+        <h3
+          className="mt-4 border-t border-rule pt-3 text-sm leading-snug text-ink"
+          data-testid="product-title"
+        >
+          {stripColor(product.title, color)}
+        </h3>
+
+        <div className="mt-2 flex items-center justify-between gap-x-4">
           {cheapestPrice && (
-            <div className="shrink-0 text-sm text-ink">
+            <div className="text-sm text-ink">
               <PreviewPrice price={cheapestPrice} />
             </div>
           )}
-        </div>
 
-        {color && (
-          <span className="label-type mt-2 block text-muted">{color}</span>
-        )}
+          {swatches.length > 0 && (
+            <div
+              className="flex shrink-0 items-center gap-x-1.5"
+              data-testid="preview-colors"
+            >
+              {swatches.map((c) => (
+                <span
+                  key={c.id}
+                  title={c.color}
+                  aria-hidden
+                  className={
+                    c.id === product.id
+                      ? "h-3.5 w-3.5 rounded-full border border-paper ring-1 ring-ink"
+                      : "h-3.5 w-3.5 rounded-full border border-rule"
+                  }
+                  style={{ backgroundColor: c.hex }}
+                />
+              ))}
+              <span className="sr-only">
+                Цвета модели: {swatches.map((c) => c.color).join(", ")}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </LocalizedClientLink>
   )

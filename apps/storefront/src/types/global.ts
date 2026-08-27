@@ -22,3 +22,11 @@ export type StoreFreeShippingPrice = StorePrice & {
   target_remaining: number
   remaining_percentage: number
 }
+
+/** Цвет модели: у каждого цвета свой товар и свой артикул. */
+export type ModelColor = {
+  id: string
+  handle: string
+  color: string
+  hex: string
+}

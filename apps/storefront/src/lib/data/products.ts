@@ -5,6 +5,7 @@ import { OptionValueIds } from "@lib/util/product-option-filters"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { ModelColor } from "types/global"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
@@ -162,4 +163,62 @@ export const listProductsWithSort = async ({
     nextPage,
     queryParams,
   }
+}
+
+/**
+ * Собирает цвета моделей для карточек каталога.
+ *
+ * Цвет у нас — отдельный товар, связанный с остальными меткой model:<код>.
+ * Чтобы не делать запрос на каждую карточку, берём метки всех товаров
+ * страницы и вытягиваем их цвета одним запросом.
+ */
+export const listModelColors = async ({
+  products,
+  countryCode,
+}: {
+  products: HttpTypes.StoreProduct[]
+  countryCode: string
+}): Promise<Record<string, ModelColor[]>> => {
+  const tagIds = Array.from(
+    new Set(
+      products.flatMap((p) =>
+        (p.tags ?? [])
+          .filter((t) => t.value?.startsWith("model:"))
+          .map((t) => t.id!)
+          .filter(Boolean)
+      )
+    )
+  )
+
+  if (!tagIds.length) {
+    return {}
+  }
+
+  const {
+    response: { products: siblings },
+  } = await listProducts({
+    countryCode,
+    queryParams: { tag_id: tagIds, limit: 100 } as ProductListQueryParams,
+  })
+
+  const byModel: Record<string, ModelColor[]> = {}
+
+  for (const p of siblings) {
+    const model = p.metadata?.model as string | undefined
+    const color = p.metadata?.color as string | undefined
+
+    if (!model || !color) {
+      continue
+    }
+
+    byModel[model] ??= []
+    byModel[model].push({
+      id: p.id!,
+      handle: p.handle ?? "",
+      color,
+      hex: (p.metadata?.color_hex as string) || "#e5e5e5",
+    })
+  }
+
+  return byModel
 }

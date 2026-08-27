@@ -1,4 +1,4 @@
-import { listProductsWithSort } from "@lib/data/products"
+import { listModelColors, listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductPreview from "@modules/products/components/product-preview"
@@ -68,6 +68,9 @@ export default async function PaginatedProducts({
     optionValueIds,
   })
 
+  // цвета всех моделей страницы — одним запросом, а не по одному на карточку
+  const colorsByModel = await listModelColors({ products, countryCode })
+
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
   return (
@@ -79,7 +82,11 @@ export default async function PaginatedProducts({
         {products.map((p) => {
           return (
             <li key={p.id}>
-              <ProductPreview product={p} region={region} />
+              <ProductPreview
+                product={p}
+                region={region}
+                colors={colorsByModel[p.metadata?.model as string]}
+              />
             </li>
           )
         })}
