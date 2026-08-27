@@ -33,7 +33,7 @@ export default async function LatestProducts({
   const colorsByModel = await listModelColors({ products, countryCode })
 
   return (
-    <section className="py-14 small:py-20">
+    <section id="novinki" className="py-14 small:py-20">
       <div className="content-container mb-5">
         <h2 className="text-base text-ink">Новинки</h2>
       </div>

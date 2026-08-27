@@ -40,7 +40,7 @@ export default async function CategoryTiles({
   }
 
   return (
-    <section className="pb-16 small:pb-24">
+    <section id="siluety" className="pb-16 small:pb-24">
       <ul className="grid grid-cols-1 gap-y-8 small:grid-cols-3 small:gap-y-0">
         {filled.map(({ category, cover }) => (
           <li key={category.id}>

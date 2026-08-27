@@ -9,7 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  * местом слева внизу под подпись.
  */
 const FeatureBanner = () => (
-  <section className="relative w-full">
+  <section id="podborka" className="relative w-full">
     <div className="relative h-[60vh] w-full overflow-hidden bg-mist small:h-[75vh]">
       <Image
         src="/hero.webp"

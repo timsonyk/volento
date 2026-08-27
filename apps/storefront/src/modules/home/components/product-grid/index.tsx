@@ -30,7 +30,7 @@ export default async function HomeProductGrid({
   const colorsByModel = await listModelColors({ products, countryCode })
 
   return (
-    <section className="content-container pb-20 small:pb-28">
+    <section id="vse-modeli" className="content-container pb-20 small:pb-28">
       <h2 className="mb-6 text-center text-base text-ink">Все модели</h2>
 
       <ul className="grid grid-cols-2 gap-x-2 gap-y-10 small:grid-cols-4 small:gap-y-14">
