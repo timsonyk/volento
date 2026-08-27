@@ -74,7 +74,7 @@ export default async function SearchPage(props: {
       )}
 
       {products.length > 0 && (
-        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-12 small:grid-cols-4 small:gap-x-6">
+        <ul className="mt-8 grid grid-cols-2 gap-x-2 gap-y-10 small:grid-cols-4">
           {products.map((product) => (
             <li key={product.id}>
               <ProductPreview

@@ -28,8 +28,8 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
       className={clx(
         "relative w-full overflow-hidden bg-mist",
         {
-          "aspect-[3/4]": !isFeatured && size !== "square",
-          "aspect-[3/4] small:aspect-[11/14]": isFeatured,
+          // пропорции карточки как на референсе; isFeatured больше не влияет
+          "aspect-[2/3]": size !== "square",
           "aspect-[1/1]": size === "square",
           "w-[180px]": size === "small",
           "w-[290px]": size === "medium",

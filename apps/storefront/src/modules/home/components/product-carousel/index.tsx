@@ -63,7 +63,7 @@ export default function ProductCarousel({
 
       <ul
         ref={trackRef}
-        className="no-scrollbar flex snap-x snap-mandatory gap-x-3 overflow-x-auto pb-1 pl-[max(1.5rem,calc((100vw-1440px)/2+1.5rem))] pr-6"
+        className="no-scrollbar flex snap-x snap-mandatory gap-x-2 overflow-x-auto pb-1 pl-[max(1.5rem,calc((100vw-1440px)/2+1.5rem))] pr-6"
       >
         {children}
       </ul>

@@ -35,7 +35,7 @@ export default async function HomeProductGrid({
         Все модели
       </h2>
 
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-12 small:grid-cols-4 small:gap-x-6 small:gap-y-16">
+      <ul className="grid grid-cols-2 gap-x-2 gap-y-10 small:grid-cols-4 small:gap-y-14">
         {products.map((product) => (
           <li key={product.id}>
             <ProductPreview
