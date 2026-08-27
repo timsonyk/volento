@@ -58,7 +58,7 @@ export default async function CategoryTiles({
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 />
               </div>
-              <span className="mt-5 block text-center font-display text-xl text-ink">
+              <span className="mt-4 block text-center text-base text-ink">
                 {category.name}
               </span>
             </LocalizedClientLink>

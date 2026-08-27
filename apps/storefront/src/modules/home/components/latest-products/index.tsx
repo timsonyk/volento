@@ -1,6 +1,5 @@
 import { listModelColors, listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductCarousel from "@modules/home/components/product-carousel"
 import ProductPreview from "@modules/products/components/product-preview"
 
@@ -35,16 +34,8 @@ export default async function LatestProducts({
 
   return (
     <section className="py-14 small:py-20">
-      <div className="content-container mb-8 flex items-baseline justify-between border-b border-rule pb-6">
-        <h2 className="font-display text-2xl leading-tight text-ink small:text-3xl">
-          Новинки
-        </h2>
-        <LocalizedClientLink
-          href="/store"
-          className="label-type link-underline text-ink"
-        >
-          Весь каталог
-        </LocalizedClientLink>
+      <div className="content-container mb-5">
+        <h2 className="text-base text-ink">Новинки</h2>
       </div>
 
       {/* Лента во всю ширину: слева выравнена по общему контейнеру,

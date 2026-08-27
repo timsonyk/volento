@@ -31,9 +31,7 @@ export default async function HomeProductGrid({
 
   return (
     <section className="content-container pb-20 small:pb-28">
-      <h2 className="mb-10 text-center font-display text-2xl leading-tight text-ink small:mb-14 small:text-3xl">
-        Все модели
-      </h2>
+      <h2 className="mb-6 text-center text-base text-ink">Все модели</h2>
 
       <ul className="grid grid-cols-2 gap-x-2 gap-y-10 small:grid-cols-4 small:gap-y-14">
         {products.map((product) => (

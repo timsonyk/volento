@@ -50,7 +50,7 @@ export default async function ProductPreview({
         />
 
         <h3
-          className="mt-4 border-t border-rule pt-3 text-sm leading-snug text-ink"
+          className="mt-3 text-sm leading-snug text-ink"
           data-testid="product-title"
         >
           {stripColor(product.title, color)}
