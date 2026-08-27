@@ -2,7 +2,7 @@ import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ModelColor } from "types/global"
-import Thumbnail from "../thumbnail"
+import PreviewGallery from "./gallery"
 import PreviewPrice from "./price"
 
 /**
@@ -31,6 +31,15 @@ export default async function ProductPreview({
   region: HttpTypes.StoreRegion
 }) {
   const { cheapestPrice } = getProductPrice({ product })
+
+  // первым идёт обложечный снимок, дальше остальные без повторов
+  const photos = Array.from(
+    new Set(
+      [product.thumbnail, ...(product.images ?? []).map((i) => i.url)].filter(
+        Boolean
+      ) as string[]
+    )
+  )
   const color = product.metadata?.color as string | undefined
 
   // кружки внутри ссылки на карточку — только показывают, какие цвета есть
@@ -42,11 +51,9 @@ export default async function ProductPreview({
       className="group block"
     >
       <div data-testid="product-wrapper">
-        <Thumbnail
-          thumbnail={product.thumbnail}
-          images={product.images}
-          size="full"
-          isFeatured={isFeatured}
+        <PreviewGallery
+          images={photos}
+          alt={stripColor(product.title, color)}
         />
 
         <h3

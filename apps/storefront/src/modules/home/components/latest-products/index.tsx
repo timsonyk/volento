@@ -1,6 +1,5 @@
 import { listModelColors, listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
-import ProductCarousel from "@modules/home/components/product-carousel"
 import ProductPreview from "@modules/products/components/product-preview"
 
 /**
@@ -40,11 +39,13 @@ export default async function LatestProducts({
 
       {/* Лента во всю ширину: слева выравнена по общему контейнеру,
           справа уходит за край экрана — так видно, что можно листать. */}
-      <ProductCarousel>
+      {/* Прилипание (snap) не включаем: оно подтягивает первую карточку
+          к краю экрана и съедает отступ слева. */}
+      <ul className="no-scrollbar flex gap-x-2 overflow-x-auto pb-1 pl-[max(1.5rem,calc((100vw-1440px)/2+1.5rem))] pr-6">
         {products.map((product) => (
           <li
             key={product.id}
-            className="w-[68vw] shrink-0 snap-start xsmall:w-[44vw] small:w-[23vw]"
+            className="w-[68vw] shrink-0 xsmall:w-[44vw] small:w-[23vw]"
           >
             <ProductPreview
               product={product}
@@ -53,7 +54,7 @@ export default async function LatestProducts({
             />
           </li>
         ))}
-      </ProductCarousel>
+      </ul>
     </section>
   )
 }
