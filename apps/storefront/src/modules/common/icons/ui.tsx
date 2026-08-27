@@ -10,8 +10,8 @@ import React from "react"
  */
 type IconProps = { className?: string }
 
-// 44 px на телефоне, 52 px на компьютере
-const base = "h-[44px] w-[44px] small:h-[52px] small:w-[52px]"
+// 33 px на телефоне, 39 px на компьютере
+const base = "h-[33px] w-[33px] small:h-[39px] small:w-[39px]"
 
 export const MenuIcon: React.FC<IconProps> = ({ className }) => (
   <svg

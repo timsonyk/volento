@@ -82,7 +82,7 @@ export default async function Nav() {
                 <LocalizedClientLink
                   href="/cart"
                   aria-label="Корзина"
-                  className="transition-opacity hover:opacity-60"
+                  className="flex h-full items-center transition-opacity hover:opacity-60"
                   data-testid="nav-cart-link"
                 >
                   <BagIcon />
