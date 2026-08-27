@@ -93,7 +93,9 @@
 
 @layer components {
   .content-container {
-    @apply max-w-[1440px] w-full mx-auto px-6;
+    /* Поля 56 px по замерам референса. Ограничения по ширине нет:
+       на широком экране контент шёл бы узкой полосой посередине. */
+    @apply w-full mx-auto px-4 small:px-14;
   }
 
   .contrast-btn {

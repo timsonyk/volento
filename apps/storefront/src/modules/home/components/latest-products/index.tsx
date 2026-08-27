@@ -33,7 +33,7 @@ export default async function LatestProducts({
 
   return (
     <section id="novinki" className="py-14 small:py-20">
-      <div className="content-container mb-5">
+      <div className="content-container mb-11">
         <h2 className="text-base text-ink">Новинки</h2>
       </div>
 
@@ -41,7 +41,7 @@ export default async function LatestProducts({
           справа уходит за край экрана — так видно, что можно листать. */}
       {/* Прилипание (snap) не включаем: оно подтягивает первую карточку
           к краю экрана и съедает отступ слева. */}
-      <ul className="no-scrollbar flex gap-x-2 overflow-x-auto pb-1 pl-[max(1.5rem,calc((100vw-1440px)/2+1.5rem))] pr-6">
+      <ul className="no-scrollbar flex gap-x-2 overflow-x-auto pb-1 pl-4 pr-4 small:pl-14 small:pr-14">
         {products.map((product) => (
           <li
             key={product.id}

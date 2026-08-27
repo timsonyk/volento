@@ -10,7 +10,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="ru" data-mode="light">
       <body className="bg-paper font-sans text-ink antialiased">
-        <main className="relative">{props.children}</main>
+        {/* clip, а не hidden: hidden ломает липкую шапку */}
+        <main className="relative overflow-x-clip">{props.children}</main>
       </body>
     </html>
   )

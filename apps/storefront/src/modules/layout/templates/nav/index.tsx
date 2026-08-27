@@ -34,7 +34,7 @@ export default async function Nav() {
       <header className="border-b border-rule bg-paper">
         <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">
           {/* слева: меню и поиск */}
-          <div className="flex flex-1 basis-0 items-center gap-x-5 text-ink">
+          <div className="flex flex-1 basis-0 items-center gap-x-6 text-ink">
             <SideMenu
               regions={regions}
               locales={locales}
