@@ -1,13 +1,13 @@
 import { listCategories } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
+import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import Thumbnail from "@modules/products/components/thumbnail"
 
 /**
- * Плитки разделов. Обложкой служит фотография товара из раздела —
- * отдельных картинок для категорий пока нет, а ставить заглушки хуже,
- * чем показать реальную вещь.
+ * Плитки разделов во всю ширину экрана, встык, с подписями под ними —
+ * как на референсе. Обложкой служит фотография товара из раздела:
+ * отдельных картинок для категорий пока нет, а заглушка хуже живой вещи.
  */
 export default async function CategoryTiles({
   region,
@@ -33,33 +33,32 @@ export default async function CategoryTiles({
     })
   )
 
-  const filled = tiles.filter((t) => t.cover)
+  const filled = tiles.filter((t) => t.cover?.thumbnail)
 
   if (!filled.length) {
     return null
   }
 
   return (
-    <section className="content-container pb-16 small:pb-24">
-      <div className="mb-10 border-b border-rule pb-6">
-        <h2 className="font-display text-2xl leading-tight text-ink small:text-3xl">
-          Силуэты
-        </h2>
-      </div>
-
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-10 small:grid-cols-3 small:gap-x-6">
+    <section className="pb-16 small:pb-24">
+      <ul className="grid grid-cols-1 gap-y-8 small:grid-cols-3 small:gap-y-0">
         {filled.map(({ category, cover }) => (
           <li key={category.id}>
             <LocalizedClientLink
               href={`/categories/${category.handle}`}
               className="group block"
             >
-              <Thumbnail
-                thumbnail={cover!.thumbnail}
-                images={cover!.images}
-                size="full"
-              />
-              <span className="label-type mt-4 block border-t border-rule pt-3 text-ink">
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-mist">
+                <Image
+                  src={cover!.thumbnail!}
+                  alt={category.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  quality={80}
+                  className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                />
+              </div>
+              <span className="mt-5 block text-center font-display text-xl text-ink">
                 {category.name}
               </span>
             </LocalizedClientLink>
