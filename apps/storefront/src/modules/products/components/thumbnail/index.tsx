@@ -53,7 +53,7 @@ const ImageOrPlaceholder = ({
     <Image
       src={image}
       alt="Фото товара"
-      className="absolute inset-0 object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+      className="absolute inset-0 object-cover object-center"
       draggable={false}
       quality={80}
       sizes="(max-width: 576px) 50vw, (max-width: 992px) 33vw, 25vw"
