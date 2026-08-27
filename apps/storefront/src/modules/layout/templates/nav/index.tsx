@@ -63,7 +63,7 @@ export default async function Nav() {
               width={2691}
               height={632}
               priority
-              className="h-[18px] w-auto small:h-[26px]"
+              className="h-[36px] w-auto small:h-[52px]"
             />
           </LocalizedClientLink>
 
