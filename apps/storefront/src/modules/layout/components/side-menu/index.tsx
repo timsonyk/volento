@@ -5,6 +5,7 @@ import useToggleState from "@lib/hooks/use-toggle-state"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { MenuIcon } from "@modules/common/icons/ui"
 import { Text, clx } from "@modules/common/components/ui"
 import { Fragment } from "react"
 import CountrySelect from "../country-select"
@@ -45,9 +46,10 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
               <div className="relative flex h-full">
                 <Popover.Button
                   data-testid="nav-menu-button"
-                  className="relative h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-ui-fg-base"
+                  aria-label="Меню"
+                  className="relative flex h-full items-center text-ink transition-opacity duration-200 hover:opacity-60 focus:outline-none"
                 >
-                  Меню
+                  <MenuIcon />
                 </Popover.Button>
               </div>
 

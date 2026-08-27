@@ -13,6 +13,7 @@ import DeleteButton from "@modules/common/components/delete-button"
 import LineItemOptions from "@modules/common/components/line-item-options"
 import LineItemPrice from "@modules/common/components/line-item-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { BagIcon } from "@modules/common/icons/ui"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
@@ -82,10 +83,18 @@ const CartDropdown = ({
       <Popover className="relative h-full">
         <PopoverButton className="h-full">
           <LocalizedClientLink
-            className="label-type link-underline text-ink"
+            className="relative flex items-center text-ink transition-opacity hover:opacity-60"
             href="/cart"
+            aria-label={`Корзина, товаров: ${totalItems}`}
             data-testid="nav-cart-link"
-          >{`Корзина (${totalItems})`}</LocalizedClientLink>
+          >
+            <BagIcon />
+            {totalItems > 0 && (
+              <span className="absolute -right-2 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-ink px-1 text-[10px] leading-none text-paper">
+                {totalItems}
+              </span>
+            )}
+          </LocalizedClientLink>
         </PopoverButton>
         <Transition
           show={cartDropdownOpen}
