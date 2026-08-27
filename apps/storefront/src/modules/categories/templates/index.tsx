@@ -40,17 +40,9 @@ export default function CategoryTemplate({
   getParents(category)
 
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList
-        sortBy={sort}
-        data-testid="sort-by-container"
-        hideOptionsPicker
-      />
-      <div className="w-full">
-        <div className="flex flex-row mb-8 text-2xl-semi gap-4">
+    <div className="content-container py-10" data-testid="category-container">
+      <div>
+        <div className="mb-6 flex flex-row items-baseline justify-center gap-4 text-base">
           {parents &&
             parents.map((parent) => (
               <span key={parent.id} className="text-ui-fg-subtle">
@@ -84,6 +76,14 @@ export default function CategoryTemplate({
             </ul>
           </div>
         )}
+        <div className="mb-8 flex justify-end">
+          <RefinementList
+            sortBy={sort}
+            data-testid="sort-by-container"
+            hideOptionsPicker
+          />
+        </div>
+
         <Suspense
           fallback={
             <SkeletonProductGrid

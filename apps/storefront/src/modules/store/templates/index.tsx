@@ -7,6 +7,11 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 
 import PaginatedProducts from "./paginated-products"
 
+/**
+ * Каталог: заголовок по центру, сетка во всю ширину. Сортировка стоит
+ * компактной строкой над сеткой, а не отдельной колонкой слева —
+ * колонка съедала треть экрана и сдвигала товары.
+ */
 const StoreTemplate = ({
   sortBy,
   page,
@@ -22,29 +27,26 @@ const StoreTemplate = ({
   const sort = sortBy || "created_at"
 
   return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList sortBy={sort} />
-      <div className="w-full">
-        <div className="mb-10 border-b border-rule pb-6">
-          <h1
-            className="font-display text-3xl leading-tight text-ink"
-            data-testid="store-page-title"
-          >
-            Все товары
-          </h1>
-        </div>
-        <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
-            sortBy={sort}
-            page={pageNumber}
-            countryCode={countryCode}
-            optionValueIds={optionValueIds}
-          />
-        </Suspense>
+    <div className="content-container py-10" data-testid="category-container">
+      <h1
+        className="mb-6 text-center text-base text-ink"
+        data-testid="store-page-title"
+      >
+        Все товары
+      </h1>
+
+      <div className="mb-8 flex justify-end">
+        <RefinementList sortBy={sort} />
       </div>
+
+      <Suspense fallback={<SkeletonProductGrid />}>
+        <PaginatedProducts
+          sortBy={sort}
+          page={pageNumber}
+          countryCode={countryCode}
+          optionValueIds={optionValueIds}
+        />
+      </Suspense>
     </div>
   )
 }
