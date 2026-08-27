@@ -46,11 +46,13 @@ export default async function LatestProducts({
         </LocalizedClientLink>
       </div>
 
-      <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-3 overflow-x-auto px-6 pb-1">
+      {/* Лента во всю ширину: слева выравнена по общему контейнеру,
+          справа уходит за край экрана — так видно, что можно листать. */}
+      <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-3 overflow-x-auto pb-1 pl-[max(1.5rem,calc((100vw-1440px)/2+1.5rem))] pr-6">
         {products.map((product) => (
           <li
             key={product.id}
-            className="w-[68%] shrink-0 snap-start xsmall:w-[44%] small:w-[23%]"
+            className="w-[68vw] shrink-0 snap-start xsmall:w-[44vw] small:w-[23vw]"
           >
             <ProductPreview
               product={product}
