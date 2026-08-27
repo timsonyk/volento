@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import CategoryTiles from "@modules/home/components/category-tiles"
 import FeatureBanner from "@modules/home/components/feature-banner"
 import Hero from "@modules/home/components/hero"
+import HomeProductGrid from "@modules/home/components/product-grid"
 import LatestProducts from "@modules/home/components/latest-products"
 import { getRegion } from "@lib/data/regions"
 
@@ -28,6 +29,7 @@ export default async function Home(props: {
       <LatestProducts region={region} countryCode={countryCode} />
       <FeatureBanner />
       <CategoryTiles region={region} />
+      <HomeProductGrid region={region} countryCode={countryCode} />
     </>
   )
 }
