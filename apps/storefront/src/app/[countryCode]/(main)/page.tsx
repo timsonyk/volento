@@ -27,8 +27,8 @@ export default async function Home(props: {
     <>
       <Hero countryCode={countryCode} />
       <LatestProducts region={region} countryCode={countryCode} />
-      <FeatureBanner />
       <CategoryTiles region={region} />
+      <FeatureBanner />
       <HomeProductGrid region={region} countryCode={countryCode} />
     </>
   )
