@@ -6,7 +6,8 @@ import React from "react"
  */
 type IconProps = { className?: string }
 
-const base = "h-5 w-5"
+// 22 px на телефоне, 26 px на компьютере: 20 терялось рядом с логотипом
+const base = "h-[22px] w-[22px] small:h-[26px] small:w-[26px]"
 
 export const MenuIcon: React.FC<IconProps> = ({ className }) => (
   <svg
