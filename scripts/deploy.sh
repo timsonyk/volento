@@ -1,0 +1,65 @@
+#!/bin/bash
+# Выкатка витрины на сервер одной командой.
+#
+# Зачем: Claude Code работает только через VPN, а сервер из-под VPN
+# доступен через раз. Поэтому выкатку можно запускать вручную из сети
+# без VPN — там связь с сервером стабильная.
+#
+# Запуск с компьютера:  bash scripts/deploy.sh
+set -uo pipefail
+
+SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10"
+
+шаг() { printf "\n\033[1m%s\033[0m\n" "$1"; }
+
+# Повторяем команду до трёх раз: связь с сервером нестабильна.
+на_сервере() {
+  local i out
+  for i in 1 2 3; do
+    if out=$(ssh $SSH_OPTS volento "$1" 2>&1); then
+      printf '%s\n' "$out"
+      return 0
+    fi
+    echo "  попытка $i не прошла, повторяю..."
+    sleep 3
+  done
+  printf '%s\n' "$out"
+  return 1
+}
+
+шаг "1/4  Забираю свежий код"
+на_сервере 'cd /home/volento/volento && sudo -u volento git pull --ff-only 2>&1 | tail -3' || {
+  echo "Не удалось подключиться к серверу."
+  echo "Проверьте, что вы в сети БЕЗ VPN — из-под VPN сервер отвечает через раз."
+  exit 1
+}
+
+шаг "2/4  Собираю витрину (несколько минут)"
+на_сервере 'sudo -u volento setsid /home/volento/build-only.sh > /home/volento/deploy.log 2>&1 < /dev/null & echo "  сборка запущена"'
+
+for i in $(seq 1 40); do
+  sleep 20
+  if на_сервере 'grep -aq ALL_DONE /home/volento/deploy.log && echo ГОТОВО' | grep -q ГОТОВО; then
+    echo "  сборка завершена"
+    break
+  fi
+  if на_сервере 'grep -aqiE "error:|failed" /home/volento/deploy.log && echo ПЛОХО' | grep -q ПЛОХО; then
+    echo "  ОШИБКА сборки, последние строки:"
+    на_сервере 'tail -15 /home/volento/deploy.log'
+    exit 1
+  fi
+  printf "  жду... (%s)\n" "$i"
+done
+
+шаг "3/4  Перезапускаю витрину"
+на_сервере 'rm -rf /home/volento/volento/apps/storefront/.next/cache
+systemctl restart volento-storefront
+sleep 20
+echo "  служба: $(systemctl is-active volento-storefront)"'
+
+шаг "4/4  Проверяю страницы"
+на_сервере 'for p in /ru /ru/store /ru/products/bryuki-pryamye-chernye; do
+  printf "  %-38s %s\n" "$p" "$(curl -s -o /dev/null -m 15 -w "%{http_code}" -L "http://127.0.0.1:8000$p")"
+done'
+
+printf "\n\033[1mГотово. Откройте https://slytn.ru\033[0m\n"
