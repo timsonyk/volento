@@ -44,15 +44,15 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
     // баннер не критичен: при недоступном бэкенде показываем запасной файл
   }
 
+  // На телефоне держим собственные пропорции баннера (9:16): экран за вычетом
+  // шапки чуть уже, и при растягивании на всю высоту срезались бы бока
+  // вместе с логотипом.
   const hasMobileBanner = Boolean(mobile)
 
   return (
     <>
       {/* Телефон */}
       {hasMobileBanner ? (
-        {/* На телефоне держим собственные пропорции баннера (9:16): экран за
-            вычетом шапки чуть уже, и при растягивании на всю высоту
-            срезались бы бока вместе с логотипом. */}
         <section className="relative aspect-[9/16] w-full overflow-hidden bg-mist small:hidden">
           <LocalizedClientLink
             href="/store"
