@@ -50,7 +50,10 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
     <>
       {/* Телефон */}
       {hasMobileBanner ? (
-        <section className="relative w-full overflow-hidden bg-mist h-[calc(100svh-77px)] small:hidden">
+        {/* На телефоне держим собственные пропорции баннера (9:16): экран за
+            вычетом шапки чуть уже, и при растягивании на всю высоту
+            срезались бы бока вместе с логотипом. */}
+        <section className="relative aspect-[9/16] w-full overflow-hidden bg-mist small:hidden">
           <LocalizedClientLink
             href="/store"
             aria-label="Volento — классические брюки с характером. Перейти в каталог"

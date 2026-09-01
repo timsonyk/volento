@@ -7,7 +7,11 @@
  * каталога он спрятан фильтром по этой метке.
  *
  * Первая картинка — для компьютера, вторая — для телефона.
- * Запуск на сервере: node setup-banner.js [путь-к-файлу]
+ *
+ * Запуск на сервере:
+ *   node setup-banner.js <компьютер> [телефон]
+ *   node setup-banner.js --mobile <телефон>   — заменить только телефонную,
+ *                                               картинку для компьютера оставить
  */
 const fs = require("fs")
 const path = require("path")
@@ -56,7 +60,9 @@ async function upload(filePath) {
 }
 
 async function main() {
-  const file = process.argv[2]
+  const args = process.argv.slice(2)
+  const onlyMobile = args[0] === "--mobile"
+  const files = onlyMobile ? args.slice(1) : args
 
   TOKEN = (
     await api("POST", "/auth/user/emailpass", {
@@ -78,15 +84,25 @@ async function main() {
   const { products } = await api("GET", `/admin/products?handle=${HANDLE}&limit=1`)
   const existing = products[0]
 
-  const images = []
-  if (file) {
-    images.push({ url: await upload(file) })
+  const uploaded = []
+  for (const f of files) {
+    uploaded.push({ url: await upload(f) })
+    console.log("загружено: " + f)
   }
 
   if (existing) {
+    // при --mobile сохраняем первую картинку (компьютер) и меняем вторую
+    const current = existing.images ?? []
+    const images = onlyMobile
+      ? [...current.slice(0, 1).map((i) => ({ url: i.url })), ...uploaded]
+      : uploaded
+
     if (images.length) {
       await api("POST", "/admin/products/" + existing.id, { images })
       console.log("баннер обновлён, картинок: " + images.length)
+      images.forEach((im, n) =>
+        console.log(`  ${n === 0 ? "компьютер" : "телефон  "}: ${im.url.split("/").pop()}`)
+      )
     } else {
       console.log("баннер уже заведён, картинку не меняли")
     }
@@ -103,8 +119,8 @@ async function main() {
     shipping_profile_id: shipping_profiles[0].id,
     sales_channels: [{ id: sales_channels[0].id }],
     tags: [{ id: tag.id }],
-    thumbnail: images[0]?.url,
-    images,
+    thumbnail: uploaded[0]?.url,
+    images: uploaded,
     options: [{ title: "Служебный", values: ["—"] }],
     variants: [
       {
@@ -118,7 +134,7 @@ async function main() {
     ],
   })
 
-  console.log("баннер заведён, картинок: " + images.length)
+  console.log("баннер заведён, картинок: " + uploaded.length)
   console.log("адрес в админке: /app/products/" + product.id)
   console.log("ГОТОВО")
 }
