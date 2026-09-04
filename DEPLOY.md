@@ -207,6 +207,40 @@ ssh volento 'sudo bash -c "set -a; . /root/.volento-secrets; set +a; cd /home/vo
 
 **Товары заводятся черновиками.** В выгрузке склада нет колонки с ценой, а Medusa не создаёт вариант совсем без цены. Поэтому ставится заглушка 1 ₽ и `metadata.price_pending = true`. Черновик не виден на витрине и не покупается — продать по 1 ₽ нельзя. Перед публикацией цены нужно проставить.
 
+## Оплата: сертификат Минцифры
+
+Сертификат `tochka.com` выдан корневым центром Минцифры, которого нет в
+доверенных ни у macOS, ни у Node. Без него любой запрос к API банка падает
+с `SELF_SIGNED_CERT_IN_CHAIN`, а curl отдаёт код 000 — выглядит как «сайт
+недоступен», хотя дело в доверии, а не в сети.
+
+Связка лежит в `deploy/certs/tochka-ca.pem` (корневой + промежуточный,
+скачаны с gu-st.ru). На сервере она в `/etc/volento/tochka-ca.pem` и
+прописана **только нашему бэкенду** — дополнением к юнитам
+`medusa-server` и `medusa-worker`:
+
+```
+/etc/systemd/system/medusa-server.service.d/tochka-ca.conf
+[Service]
+Environment=NODE_EXTRA_CA_CERTS=/etc/volento/tochka-ca.pem
+```
+
+В общесистемное хранилище не добавляли специально: иначе серверу пришлось
+бы доверять этому центру целиком. Откат — удалить два файла-дополнения и
+`systemctl daemon-reload`.
+
+Проверка (с сервера, из-под пользователя volento):
+
+```bash
+NODE_EXTRA_CA_CERTS=/etc/volento/tochka-ca.pem node -e '
+fetch("https://enter.tochka.com/sandbox/v2/open-banking/v1.0/customers",
+ {headers:{Authorization:"Bearer sandbox.jwt.token"}}).then(r=>console.log(r.status))'
+```
+
+Должно быть 200. Без токена — 403, тоже нормально: значит TLS прошёл.
+
+Промежуточный сертификат истекает в марте 2027 — перевыпустить связку.
+
 ## Что настроено на сервере
 
 - Ubuntu 26.04, вход по SSH только по ключу, пароль отключён
