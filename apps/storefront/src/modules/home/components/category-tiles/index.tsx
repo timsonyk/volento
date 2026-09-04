@@ -5,8 +5,9 @@ import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
- * Плитки разделов встык, без полей, с подписями под ними. По замерам
- * референса: на телефоне две в ряд, на компьютере три, кадр 2:3.
+ * Плитки разделов с подписями под ними. По замерам референса: на телефоне
+ * это листалка — одна плитка на 88 % ширины и краешек следующей, зазор
+ * 16 px; на компьютере три в ряд встык, без полей. Кадр 2:3.
  * Обложкой служит фотография товара из раздела:
  * отдельных картинок для категорий пока нет, а заглушка хуже живой вещи.
  */
@@ -42,9 +43,9 @@ export default async function CategoryTiles({
 
   return (
     <section id="siluety" className="pb-16 small:pb-24">
-      <ul className="grid grid-cols-2 gap-y-8 small:grid-cols-3 small:gap-y-0">
+      <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-4 overflow-x-auto scroll-pl-4 px-4 small:grid small:grid-cols-3 small:gap-x-0 small:overflow-visible small:px-0">
         {filled.map(({ category, cover }) => (
-          <li key={category.id}>
+          <li key={category.id} className="w-[88vw] shrink-0 snap-start small:w-auto">
             <LocalizedClientLink
               href={`/categories/${category.handle}`}
               className="group block"
@@ -54,7 +55,7 @@ export default async function CategoryTiles({
                   src={cover!.thumbnail!}
                   alt={category.name}
                   fill
-                  sizes="(max-width: 1024px) 50vw, 33vw"
+                  sizes="(max-width: 1024px) 88vw, 33vw"
                   quality={80}
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 />
