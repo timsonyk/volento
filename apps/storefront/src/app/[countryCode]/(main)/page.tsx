@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 
 import CategoryTiles from "@modules/home/components/category-tiles"
+import ClosingBanner from "@modules/home/components/closing-banner"
 import FeatureBanner from "@modules/home/components/feature-banner"
 import Hero from "@modules/home/components/hero"
 import LatestProducts from "@modules/home/components/latest-products"
@@ -28,6 +29,14 @@ export default async function Home(props: {
       <LatestProducts region={region} countryCode={countryCode} />
       <CategoryTiles region={region} />
       <FeatureBanner />
+      <LatestProducts
+        region={region}
+        countryCode={countryCode}
+        title="Выбор сезона"
+        anchor="podborka-lenta"
+        order="created_at"
+      />
+      <ClosingBanner countryCode={countryCode} />
     </>
   )
 }

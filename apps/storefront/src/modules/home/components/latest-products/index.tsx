@@ -3,16 +3,25 @@ import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
 
 /**
- * Лента новинок сразу после баннера: карточки уходят за правый край и
- * прокручиваются вбок, как на референсе. Цвета моделей берутся одним
- * запросом на всю ленту, а не по запросу на карточку.
+ * Лента товаров: карточки уходят за правый край и прокручиваются вбок,
+ * как на референсе. Цвета моделей берутся одним запросом на всю ленту,
+ * а не по запросу на карточку.
+ *
+ * На главной таких лент две — до и после широкого баннера, как у
+ * референса. Отличаются заголовком и порядком выборки.
  */
 export default async function LatestProducts({
   region,
   countryCode,
+  title = "Новинки",
+  anchor = "novinki",
+  order = "-created_at",
 }: {
   region: HttpTypes.StoreRegion
   countryCode: string
+  title?: string
+  anchor?: string
+  order?: string
 }) {
   const {
     response: { products },
@@ -20,7 +29,7 @@ export default async function LatestProducts({
     regionId: region.id,
     queryParams: {
       limit: 12,
-      order: "-created_at",
+      order,
       fields: "*variants.calculated_price,+metadata,+tags",
     },
   })
@@ -32,9 +41,9 @@ export default async function LatestProducts({
   const colorsByModel = await listModelColors({ products, countryCode })
 
   return (
-    <section id="novinki" className="py-14 small:py-20">
-      <div className="content-container mb-11">
-        <h2 className="text-base text-ink">Новинки</h2>
+    <section id={anchor} className="py-14 small:py-20">
+      <div className="px-4 mb-11 xsmall:px-[30px] small:px-[50px]">
+        <h2 className="text-base text-ink">{title}</h2>
       </div>
 
       {/* Лента во всю ширину: слева выравнена по общему контейнеру,
