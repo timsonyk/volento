@@ -45,13 +45,13 @@ export default async function LatestProducts({
 
           Карточки прилипают при листании (scroll-snap). Ширины сняты
           замерами с референса: на телефоне видно одну карточку с краешком
-          следующей (84 % ширины экрана), на планшете около трёх, на
+          следующей (84 % ширины экрана), на планшете около трёх (35 %), на
           компьютере около четырёх. Зазор 6 px. */}
       <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-1.5 overflow-x-auto pb-1">
         {products.map((product) => (
           <li
             key={product.id}
-            className="w-[84vw] shrink-0 snap-start xsmall:w-[38vw] small:w-[26vw]"
+            className="w-[84vw] shrink-0 snap-start xsmall:w-[35vw] small:w-[26vw]"
           >
             <ProductPreview
               product={product}

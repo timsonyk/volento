@@ -4,26 +4,29 @@ import { listProducts } from "@lib/data/products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
- * Баннер главной. Картинка берётся из админки: там заведён служебный
+ * Первый экран главной. Картинки берутся из админки: там заведён служебный
  * товар с адресом home-banner, его изображения и есть баннер.
- * Первая картинка — для компьютера, вторая (если есть) — для телефона.
  *
- * Если товара или картинок нет, показываем файл из репозитория, чтобы
- * главная не осталась пустой.
+ * Раскладка по замерам референса:
+ *   телефон    — одна вертикальная картинка 4:5;
+ *   компьютер  — две в ряд по половине ширины: слева вертикальная 4:5,
+ *                справа горизонтальная 10:7, выровненные по верху.
  *
- * Картинка растягивается на весь экран и обрезается по краям, поэтому
- * формат баннера важен: 2560x1440 для компьютера, 1080x1920 для телефона.
- * Значимое держать в середине — края срезаются на узких экранах.
+ * Порядок картинок в админке:
+ *   первая  — вертикальная 1080x1350 (телефон и левая половина);
+ *   вторая  — горизонтальная 2560x1792 (правая половина на компьютере).
+ *
+ * Обе вписываются с обрезкой по центру, поэтому значимое держать в
+ * середине кадра — края срезаются.
  */
 const BANNER_HANDLE = "home-banner"
 const FALLBACK = "/banner.jpg"
 
-// высота шапки, которую вычитаем из экрана:
-// промо-полоса 26 px + навигация 51.2 px (телефон) / 76.8 px (компьютер)
+const ПОДПИСЬ = "Volento — классические брюки с характером"
 
 const Hero = async ({ countryCode }: { countryCode: string }) => {
-  let desktop = FALLBACK
-  let mobile: string | undefined
+  let вертикальная = FALLBACK
+  let горизонтальная: string | undefined
 
   try {
     const {
@@ -35,82 +38,71 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
 
     const images = products[0]?.images ?? []
     if (images[0]?.url) {
-      desktop = images[0].url
+      вертикальная = images[0].url
     }
     if (images[1]?.url) {
-      mobile = images[1].url
+      горизонтальная = images[1].url
     }
   } catch {
     // баннер не критичен: при недоступном бэкенде показываем запасной файл
   }
 
-  // На телефоне держим собственные пропорции баннера (9:16): экран за вычетом
-  // шапки чуть уже, и при растягивании на всю высоту срезались бы бока
-  // вместе с логотипом.
-  const hasMobileBanner = Boolean(mobile)
+  // если вторая картинка не загружена, справа показываем ту же первую —
+  // лучше повтор, чем дыра в половину экрана
+  const справа = горизонтальная ?? вертикальная
 
   return (
-    <>
-      {/* Телефон */}
-      {hasMobileBanner ? (
-        <section className="relative aspect-[9/16] w-full overflow-hidden bg-mist small:hidden">
-          <LocalizedClientLink
-            href="/store"
-            aria-label="Volento — классические брюки с характером. Перейти в каталог"
-            className="block h-full w-full"
-            data-testid="hero-banner"
-          >
-            <Image
-              src={mobile!}
-              alt="Volento — классические брюки с характером"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover object-center"
-            />
-          </LocalizedClientLink>
-        </section>
-      ) : (
-        // Пока для телефона не загружен свой баннер, показываем картинку
-        // целиком: широкий баннер во весь экран обрезается до фрагмента.
-        <section className="w-full bg-mist small:hidden">
-          <LocalizedClientLink
-            href="/store"
-            aria-label="Volento — классические брюки с характером. Перейти в каталог"
-            className="block"
-            data-testid="hero-banner"
-          >
-            <Image
-              src={desktop}
-              alt="Volento — классические брюки с характером"
-              width={1080}
-              height={450}
-              priority
-              sizes="100vw"
-              className="h-auto w-full"
-            />
-          </LocalizedClientLink>
-        </section>
-      )}
+    <section className="w-full">
+      {/* Телефон: одна вертикальная 4:5 */}
+      <LocalizedClientLink
+        href="/store"
+        aria-label={`${ПОДПИСЬ}. Перейти в каталог`}
+        className="relative block aspect-[4/5] w-full overflow-hidden bg-mist xsmall:hidden"
+        data-testid="hero-banner"
+      >
+        <Image
+          src={вертикальная}
+          alt={ПОДПИСЬ}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      </LocalizedClientLink>
 
-      {/* Компьютер */}
-      <section className="relative hidden w-full overflow-hidden bg-mist h-[calc(100svh-103px)] small:block">
+      {/* Компьютер и планшет: две картинки по половине ширины, по верху */}
+      <div className="hidden w-full items-start xsmall:grid xsmall:grid-cols-2">
         <LocalizedClientLink
           href="/store"
-          aria-label="Volento — классические брюки с характером. Перейти в каталог"
-          className="block h-full w-full"
+          aria-label={`${ПОДПИСЬ}. Перейти в каталог`}
+          className="relative block aspect-[4/5] w-full overflow-hidden bg-mist"
         >
           <Image
-            src={desktop}
-            alt="Volento — классические брюки с характером"
+            src={вертикальная}
+            alt={ПОДПИСЬ}
             fill
             priority
-            sizes="100vw"
+            sizes="50vw"
             className="object-cover object-center"
           />
         </LocalizedClientLink>
-      </section>
-    </>
+
+        <LocalizedClientLink
+          href="/store"
+          aria-label={`${ПОДПИСЬ}. Перейти в каталог`}
+          className="relative block aspect-[10/7] w-full overflow-hidden bg-mist"
+        >
+          <Image
+            src={справа}
+            alt={ПОДПИСЬ}
+            fill
+            priority
+            sizes="50vw"
+            className="object-cover object-center"
+          />
+        </LocalizedClientLink>
+      </div>
+    </section>
   )
 }
 

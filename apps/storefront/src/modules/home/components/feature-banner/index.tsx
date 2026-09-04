@@ -2,7 +2,8 @@ import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
- * Широкая картинка с подписью в углу — приём с референса.
+ * Широкая картинка с подписью в углу. Пропорция 16:9 — по замерам
+ * референса, у них нижний баннер ровно 1440x809.
  *
  * ВРЕМЕННО: снимок взят из имеющихся, он вертикальный и в широкой полосе
  * сильно обрезается. Нужна горизонтальная съёмка от 2400 px с пустым
@@ -10,7 +11,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  */
 const FeatureBanner = () => (
   <section id="podborka" className="relative w-full">
-    <div className="relative h-[60vh] w-full overflow-hidden bg-mist small:h-[75vh]">
+    <div className="relative aspect-[16/9] w-full overflow-hidden bg-mist">
       <Image
         src="/hero.webp"
         alt="Классические брюки Volento"
