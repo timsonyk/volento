@@ -39,13 +39,20 @@ export default async function LatestProducts({
 
       {/* Лента во всю ширину: слева выравнена по общему контейнеру,
           справа уходит за край экрана — так видно, что можно листать. */}
-      {/* Прилипание (snap) не включаем: оно подтягивает первую карточку
-          к краю экрана и съедает отступ слева. */}
-      <ul className="no-scrollbar flex gap-x-2 overflow-x-auto pb-1 pl-4 pr-4 small:pl-14 small:pr-14">
+      {/* Карточки прилипают при листании, как в референсе (scroll-snap).
+          Раньше прилипание было выключено: оно подтягивало первую карточку
+          вплотную к краю и съедало отступ слева. Лечится scroll-pl — он
+          говорит браузеру останавливать карточку не у самого края, а с
+          тем же отступом, что и у ленты.
+
+          Ширины сняты замерами с референса: на телефоне видно одну карточку
+          с краешком следующей (84 % ширины экрана), на планшете около трёх,
+          на компьютере около четырёх. Зазор 6 px. */}
+      <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-1.5 overflow-x-auto scroll-pl-4 pb-1 pl-4 pr-4 small:scroll-pl-14 small:pl-14 small:pr-14">
         {products.map((product) => (
           <li
             key={product.id}
-            className="w-[68vw] shrink-0 xsmall:w-[44vw] small:w-[23vw]"
+            className="w-[84vw] shrink-0 snap-start xsmall:w-[38vw] small:w-[26vw]"
           >
             <ProductPreview
               product={product}
