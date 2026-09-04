@@ -3,22 +3,28 @@ import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
 
 /**
- * Крупная сетка товаров с заголовком по центру — как секция каталога
- * на главной у референса.
+ * Сетка товаров на главной. По замерам референса: на телефоне две
+ * карточки в ряд, каждая 47 % ширины, зазор 6 px, встык к краям;
+ * на компьютере четыре в ряд тем же зазором. Заголовка над ней нет.
+ *
+ * Товаров показывается немного — это витринный блок, а не каталог.
+ * Весь каталог живёт на своей странице.
  */
 export default async function HomeProductGrid({
   region,
   countryCode,
+  limit = 4,
 }: {
   region: HttpTypes.StoreRegion
   countryCode: string
+  limit?: number
 }) {
   const {
     response: { products },
   } = await listProducts({
     regionId: region.id,
     queryParams: {
-      limit: 12,
+      limit,
       fields: "*variants.calculated_price,+metadata,+tags",
     },
   })
@@ -30,10 +36,8 @@ export default async function HomeProductGrid({
   const colorsByModel = await listModelColors({ products, countryCode })
 
   return (
-    <section id="vse-modeli" className="content-container pb-20 small:pb-28">
-      <h2 className="mb-6 text-center text-base text-ink">Все модели</h2>
-
-      <ul className="grid grid-cols-2 gap-x-2 gap-y-10 small:grid-cols-4 small:gap-y-14">
+    <section id="podborka-tovary" className="pb-20 small:pb-28">
+      <ul className="grid grid-cols-2 gap-x-1.5 gap-y-10 small:grid-cols-4 small:gap-y-14">
         {products.map((product) => (
           <li key={product.id}>
             <ProductPreview
