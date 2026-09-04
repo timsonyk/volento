@@ -64,3 +64,4 @@ Thumbs.db
 
 # выгрузки склада — рабочие данные, в git не нужны
 data/warehouse/
+scripts/catalog.json
