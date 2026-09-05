@@ -1,4 +1,5 @@
 import { listModelColors, listProducts } from "@lib/data/products"
+import SectionHeading from "@modules/home/components/section-heading"
 import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
 
@@ -46,7 +47,7 @@ export default async function LatestProducts({
   return (
     <section id={anchor} className="pt-[50px] pb-4 small:pb-10">
       <div className="mb-4 px-4 small:mb-8 xsmall:px-[30px] small:px-[50px]">
-        <h2 className="text-base text-ink">{title}</h2>
+        <SectionHeading>{title}</SectionHeading>
       </div>
 
       {/* Лента во всю ширину: слева выравнена по общему контейнеру,
