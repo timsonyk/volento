@@ -35,7 +35,7 @@ const StoreTemplate = ({
         Все товары
       </h1>
 
-      <div className="mb-8 flex justify-end">
+      <div className="mb-6 flex justify-end">
         <RefinementList sortBy={sort} />
       </div>
 

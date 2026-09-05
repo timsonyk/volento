@@ -42,7 +42,7 @@ export default function CategoryTemplate({
   return (
     <div className="content-container py-10" data-testid="category-container">
       <div>
-        <div className="mb-6 flex flex-row items-baseline justify-center gap-4 text-base">
+        <div className="mb-4 flex flex-row items-baseline justify-center gap-4 text-base">
           {parents &&
             parents.map((parent) => (
               <span key={parent.id} className="text-ui-fg-subtle">
@@ -76,7 +76,7 @@ export default function CategoryTemplate({
             </ul>
           </div>
         )}
-        <div className="mb-8 flex justify-end">
+        <div className="mb-6 flex justify-end">
           <RefinementList
             sortBy={sort}
             data-testid="sort-by-container"
