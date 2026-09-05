@@ -41,11 +41,12 @@ export default async function LatestProducts({
 
   const colorsByModel = await listModelColors({ products, countryCode })
 
-  // Вертикальный воздух по замерам референса: над заголовком 50 px,
+  // Вертикальный воздух по замерам референса: над заголовком было 50 px,
+  // сейчас 42 — заголовок попросили поднять на пару пикселей выше,
   // от заголовка до карточек 15 на телефоне и 31 дальше, под лентой
   // 82 и 108. Между секциями у них ноль — блоки стоят вплотную.
   return (
-    <section id={anchor} className="pt-[50px] pb-4 small:pb-10">
+    <section id={anchor} className="pt-[42px] pb-4 small:pb-10">
       <div className="mb-4 px-4 small:mb-8 xsmall:px-[30px] small:px-[50px]">
         <SectionHeading>{title}</SectionHeading>
       </div>
