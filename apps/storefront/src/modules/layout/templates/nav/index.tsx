@@ -83,7 +83,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 { имя: "Скидки", адрес: "/collections/skidki" },
               ]}
               колонки={колонки}
-              снимок={оформление.картинки[4]}
+              снимок={оформление.картинка("середина")}
             />
           </div>
 

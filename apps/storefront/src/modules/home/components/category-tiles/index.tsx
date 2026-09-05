@@ -1,4 +1,4 @@
-import { getHomeImages } from "@lib/data/home-banner"
+import { getHomeContent, ключПлитки } from "@lib/data/home-banner"
 import { listCategories } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
@@ -10,10 +10,9 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  * это листалка — одна плитка на 88 % ширины и краешек следующей, зазор
  * 16 px; на компьютере три в ряд встык, без полей. Кадр 2:3.
  *
- * Обложка берётся из записи «Картинки главной страницы»: шестая картинка
- * идёт первому разделу, седьмая второму и так далее по порядку разделов.
- * Если своей картинки нет, показывается фотография товара из раздела —
- * живая вещь лучше заглушки. Раздел без обеих не показывается вовсе.
+ * Обложка берётся из записи «Оформление сайта» по ключу раздела. Если
+ * своей картинки нет, показывается фотография товара из раздела — живая
+ * вещь лучше заглушки. Раздел без обеих не показывается вовсе.
  */
 export default async function CategoryTiles({
   region,
@@ -22,9 +21,9 @@ export default async function CategoryTiles({
   region: HttpTypes.StoreRegion
   countryCode: string
 }) {
-  const [categories, картинки] = await Promise.all([
+  const [categories, { картинка }] = await Promise.all([
     listCategories(),
-    getHomeImages(countryCode),
+    getHomeContent(countryCode),
   ])
   const top = (categories ?? []).filter((c) => !c.parent_category)
 
@@ -32,12 +31,9 @@ export default async function CategoryTiles({
     return null
   }
 
-  // картинки разделов идут с шестой по счёту, по порядку самих разделов
-  const ПЕРВАЯ_ПЛИТКА = 5
-
   const tiles = await Promise.all(
-    top.map(async (c, n) => {
-      const своя = картинки[ПЕРВАЯ_ПЛИТКА + n]
+    top.map(async (c) => {
+      const своя = картинка(ключПлитки(c.handle))
       if (своя) {
         return { category: c, обложка: своя }
       }

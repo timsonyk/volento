@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-import { getHomeImages } from "@lib/data/home-banner"
+import { getHomeContent } from "@lib/data/home-banner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
@@ -8,18 +8,20 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  *   телефон              — одна вертикальная картинка 4:5 во всю ширину;
  *   планшет и компьютер  — одна широкая картинка 16:9 во всю ширину.
  *
- * Картинки 3 и 4 из записи «Картинки главной страницы» (см. home-banner.ts).
- * Если их не загрузили, берутся 1 и 2 — то есть повторяется верхний
- * баннер: заметно, что нужны свои снимки, но дырки нет.
+ * Картинки по ключам «низ_телефон» и «низ_компьютер». Если их не
+ * загрузили, берутся верхние — то есть повторяется первый баннер:
+ * заметно, что нужны свои снимки, но дырки нет.
  */
 const FALLBACK = "/banner.jpg"
 
 const ПОДПИСЬ = "Volento — классические брюки"
 
 const ClosingBanner = async ({ countryCode }: { countryCode: string }) => {
-  const images = await getHomeImages(countryCode)
-  const вертикальная = images[2] ?? images[0] ?? FALLBACK
-  const широкая = images[3] ?? images[1] ?? вертикальная
+  const { картинка } = await getHomeContent(countryCode)
+  const вертикальная =
+    картинка("низ_телефон") ?? картинка("верх_телефон") ?? FALLBACK
+  const широкая =
+    картинка("низ_компьютер") ?? картинка("верх_компьютер") ?? вертикальная
 
   return (
     <section className="w-full">

@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-import { getHomeImages } from "@lib/data/home-banner"
+import { getHomeContent } from "@lib/data/home-banner"
 import { listModelColors, listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -15,8 +15,8 @@ import ProductPreview from "@modules/products/components/product-preview"
  *                тянется вровень с карточками вместе с их подписями
  *                (у них 720x590 при ширине окна 1440).
  *
- * Картинка — пятая в записи «Картинки главной страницы». Исходник
- * квадратный: на компьютере он обрезается сверху и снизу.
+ * Картинка берётся по ключу «середина». Исходник квадратный: на
+ * компьютере он обрезается сверху и снизу.
  */
 const FALLBACK = "/hero.webp"
 
@@ -27,8 +27,8 @@ export default async function FeatureBlock({
   region: HttpTypes.StoreRegion
   countryCode: string
 }) {
-  const [картинки, { response }] = await Promise.all([
-    getHomeImages(countryCode),
+  const [{ картинка }, { response }] = await Promise.all([
+    getHomeContent(countryCode),
     listProducts({
       regionId: region.id,
       queryParams: {
@@ -53,7 +53,7 @@ export default async function FeatureBlock({
           className="relative block aspect-square w-full overflow-hidden bg-mist xsmall:aspect-auto xsmall:h-full"
         >
           <Image
-            src={картинки[4] ?? FALLBACK}
+            src={картинка("середина") ?? FALLBACK}
             alt="Классические брюки Volento"
             fill
             sizes="(max-width: 512px) 100vw, 50vw"
