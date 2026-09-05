@@ -59,15 +59,18 @@ export default async function ProductPreview({
         {/* Текст под фото по замерам референса: на телефоне 12 px с
             межстрочным 1.2 и отступом 11 от фото, от планшета 14 px с 1.4
             и отступом 10; цена сразу под названием, без зазора.
-            Подпись сдвинута от края фото: 13 px на телефоне, 21 дальше. */}
+            Подпись сдвинута от края фото: 13 px на телефоне, 21 дальше.
+            Кегль поднят против замеров по просьбе: у фирменного шрифта
+            одно начертание, Light, и мелким он читается бледно. По той же
+            причине насыщенность добавлена обводкой, а не font-bold. */}
         <h3
-          className="mt-[11px] pl-[13px] text-xs leading-[1.2] text-ink xsmall:mt-2.5 xsmall:pl-[21px] xsmall:text-sm xsmall:leading-[1.4]"
+          className="mt-[11px] pl-[13px] text-sm leading-[1.2] text-ink [-webkit-text-stroke:0.3px_currentColor] xsmall:mt-2.5 xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]"
           data-testid="product-title"
         >
           {stripColor(product.title, color)}
         </h3>
 
-        <div className="flex items-center justify-between gap-x-4 pl-[13px] text-xs leading-[1.2] xsmall:pl-[21px] xsmall:text-sm xsmall:leading-[1.4]">
+        <div className="flex items-center justify-between gap-x-4 pl-[13px] text-sm leading-[1.2] [-webkit-text-stroke:0.3px_currentColor] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]">
           {cheapestPrice && (
             <div className="flex gap-x-2">
               <PreviewPrice price={cheapestPrice} />
