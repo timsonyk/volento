@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-import { listProducts } from "@lib/data/products"
+import { getHomeImages } from "@lib/data/home-banner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
@@ -8,36 +8,18 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  *   телефон              — одна вертикальная картинка 4:5 во всю ширину;
  *   планшет и компьютер  — одна широкая картинка 16:9 во всю ширину.
  *
- * Картинки берутся из той же записи «Баннер главной страницы», но
- * третья и четвёртая по счёту:
- *   3-я — вертикальная 1080x1350 (телефон);
- *   4-я — широкая 2560x1440 (планшет и компьютер).
- * Если их не загрузили, берутся первая и вторая — то есть повторяется
- * верхний баннер: заметно, что нужны свои снимки, но дырки нет.
+ * Картинки 3 и 4 из записи «Картинки главной страницы» (см. home-banner.ts).
+ * Если их не загрузили, берутся 1 и 2 — то есть повторяется верхний
+ * баннер: заметно, что нужны свои снимки, но дырки нет.
  */
-const BANNER_HANDLE = "home-banner"
 const FALLBACK = "/banner.jpg"
 
 const ПОДПИСЬ = "Volento — классические брюки"
 
 const ClosingBanner = async ({ countryCode }: { countryCode: string }) => {
-  let вертикальная = FALLBACK
-  let широкая: string | undefined
-
-  try {
-    const {
-      response: { products },
-    } = await listProducts({
-      countryCode,
-      queryParams: { handle: BANNER_HANDLE, limit: 1 },
-    })
-
-    const images = products[0]?.images ?? []
-    вертикальная = images[2]?.url ?? images[0]?.url ?? FALLBACK
-    широкая = images[3]?.url ?? images[1]?.url
-  } catch {
-    // баннер не критичен: при недоступном бэкенде показываем запасной файл
-  }
+  const images = await getHomeImages(countryCode)
+  const вертикальная = images[2] ?? images[0] ?? FALLBACK
+  const широкая = images[3] ?? images[1] ?? вертикальная
 
   return (
     <section className="w-full">
@@ -63,7 +45,7 @@ const ClosingBanner = async ({ countryCode }: { countryCode: string }) => {
         className="relative hidden aspect-video w-full overflow-hidden bg-mist xsmall:block"
       >
         <Image
-          src={широкая ?? вертикальная}
+          src={широкая}
           alt={ПОДПИСЬ}
           fill
           sizes="100vw"

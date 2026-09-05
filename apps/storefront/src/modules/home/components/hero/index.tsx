@@ -1,47 +1,25 @@
 import Image from "next/image"
 
-import { listProducts } from "@lib/data/products"
+import { getHomeImages } from "@lib/data/home-banner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
- * Первый экран главной. Картинки берутся из админки: там заведён служебный
- * товар с адресом home-banner, его изображения и есть баннер.
- *
- * Раскладка по замерам референса:
+ * Первый экран главной. Раскладка по замерам референса:
  *   телефон              — одна вертикальная картинка 4:5 во всю ширину;
  *   планшет и компьютер  — одна широкая картинка 8:5 во всю ширину.
  *
- * Порядок картинок в админке:
- *   первая  — вертикальная 1080x1350 (телефон);
- *   вторая  — широкая 2560x1600 (планшет и компьютер).
+ * Картинки 1 и 2 из записи «Картинки главной страницы» (см. home-banner.ts).
  * Если второй нет, на компьютере показывается первая, обрезанная до 8:5.
- *
- * Обе вписываются с обрезкой по центру, поэтому значимое держать в
- * середине кадра — края срезаются.
+ * Обе вписываются с обрезкой по центру — значимое держать в середине кадра.
  */
-const BANNER_HANDLE = "home-banner"
 const FALLBACK = "/banner.jpg"
 
 const ПОДПИСЬ = "Volento — классические брюки с характером"
 
 const Hero = async ({ countryCode }: { countryCode: string }) => {
-  let вертикальная = FALLBACK
-  let широкая: string | undefined
-
-  try {
-    const {
-      response: { products },
-    } = await listProducts({
-      countryCode,
-      queryParams: { handle: BANNER_HANDLE, limit: 1 },
-    })
-
-    const images = products[0]?.images ?? []
-    вертикальная = images[0]?.url ?? FALLBACK
-    широкая = images[1]?.url
-  } catch {
-    // баннер не критичен: при недоступном бэкенде показываем запасной файл
-  }
+  const images = await getHomeImages(countryCode)
+  const вертикальная = images[0] ?? FALLBACK
+  const широкая = images[1] ?? вертикальная
 
   return (
     <section className="w-full">
@@ -69,7 +47,7 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
         className="relative hidden aspect-[8/5] w-full overflow-hidden bg-mist xsmall:block"
       >
         <Image
-          src={широкая ?? вертикальная}
+          src={широкая}
           alt={ПОДПИСЬ}
           fill
           priority
