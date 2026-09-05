@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { Suspense } from "react"
 
+import { listCategories } from "@lib/data/categories"
 import { getHomeContent } from "@lib/data/home-banner"
 import { getLocale } from "@lib/data/locale-actions"
 import { listLocales } from "@lib/data/locales"
@@ -13,32 +14,64 @@ import {
 } from "@modules/common/icons/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import DesktopMenu from "@modules/layout/components/desktop-menu"
 import PromoBar from "@modules/layout/components/promo-bar"
 import SideMenu from "@modules/layout/components/side-menu"
 
 export default async function Nav({ countryCode }: { countryCode: string }) {
-  const [regions, locales, currentLocale, оформление] = await Promise.all([
-    listRegions().then((regions: StoreRegion[]) => regions),
-    listLocales(),
-    getLocale(),
-    getHomeContent(countryCode),
-  ])
+  const [regions, locales, currentLocale, оформление, categories] =
+    await Promise.all([
+      listRegions().then((regions: StoreRegion[]) => regions),
+      listLocales(),
+      getLocale(),
+      getHomeContent(countryCode),
+      listCategories(),
+    ])
 
   const акция = оформление.акцияПоказывать ? оформление.акцияТекст : undefined
+
+  // В панели «Каталог»: слева крой, рядом общие ссылки и снимок.
+  // Страниц «о бренде», «доставка», «возврат» ещё нет — как появятся,
+  // добавить сюда третьей колонкой, а не плодить ссылки в никуда.
+  const крой = (categories ?? [])
+    .filter((c) => !c.parent_category)
+    .map((c) => ({ имя: c.name, адрес: `/categories/${c.handle}` }))
+
+  const колонки = [
+    { заголовок: "Крой", ссылки: крой },
+    {
+      заголовок: "Смотреть",
+      ссылки: [
+        { имя: "Весь каталог", адрес: "/store" },
+        { имя: "Новинки", адрес: "/store?sortBy=created_at" },
+      ],
+    },
+  ]
 
   return (
     <div className="sticky inset-x-0 top-0 z-50">
       {/* полоса с акцией: текст и выключатель — в админке */}
       {акция && <PromoBar текст={акция} />}
 
-      <header className="border-b border-rule bg-paper">
+      <header className="relative border-b border-rule bg-paper">
         <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">
-          {/* слева: меню и поиск */}
+          {/* слева: меню и поиск. Шторка — только на телефоне, на
+              компьютере вместо неё ряд разделов с раскрывающейся панелью */}
           <div className="flex flex-1 basis-0 items-center gap-x-6 text-ink">
-            <SideMenu
-              regions={regions}
-              locales={locales}
-              currentLocale={currentLocale}
+            <div className="small:hidden">
+              <SideMenu
+                regions={regions}
+                locales={locales}
+                currentLocale={currentLocale}
+              />
+            </div>
+            <DesktopMenu
+              пункты={[
+                { имя: "Новинки", адрес: "/store?sortBy=created_at" },
+                { имя: "Весь каталог", адрес: "/store" },
+              ]}
+              колонки={колонки}
+              снимок={оформление.картинки[4]}
             />
             <LocalizedClientLink
               href="/search"
