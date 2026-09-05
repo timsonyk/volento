@@ -5,13 +5,13 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { РАЗМЕР_ЗАГОЛОВКА } from "@modules/home/components/section-heading"
 
 /**
- * Первый экран главной. Раскладка по замерам референса:
- *   телефон              — одна вертикальная картинка 4:5 во всю ширину;
- *   планшет и компьютер  — две вертикальные 4:5 рядом, по половине ширины.
+ * Первый экран главной — одна картинка во всю ширину:
+ *   телефон              — вертикальная 4:5;
+ *   планшет и компьютер  — широкая 8:5.
  *
  * Картинки 1 и 2 из записи «Картинки главной страницы»; если второй нет,
- * справа повторяется первая. Обе обрезаются по центру — значимое держать
- * в середине кадра.
+ * на компьютере обрезается первая. Обе вписываются с обрезкой по центру —
+ * значимое держать в середине кадра.
  *
  * Надпись поверх берётся оттуда же из метаданных, редактируется в админке.
  * Если её не задали, баннер показывается чистым.
@@ -23,15 +23,15 @@ const ПОДПИСЬ = "Volento — классические брюки с ха�
 const Hero = async ({ countryCode }: { countryCode: string }) => {
   const { картинки, надпись, ссылкаТекст, ссылкаАдрес } =
     await getHomeContent(countryCode)
-  const слева = картинки[0] ?? FALLBACK
-  const справа = картинки[1] ?? слева
+  const вертикальная = картинки[0] ?? FALLBACK
+  const широкая = картинки[1] ?? вертикальная
 
   return (
     <section className="relative w-full">
       {/* Телефон: одна вертикальная 4:5 */}
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-mist xsmall:hidden">
         <Image
-          src={слева}
+          src={вертикальная}
           alt={ПОДПИСЬ}
           fill
           priority
@@ -40,23 +40,16 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
         />
       </div>
 
-      {/* Планшет и компьютер: две вертикальные 4:5 рядом */}
-      <div className="hidden w-full grid-cols-2 xsmall:grid">
-        {[слева, справа].map((src, n) => (
-          <div
-            key={n}
-            className="relative aspect-[4/5] w-full overflow-hidden bg-mist"
-          >
-            <Image
-              src={src}
-              alt={ПОДПИСЬ}
-              fill
-              priority
-              sizes="50vw"
-              className="object-cover object-center"
-            />
-          </div>
-        ))}
+      {/* Планшет и компьютер: широкая 8:5 */}
+      <div className="relative hidden aspect-[8/5] w-full overflow-hidden bg-mist xsmall:block">
+        <Image
+          src={широкая}
+          alt={ПОДПИСЬ}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
       </div>
 
       {/* Надпись поверх — по замерам референса белая, слева внизу */}
