@@ -29,7 +29,7 @@ const ПОДЧЁРКИВАНИЕ =
   "after:duration-300 after:ease-out hover:after:scale-x-100 " +
   "focus-visible:after:scale-x-100 motion-reduce:after:transition-none"
 
-export type Колонка = { заголовок: string; ссылки: Раздел[] }
+export type Колонка = { заголовок: string; адрес?: string; ссылки: Раздел[] }
 
 export default function DesktopMenu({
   пункты,
@@ -98,10 +98,20 @@ export default function DesktopMenu({
             : "pointer-events-none -translate-y-2 opacity-0")
         }
       >
-        <div className="content-container grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,2fr)] gap-x-10 py-10">
+        <div className="content-container flex gap-x-10 py-10">
           {колонки.map((к) => (
-            <div key={к.заголовок}>
-              <p className="mb-6 text-base text-ink">{к.заголовок}</p>
+            <div key={к.заголовок} className="min-w-[150px]">
+              {к.адрес ? (
+                <LocalizedClientLink
+                  href={к.адрес}
+                  onClick={() => setОткрыт(false)}
+                  className="mb-6 block text-base text-ink transition-opacity hover:opacity-60"
+                >
+                  {к.заголовок}
+                </LocalizedClientLink>
+              ) : (
+                <p className="mb-6 text-base text-ink">{к.заголовок}</p>
+              )}
               <ul className="flex flex-col gap-y-3">
                 {к.ссылки.map((с) => (
                   <li key={с.адрес}>
@@ -122,7 +132,7 @@ export default function DesktopMenu({
             <LocalizedClientLink
               href="/store"
               onClick={() => setОткрыт(false)}
-              className="relative block aspect-[4/3] w-full overflow-hidden bg-mist"
+              className="relative ml-auto block aspect-[4/3] w-[38%] shrink-0 overflow-hidden bg-mist"
             >
               <Image
                 src={снимок}
