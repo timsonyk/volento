@@ -45,14 +45,12 @@ export default function DesktopMenu({
   }
 
   return (
-    <div
-      className="hidden h-full items-center small:flex"
-      onMouseLeave={закрыть}
-      onMouseEnter={открыть}
-    >
+    <div className="hidden h-full items-center small:flex">
       <nav aria-label="Разделы каталога">
         <ul className="flex items-center gap-x-7">
-          <li>
+          {/* панель раскрывает только «Каталог»; остальные пункты при
+              наведении её закрывают, иначе она висела бы над всем рядом */}
+          <li onMouseEnter={открыть} onMouseLeave={закрыть}>
             <button
               type="button"
               aria-expanded={открыт}
@@ -64,7 +62,7 @@ export default function DesktopMenu({
             </button>
           </li>
           {пункты.map((п) => (
-            <li key={п.адрес}>
+            <li key={п.адрес} onMouseEnter={закрыть}>
               <LocalizedClientLink
                 href={п.адрес}
                 onFocus={закрыть}
@@ -80,6 +78,8 @@ export default function DesktopMenu({
       {/* панель во всю ширину окна: она вне потока шапки, поэтому шапка
           не прыгает, когда панель появляется */}
       <div
+        onMouseEnter={открыть}
+        onMouseLeave={закрыть}
         className={
           "absolute inset-x-0 top-full border-b border-rule bg-paper transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none " +
           (открыт
