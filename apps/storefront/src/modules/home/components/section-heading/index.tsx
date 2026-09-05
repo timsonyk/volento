@@ -6,7 +6,7 @@
  * Стиль в одном месте, чтобы менять его везде разом.
  */
 export const РАЗМЕР_ЗАГОЛОВКА =
-  "font-display text-[40px] font-medium leading-[1.1] xsmall:text-[52px]"
+  "font-display text-[40px] font-light leading-[1.1] xsmall:text-[52px]"
 
 export default function SectionHeading({
   children,
