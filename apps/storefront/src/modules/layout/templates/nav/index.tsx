@@ -69,7 +69,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
             <DesktopMenu
               пункты={[
                 { имя: "Новинки", адрес: "/store?sortBy=created_at" },
-                { имя: "Весь каталог", адрес: "/store" },
+                { имя: "Скидки", адрес: "/collections/skidki" },
               ]}
               колонки={колонки}
               снимок={оформление.картинки[4]}
