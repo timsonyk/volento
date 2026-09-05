@@ -4,8 +4,8 @@
 @import "tailwindcss/utilities";
 
 :root {
-  --font-display: 'Tenor Sans', 'Jost', 'Lora', Georgia, serif;
-  --font-sans: 'Tenor Sans', 'Jost', 'Lora', Georgia, serif;
+  --font-display: 'Jost', 'Tenor Sans', 'Lora', Georgia, serif;
+  --font-sans: 'Jost', 'Tenor Sans', 'Lora', Georgia, serif;
 }
 
 @layer components {
