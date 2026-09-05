@@ -127,10 +127,14 @@ async function main() {
   const existing = products[0]
 
   if (existing) {
+    // обложка показывается в админке первой; держим её равной первой
+    // картинке списка, иначе там маячит давно удалённый файл
+    const images = uploaded.length ? uploaded : existing.images ?? []
     await api("POST", "/admin/products/" + existing.id, {
       title: "Картинки главной страницы",
       description: SPEC,
-      ...(uploaded.length ? { images: uploaded, thumbnail: uploaded[0].url } : {}),
+      thumbnail: images[0]?.url ?? null,
+      ...(uploaded.length ? { images: uploaded } : {}),
     })
     console.log(
       uploaded.length
