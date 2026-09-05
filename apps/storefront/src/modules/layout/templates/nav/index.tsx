@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { Suspense } from "react"
 
+import { getHomeContent } from "@lib/data/home-banner"
 import { getLocale } from "@lib/data/locale-actions"
 import { listLocales } from "@lib/data/locales"
 import { listRegions } from "@lib/data/regions"
@@ -12,24 +13,23 @@ import {
 } from "@modules/common/icons/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import PromoBar from "@modules/layout/components/promo-bar"
 import SideMenu from "@modules/layout/components/side-menu"
 
-export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
+export default async function Nav({ countryCode }: { countryCode: string }) {
+  const [regions, locales, currentLocale, оформление] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
     getLocale(),
+    getHomeContent(countryCode),
   ])
+
+  const акция = оформление.акцияПоказывать ? оформление.акцияТекст : undefined
 
   return (
     <div className="sticky inset-x-0 top-0 z-50">
-      {/* промо-полоса: одно сообщение, как на референсе */}
-      <div className="flex h-[26px] items-center justify-center bg-ink">
-        <span className="label-type text-paper/90">
-          {/* Заглушка: заменить на настоящее предложение до запуска */}
-          До 31 августа −20% на вторую пару
-        </span>
-      </div>
+      {/* полоса с акцией: текст и выключатель — в админке */}
+      {акция && <PromoBar текст={акция} />}
 
       <header className="border-b border-rule bg-paper">
         <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">

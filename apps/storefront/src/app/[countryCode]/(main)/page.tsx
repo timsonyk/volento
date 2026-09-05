@@ -5,6 +5,7 @@ import ClosingBanner from "@modules/home/components/closing-banner"
 import FeatureBlock from "@modules/home/components/feature-block"
 import Hero from "@modules/home/components/hero"
 import LatestProducts from "@modules/home/components/latest-products"
+import Reveal from "@modules/common/components/reveal"
 import { getRegion } from "@lib/data/regions"
 
 export const metadata: Metadata = {
@@ -25,11 +26,20 @@ export default async function Home(props: {
 
   return (
     <>
+      {/* первый экран без появления: он виден сразу, анимировать нечего */}
       <Hero countryCode={countryCode} />
-      <LatestProducts region={region} countryCode={countryCode} />
-      <CategoryTiles region={region} countryCode={countryCode} />
-      <FeatureBlock region={region} countryCode={countryCode} />
-      <ClosingBanner countryCode={countryCode} />
+      <Reveal>
+        <LatestProducts region={region} countryCode={countryCode} />
+      </Reveal>
+      <Reveal>
+        <CategoryTiles region={region} countryCode={countryCode} />
+      </Reveal>
+      <Reveal>
+        <FeatureBlock region={region} countryCode={countryCode} />
+      </Reveal>
+      <Reveal>
+        <ClosingBanner countryCode={countryCode} />
+      </Reveal>
     </>
   )
 }
