@@ -27,13 +27,21 @@ const SideMenuItemLabels: Record<string, string> = {
   Cart: "Корзина",
 }
 
+/** Раздел каталога с подразделами — то же дерево, что в меню на компьютере. */
+export type РазделМеню = {
+  имя: string
+  адрес: string
+  дети: { имя: string; адрес: string }[]
+}
+
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
+  разделы?: РазделМеню[]
 }
 
-const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
+const SideMenu = ({ regions, locales, currentLocale, разделы }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
 
@@ -81,13 +89,44 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
                         <XMark />
                       </button>
                     </div>
-                    <ul className="flex flex-col gap-6 items-start justify-start">
+                    {/* Разделы каталога: на телефоне это единственное место,
+                        где их видно целиком — ряда разделов в шапке тут нет.
+                        Подразделы сразу раскрыты: прятать их под нажатие
+                        значит заставить искать то, за чем и пришли. */}
+                    <ul className="my-6 flex flex-col items-start gap-y-5 overflow-y-auto">
+                      {(разделы ?? []).map((р) => (
+                        <li key={р.адрес}>
+                          <LocalizedClientLink
+                            href={р.адрес}
+                            className="text-2xl leading-none hover:text-ui-fg-disabled"
+                            onClick={close}
+                          >
+                            {р.имя}
+                          </LocalizedClientLink>
+                          {!!р.дети.length && (
+                            <ul className="mt-3 flex flex-col gap-y-2 pl-4">
+                              {р.дети.map((д) => (
+                                <li key={д.адрес}>
+                                  <LocalizedClientLink
+                                    href={д.адрес}
+                                    className="text-base leading-none text-ui-fg-on-color/80 hover:text-ui-fg-disabled"
+                                    onClick={close}
+                                  >
+                                    {д.имя}
+                                  </LocalizedClientLink>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+
                       {Object.entries(SideMenuItems).map(([name, href]) => {
                         return (
-                          <li key={name}>
+                          <li key={name} className="first:mt-0">
                             <LocalizedClientLink
                               href={href}
-                              className="text-3xl leading-10 hover:text-ui-fg-disabled"
+                              className="text-base leading-none text-ui-fg-on-color/80 hover:text-ui-fg-disabled"
                               onClick={close}
                               data-testid={`${name.toLowerCase()}-link`}
                             >

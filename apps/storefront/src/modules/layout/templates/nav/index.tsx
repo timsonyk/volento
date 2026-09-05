@@ -41,6 +41,15 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
   // добавить их колонкой сюда, а не плодить ссылки в никуда.
   const верхние = (categories ?? []).filter((c) => !c.parent_category)
 
+  const дерево = верхние.map((c) => ({
+    имя: c.name,
+    адрес: `/categories/${c.handle}`,
+    дети: (c.category_children ?? []).map((d) => ({
+      имя: d.name,
+      адрес: `/categories/${d.handle}`,
+    })),
+  }))
+
   const колонки = верхние.map((c) => {
     const дети = (c.category_children ?? []).map((d) => ({
       имя: d.name,
@@ -72,6 +81,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 regions={regions}
                 locales={locales}
                 currentLocale={currentLocale}
+                разделы={дерево}
               />
             </div>
             <LocalizedClientLink
