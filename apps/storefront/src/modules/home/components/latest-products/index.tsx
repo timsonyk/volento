@@ -40,10 +40,10 @@ export default async function LatestProducts({
 
   const colorsByModel = await listModelColors({ products, countryCode })
 
+  // Вертикальный воздух по замерам референса: над заголовком 50 px,
+  // от заголовка до карточек 15 на телефоне и 31 дальше, под лентой
+  // 82 и 108. Между секциями у них ноль — блоки стоят вплотную.
   return (
-    {/* Вертикальный воздух по замерам референса: над заголовком 50 px,
-        от заголовка до карточек 15 на телефоне и 31 дальше, под лентой
-        82 и 108. Между секциями у них ноль — блоки стоят вплотную. */}
     <section id={anchor} className="pt-[50px] pb-4 small:pb-10">
       <div className="mb-4 px-4 small:mb-8 xsmall:px-[30px] small:px-[50px]">
         <h2 className="text-base text-ink">{title}</h2>
