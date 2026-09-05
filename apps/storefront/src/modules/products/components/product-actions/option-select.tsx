@@ -65,6 +65,10 @@ const VerticalMeasure: React.FC<{
   </div>
 )
 
+/**
+ * Размеры набраны текстом в строку, как на референсе: рамки вокруг каждого
+ * делали из простого ряда цифр подобие клавиатуры. Выбранный подчёркнут.
+ */
 const OptionSelect: React.FC<OptionSelectProps> = ({
   option,
   current,
@@ -91,7 +95,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
           dataTestId={dataTestId}
         />
       ) : (
-        <div className="flex flex-wrap gap-2" data-testid={dataTestId}>
+        <div className="flex flex-wrap gap-x-5 gap-y-2" data-testid={dataTestId}>
           {values.map((v) => (
             <button
               key={v}
@@ -101,10 +105,10 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
               aria-pressed={v === current}
               data-testid="option-button"
               className={clx(
-                "min-w-[3.25rem] border px-4 py-3 text-sm tabular-nums transition-colors duration-200 disabled:opacity-40",
+                "py-1 text-base tabular-nums underline-offset-[6px] transition-colors duration-200 disabled:opacity-40",
                 v === current
-                  ? "border-ink bg-ink text-paper"
-                  : "border-rule text-ink hover:border-ink"
+                  ? "text-ink underline"
+                  : "text-muted hover:text-ink"
               )}
             >
               {v}

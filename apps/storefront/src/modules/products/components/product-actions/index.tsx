@@ -130,6 +130,9 @@ export default function ProductActions({
         .filter((c) => typeof c === "number")
     ).size > 1
 
+  const нельзяКупить =
+    !inStock || !selectedVariant || !!disabled || !isValidVariant
+
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) return null
 
@@ -142,6 +145,21 @@ export default function ProductActions({
     })
 
     setIsAdding(false)
+  }
+
+  // «Купить сейчас» — та же покупка, только без остановки в корзине:
+  // кладём вещь и сразу ведём к оформлению
+  const handleBuyNow = async () => {
+    if (!selectedVariant?.id) return null
+
+    setIsAdding(true)
+    await addToCart({
+      variantId: selectedVariant.id,
+      quantity: 1,
+      countryCode,
+    })
+    setIsAdding(false)
+    router.push(`/${countryCode}/checkout?step=address`)
   }
 
   return (
@@ -176,28 +194,37 @@ export default function ProductActions({
           <ProductPrice product={product} variant={selectedVariant} />
         )}
 
-        <Button
-          onClick={handleAddToCart}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full h-14"
-          isLoading={isAdding}
-          data-testid="add-product-button"
-        >
-          {/* options это объект, поэтому !options всегда false: без этой правки
-              до выбора размера кнопка показывала "Нет в наличии" */}
-          {!selectedVariant || !isValidVariant
-            ? "Выберите размер и рост"
-            : !inStock
-            ? "Нет в наличии"
-            : "В корзину"}
-        </Button>
+        {/* Две кнопки в ряд, как на референсе: обычная покупка и покупка
+            без захода в корзину. На телефоне они встают друг под друга —
+            в строку не помещаются. */}
+        <div className="flex flex-col gap-2 small:flex-row">
+          <Button
+            onClick={handleAddToCart}
+            disabled={нельзяКупить || isAdding}
+            variant="primary"
+            className="h-14 w-full"
+            isLoading={isAdding}
+            data-testid="add-product-button"
+          >
+            {/* options это объект, поэтому !options всегда false: без этой правки
+                до выбора размера кнопка показывала "Нет в наличии" */}
+            {!selectedVariant || !isValidVariant
+              ? "Выберите размер и рост"
+              : !inStock
+              ? "Нет в наличии"
+              : "В корзину"}
+          </Button>
+
+          <Button
+            onClick={handleBuyNow}
+            disabled={нельзяКупить || isAdding}
+            variant="secondary"
+            className="h-14 w-full border border-ink"
+            data-testid="buy-now-button"
+          >
+            Купить сейчас
+          </Button>
+        </div>
         <MobileActions
           product={product}
           variant={selectedVariant}

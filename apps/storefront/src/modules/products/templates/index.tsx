@@ -72,11 +72,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         </div>
 
         <div className="small:flex small:items-start small:gap-x-10 small:px-[50px] small:pb-10">
-          <div className="small:w-[55%]">
+          <div className="small:w-[52%]">
             <ImageGallery images={images} />
           </div>
 
-          <div className="flex flex-col gap-y-8 px-4 pb-12 pt-8 small:sticky small:top-24 small:w-[45%] small:max-w-[440px] small:px-0 small:pt-0">
+          <div className="flex flex-col gap-y-7 px-4 pb-12 pt-8 small:sticky small:top-24 small:w-[48%] small:max-w-[520px] small:px-0 small:pt-0">
             {сведения}
           </div>
         </div>
