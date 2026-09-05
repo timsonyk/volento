@@ -18,6 +18,17 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  */
 export type Раздел = { имя: string; адрес: string }
 
+/**
+ * Подчёркивание, растущее из центра в обе стороны при наведении.
+ * Линия нарисована псевдоэлементом и всегда на месте — меняется только
+ * её ширина по горизонтали, поэтому соседние слова не съезжают.
+ */
+const ПОДЧЁРКИВАНИЕ =
+  "relative after:absolute after:-bottom-1 after:left-0 after:h-px after:w-full " +
+  "after:origin-center after:scale-x-0 after:bg-ink after:transition-transform " +
+  "after:duration-300 after:ease-out hover:after:scale-x-100 " +
+  "focus-visible:after:scale-x-100 motion-reduce:after:transition-none"
+
 export type Колонка = { заголовок: string; ссылки: Раздел[] }
 
 export default function DesktopMenu({
@@ -56,7 +67,7 @@ export default function DesktopMenu({
               aria-expanded={открыт}
               onFocus={открыть}
               onClick={() => setОткрыт((v) => !v)}
-              className="text-base text-ink underline-offset-[6px] transition-opacity hover:opacity-60 aria-expanded:underline"
+              className={`text-base text-ink aria-expanded:after:scale-x-100 ${ПОДЧЁРКИВАНИЕ}`}
             >
               Каталог
             </button>
@@ -66,7 +77,7 @@ export default function DesktopMenu({
               <LocalizedClientLink
                 href={п.адрес}
                 onFocus={закрыть}
-                className="text-base text-ink transition-opacity hover:opacity-60"
+                className={`text-base text-ink ${ПОДЧЁРКИВАНИЕ}`}
               >
                 {п.имя}
               </LocalizedClientLink>
