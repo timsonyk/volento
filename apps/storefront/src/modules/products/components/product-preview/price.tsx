@@ -1,6 +1,10 @@
-import { Text, clx } from "@modules/common/components/ui"
+import { clx } from "@modules/common/components/ui"
 import { VariantPrice } from "types/global"
 
+/**
+ * Цена в карточке. Размер шрифта задаёт родитель — здесь только цвет:
+ * серый #4d4d4d по замерам референса, у скидки — обычная цена зачёркнута.
+ */
 export default async function PreviewPrice({ price }: { price: VariantPrice }) {
   if (!price) {
     return null
@@ -9,21 +13,16 @@ export default async function PreviewPrice({ price }: { price: VariantPrice }) {
   return (
     <>
       {price.price_type === "sale" && (
-        <Text
-          className="line-through text-ui-fg-muted"
-          data-testid="original-price"
-        >
+        <span className="text-[#4D4D4D] line-through" data-testid="original-price">
           {price.original_price}
-        </Text>
+        </span>
       )}
-      <Text
-        className={clx("text-ui-fg-muted", {
-          "text-ui-fg-interactive": price.price_type === "sale",
-        })}
+      <span
+        className={clx("text-[#4D4D4D]", { "text-ink": price.price_type === "sale" })}
         data-testid="price"
       >
         {price.calculated_price}
-      </Text>
+      </span>
     </>
   )
 }

@@ -56,16 +56,19 @@ export default async function ProductPreview({
           alt={stripColor(product.title, color)}
         />
 
+        {/* Текст под фото по замерам референса: на телефоне 12 px с
+            межстрочным 1.2 и отступом 11 от фото, от планшета 14 px с 1.4
+            и отступом 10; цена сразу под названием, без зазора. */}
         <h3
-          className="mt-3 text-sm leading-snug text-ink"
+          className="mt-[11px] text-xs leading-[1.2] text-ink xsmall:mt-2.5 xsmall:text-sm xsmall:leading-[1.4]"
           data-testid="product-title"
         >
           {stripColor(product.title, color)}
         </h3>
 
-        <div className="mt-2 flex items-center justify-between gap-x-4">
+        <div className="flex items-center justify-between gap-x-4 text-xs leading-[1.2] xsmall:text-sm xsmall:leading-[1.4]">
           {cheapestPrice && (
-            <div className="text-sm text-ink">
+            <div className="flex gap-x-2">
               <PreviewPrice price={cheapestPrice} />
             </div>
           )}
@@ -82,8 +85,8 @@ export default async function ProductPreview({
                   aria-hidden
                   className={
                     c.id === product.id
-                      ? "h-3.5 w-3.5 rounded-full border border-paper ring-1 ring-ink"
-                      : "h-3.5 w-3.5 rounded-full border border-rule"
+                      ? "h-3 w-3 rounded-full border border-paper ring-1 ring-ink"
+                      : "h-3 w-3 rounded-full border border-rule"
                   }
                   style={{ backgroundColor: c.hex }}
                 />

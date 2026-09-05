@@ -7,6 +7,8 @@ import ProductPreview from "@modules/products/components/product-preview"
  * карточки в ряд, каждая 47 % ширины, зазор 6 px, встык к краям;
  * на компьютере четыре в ряд тем же зазором. Заголовка над ней нет.
  *
+ * От широкой картинки выше отступ 15 px — тоже по замерам.
+ *
  * Ряд ровно один. На телефоне это две карточки, поэтому третья и
  * четвёртая там прячутся — иначе получалось два ряда по две.
  *
@@ -39,7 +41,7 @@ export default async function HomeProductGrid({
   const colorsByModel = await listModelColors({ products, countryCode })
 
   return (
-    <section id="podborka-tovary" className="pb-2 small:pb-4">
+    <section id="podborka-tovary" className="pt-[15px] pb-2 small:pb-4">
       <ul className="grid grid-cols-2 gap-x-1.5 gap-y-10 [&>li:nth-child(n+3)]:hidden xsmall:grid-cols-4 xsmall:[&>li:nth-child(n+3)]:block small:gap-y-14">
         {products.map((product) => (
           <li key={product.id}>
