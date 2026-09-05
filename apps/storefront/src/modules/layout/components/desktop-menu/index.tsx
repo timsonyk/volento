@@ -61,16 +61,19 @@ export default function DesktopMenu({
         <ul className="flex items-center gap-x-7">
           {/* панель раскрывает только «Каталог»; остальные пункты при
               наведении её закрывают, иначе она висела бы над всем рядом */}
+          {/* «Каталог» — обычная ссылка на весь каталог: панель под ней
+              подсказывает разделы, но нажатие ведёт к товарам, а не просто
+              раскрывает список. */}
           <li onMouseEnter={открыть} onMouseLeave={закрыть}>
-            <button
-              type="button"
+            <LocalizedClientLink
+              href="/store"
               aria-expanded={открыт}
               onFocus={открыть}
-              onClick={() => setОткрыт((v) => !v)}
+              onClick={() => setОткрыт(false)}
               className={`text-base text-ink aria-expanded:after:scale-x-100 ${ПОДЧЁРКИВАНИЕ}`}
             >
               Каталог
-            </button>
+            </LocalizedClientLink>
           </li>
           {пункты.map((п) => (
             <li key={п.адрес} onMouseEnter={закрыть}>

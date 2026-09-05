@@ -19,7 +19,7 @@ export default async function PaginatedProducts({
   sortBy,
   page,
   collectionId,
-  categoryId,
+  categoryIds,
   productsIds,
   countryCode,
   optionValueIds,
@@ -27,7 +27,7 @@ export default async function PaginatedProducts({
   sortBy?: SortOptions
   page: number
   collectionId?: string
-  categoryId?: string
+  categoryIds?: string[]
   productsIds?: string[]
   countryCode: string
   optionValueIds?: OptionValueIds
@@ -40,8 +40,12 @@ export default async function PaginatedProducts({
     queryParams["collection_id"] = [collectionId]
   }
 
-  if (categoryId) {
-    queryParams["category_id"] = [categoryId]
+  // Разделов может быть несколько: в «Брюках» товаров нет — они лежат в
+  // «Прямых», «Зауженных» и «Широких». Поэтому у раздела с подразделами
+  // спрашиваем товары его самого и всех потомков сразу, иначе страница
+  // раздела верхнего уровня оказывалась пустой.
+  if (categoryIds?.length) {
+    queryParams["category_id"] = categoryIds
   }
 
   if (productsIds) {

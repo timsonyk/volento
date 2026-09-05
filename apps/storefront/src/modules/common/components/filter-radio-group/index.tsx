@@ -48,7 +48,7 @@ const FilterRadioGroup = ({
                 "!transform-none cursor-pointer text-sm underline-offset-[6px] transition-colors",
                 i.value === value
                   ? "text-ink underline"
-                  : "text-muted hover:text-ink"
+                  : "text-muted hover:text-ink",
               )}
               data-testid="radio-label"
               data-active={i.value === value}

@@ -39,6 +39,15 @@ export default function CategoryTemplate({
 
   getParents(category)
 
+  // товары лежат в самых нижних разделах, поэтому у «Брюк» спрашиваем ещё
+  // и товары «Прямых», «Зауженных», «Широких»
+  const idsРаздела: string[] = []
+  const собратьId = (c: HttpTypes.StoreProductCategory) => {
+    idsРаздела.push(c.id)
+    c.category_children?.forEach(собратьId)
+  }
+  собратьId(category)
+
   return (
     <div className="content-container py-10" data-testid="category-container">
       <div>
@@ -94,7 +103,7 @@ export default function CategoryTemplate({
           <PaginatedProducts
             sortBy={sort}
             page={pageNumber}
-            categoryId={category.id}
+            categoryIds={idsРаздела}
             countryCode={countryCode}
             optionValueIds={optionValueIds}
           />
