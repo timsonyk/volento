@@ -2,7 +2,7 @@ import Image from "next/image"
 
 import { getHomeContent } from "@lib/data/home-banner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { РАЗМЕР_ЗАГОЛОВКА } from "@modules/home/components/section-heading"
+import { РАЗМЕР_НАДПИСИ_БАННЕРА } from "@modules/home/components/section-heading"
 
 /**
  * Первый экран главной — одна картинка во всю ширину:
@@ -57,7 +57,7 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-8 xsmall:px-[30px] xsmall:pb-12 small:px-[50px]">
           {надпись && (
             <p
-              className={`${РАЗМЕР_ЗАГОЛОВКА} max-w-[18ch] text-paper drop-shadow-sm`}
+              className={`${РАЗМЕР_НАДПИСИ_БАННЕРА} max-w-[18ch] text-paper drop-shadow-sm`}
             >
               {надпись}
             </p>

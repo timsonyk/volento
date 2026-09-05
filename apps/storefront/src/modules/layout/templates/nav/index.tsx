@@ -55,8 +55,9 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
 
       <header className="relative border-b border-rule bg-paper">
         <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">
-          {/* слева: меню и поиск. Шторка — только на телефоне, на
-              компьютере вместо неё ряд разделов с раскрывающейся панелью */}
+          {/* слева: разделы. Шторка — только на телефоне, на компьютере
+              вместо неё ряд разделов с раскрывающейся панелью.
+              Поиск переехал вправо, к кабинету и корзине */}
           <div className="flex flex-1 basis-0 items-center gap-x-6 text-ink">
             <div className="small:hidden">
               <SideMenu
@@ -73,14 +74,6 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               колонки={колонки}
               снимок={оформление.картинки[4]}
             />
-            <LocalizedClientLink
-              href="/search"
-              aria-label="Поиск по каталогу"
-              className="transition-opacity hover:opacity-60"
-              data-testid="nav-search-link"
-            >
-              <SearchIcon />
-            </LocalizedClientLink>
           </div>
 
           {/* по центру: логотип */}
@@ -102,6 +95,14 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
 
           {/* справа: кабинет и корзина */}
           <div className="flex flex-1 basis-0 items-center justify-end gap-x-5 text-ink">
+            <LocalizedClientLink
+              href="/search"
+              aria-label="Поиск по каталогу"
+              className="transition-opacity hover:opacity-60"
+              data-testid="nav-search-link"
+            >
+              <SearchIcon />
+            </LocalizedClientLink>
             <LocalizedClientLink
               href="/account"
               aria-label="Личный кабинет"
