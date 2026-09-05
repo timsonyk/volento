@@ -82,6 +82,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 locales={locales}
                 currentLocale={currentLocale}
                 разделы={дерево}
+                снимок={оформление.картинка("середина")}
               />
             </div>
             <LocalizedClientLink

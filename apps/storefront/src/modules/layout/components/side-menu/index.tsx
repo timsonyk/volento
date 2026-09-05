@@ -1,189 +1,266 @@
 "use client"
 
 import { Popover, PopoverPanel, Transition } from "@headlessui/react"
-import useToggleState from "@lib/hooks/use-toggle-state"
 import { ArrowRightMini, XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
+import Image from "next/image"
+import { Fragment, useState } from "react"
+
+import useToggleState from "@lib/hooks/use-toggle-state"
+import { Locale } from "@lib/data/locales"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { MenuIcon } from "@modules/common/icons/ui"
 import { Text, clx } from "@modules/common/components/ui"
-import { Fragment } from "react"
+import { MenuIcon } from "@modules/common/icons/ui"
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
-import { Locale } from "@lib/data/locales"
 
-
-const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Account: "/account",
-  Cart: "/cart",
-}
-
-const SideMenuItemLabels: Record<string, string> = {
-  Home: "Главная",
-  Store: "Каталог",
-  Account: "Личный кабинет",
-  Cart: "Корзина",
-}
-
-/** Раздел каталога с подразделами — то же дерево, что в меню на компьютере. */
+/**
+ * Меню на телефоне: белая шторка во весь экран.
+ *
+ * Устроено в два уровня, как на референсе. Первый — разделы каталога
+ * строкой со стрелкой; у раздела с подразделами стрелка уводит внутрь, у
+ * раздела без них — сразу в сам раздел. Второй уровень открывается на том
+ * же месте, назад ведёт стрелка у заголовка.
+ *
+ * Ссылки на кабинет, корзину и выбор языка живут внизу: они нужны реже,
+ * чем каталог, ради которого меню и открывают.
+ */
 export type РазделМеню = {
   имя: string
   адрес: string
   дети: { имя: string; адрес: string }[]
 }
 
+const СЛУЖЕБНЫЕ = [
+  { имя: "Каталог целиком", адрес: "/store" },
+  { имя: "Личный кабинет", адрес: "/account" },
+  { имя: "Корзина", адрес: "/cart" },
+]
+
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
   разделы?: РазделМеню[]
+  снимок?: string
 }
 
-const SideMenu = ({ regions, locales, currentLocale, разделы }: SideMenuProps) => {
+const SideMenu = ({
+  regions,
+  locales,
+  currentLocale,
+  разделы,
+  снимок,
+}: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
+  // какой раздел раскрыт вторым уровнем; null — показываем первый
+  const [внутри, setВнутри] = useState<РазделМеню | null>(null)
+
+  const строка =
+    "flex w-full items-center justify-between border-b border-rule py-5 text-left text-xl text-ink"
 
   return (
     <div className="h-full">
-      <div className="flex items-center h-full">
-        <Popover className="h-full flex">
-          {({ open, close }) => (
-            <>
-              <div className="relative flex h-full">
-                <Popover.Button
-                  data-testid="nav-menu-button"
-                  aria-label="Меню"
-                  className="relative flex h-full items-center text-ink transition-opacity duration-200 hover:opacity-60 focus:outline-none"
-                >
-                  <MenuIcon />
-                </Popover.Button>
-              </div>
+      <div className="flex h-full items-center">
+        <Popover className="flex h-full">
+          {({ open, close }) => {
+            const закрыть = () => {
+              setВнутри(null)
+              close()
+            }
 
-              {open && (
-                <div
-                  className="fixed inset-0 z-[50] bg-black/0 pointer-events-auto"
-                  onClick={close}
-                  data-testid="side-menu-backdrop"
-                />
-              )}
-
-              <Transition
-                show={open}
-                as={Fragment}
-                enter="transition ease-out duration-150"
-                enterFrom="opacity-0"
-                enterTo="opacity-100 backdrop-blur-2xl"
-                leave="transition ease-in duration-150"
-                leaveFrom="opacity-100 backdrop-blur-2xl"
-                leaveTo="opacity-0"
-              >
-                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm text-ui-fg-on-color m-2 backdrop-blur-2xl">
-                  <div
-                    data-testid="nav-menu-popup"
-                    className="flex flex-col h-full bg-[rgba(3,7,18,0.5)] rounded-rounded justify-between p-6"
+            return (
+              <>
+                <div className="relative flex h-full">
+                  <Popover.Button
+                    data-testid="nav-menu-button"
+                    aria-label="Меню"
+                    className="relative flex h-full items-center text-ink transition-opacity duration-200 hover:opacity-60 focus:outline-none"
                   >
-                    <div className="flex justify-end" id="xmark">
-                      <button data-testid="close-menu-button" onClick={close}>
+                    <MenuIcon />
+                  </Popover.Button>
+                </div>
+
+                <Transition
+                  show={open}
+                  as={Fragment}
+                  enter="transition ease-out duration-200"
+                  enterFrom="opacity-0"
+                  enterTo="opacity-100"
+                  leave="transition ease-in duration-150"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <PopoverPanel
+                    data-testid="nav-menu-popup"
+                    className="fixed inset-0 z-[51] flex flex-col overflow-y-auto bg-paper"
+                  >
+                    <div className="flex h-[3.2rem] shrink-0 items-center px-4">
+                      <button
+                        aria-label="Закрыть меню"
+                        data-testid="close-menu-button"
+                        onClick={закрыть}
+                        className="text-ink"
+                      >
                         <XMark />
                       </button>
-                    </div>
-                    {/* Разделы каталога: на телефоне это единственное место,
-                        где их видно целиком — ряда разделов в шапке тут нет.
-                        Подразделы сразу раскрыты: прятать их под нажатие
-                        значит заставить искать то, за чем и пришли. */}
-                    <ul className="my-6 flex flex-col items-start gap-y-5 overflow-y-auto">
-                      {(разделы ?? []).map((р) => (
-                        <li key={р.адрес}>
-                          <LocalizedClientLink
-                            href={р.адрес}
-                            className="text-2xl leading-none hover:text-ui-fg-disabled"
-                            onClick={close}
-                          >
-                            {р.имя}
-                          </LocalizedClientLink>
-                          {!!р.дети.length && (
-                            <ul className="mt-3 flex flex-col gap-y-2 pl-4">
-                              {р.дети.map((д) => (
-                                <li key={д.адрес}>
-                                  <LocalizedClientLink
-                                    href={д.адрес}
-                                    className="text-base leading-none text-ui-fg-on-color/80 hover:text-ui-fg-disabled"
-                                    onClick={close}
-                                  >
-                                    {д.имя}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </li>
-                      ))}
-
-                      {Object.entries(SideMenuItems).map(([name, href]) => {
-                        return (
-                          <li key={name} className="first:mt-0">
-                            <LocalizedClientLink
-                              href={href}
-                              className="text-base leading-none text-ui-fg-on-color/80 hover:text-ui-fg-disabled"
-                              onClick={close}
-                              data-testid={`${name.toLowerCase()}-link`}
-                            >
-                              {SideMenuItemLabels[name]}
-                            </LocalizedClientLink>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                    <div className="flex flex-col gap-y-6">
-                      {!!locales?.length && (
-                        <div
-                          className="flex justify-between"
-                          onMouseEnter={languageToggleState.open}
-                          onMouseLeave={languageToggleState.close}
-                        >
-                          <LanguageSelect
-                            toggleState={languageToggleState}
-                            locales={locales}
-                            currentLocale={currentLocale}
-                          />
-                          <ArrowRightMini
-                            className={clx(
-                              "transition-transform duration-150",
-                              languageToggleState.state ? "-rotate-90" : ""
-                            )}
-                          />
-                        </div>
-                      )}
-                      <div
-                        className="flex justify-between"
-                        onMouseEnter={countryToggleState.open}
-                        onMouseLeave={countryToggleState.close}
+                      <LocalizedClientLink
+                        href="/"
+                        onClick={закрыть}
+                        className="absolute left-1/2 -translate-x-1/2"
+                        aria-label="Volento — на главную"
                       >
-                        {regions && (
-                          <CountrySelect
-                            toggleState={countryToggleState}
-                            regions={regions}
-                          />
-                        )}
-                        <ArrowRightMini
-                          className={clx(
-                            "transition-transform duration-150",
-                            countryToggleState.state ? "-rotate-90" : ""
-                          )}
+                        <Image
+                          src="/volento-logo.png"
+                          alt="Volento"
+                          width={2691}
+                          height={632}
+                          className="h-[30px] w-auto"
                         />
-                      </div>
-                      <Text className="flex justify-between txt-compact-small">
-                        © {new Date().getFullYear()} Volento. Все права
-                        защищены.
-                      </Text>
+                      </LocalizedClientLink>
                     </div>
-                  </div>
-                </PopoverPanel>
-              </Transition>
-            </>
-          )}
+
+                    <div className="flex flex-1 flex-col px-4 pb-8">
+                      {внутри ? (
+                        <>
+                          <button
+                            onClick={() => setВнутри(null)}
+                            className={`${строка} gap-x-3`}
+                          >
+                            <ArrowRightMini className="rotate-180" />
+                            <span className="flex-1">{внутри.имя}</span>
+                          </button>
+                          <LocalizedClientLink
+                            href={внутри.адрес}
+                            onClick={закрыть}
+                            className={строка}
+                          >
+                            Все {внутри.имя.toLowerCase()}
+                            <ArrowRightMini />
+                          </LocalizedClientLink>
+                          {внутри.дети.map((д) => (
+                            <LocalizedClientLink
+                              key={д.адрес}
+                              href={д.адрес}
+                              onClick={закрыть}
+                              className={строка}
+                            >
+                              {д.имя}
+                              <ArrowRightMini />
+                            </LocalizedClientLink>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          {(разделы ?? []).map((р) =>
+                            р.дети.length ? (
+                              <button
+                                key={р.адрес}
+                                onClick={() => setВнутри(р)}
+                                className={строка}
+                              >
+                                {р.имя}
+                                <ArrowRightMini />
+                              </button>
+                            ) : (
+                              <LocalizedClientLink
+                                key={р.адрес}
+                                href={р.адрес}
+                                onClick={закрыть}
+                                className={строка}
+                              >
+                                {р.имя}
+                                <ArrowRightMini />
+                              </LocalizedClientLink>
+                            )
+                          )}
+
+                          {снимок && (
+                            <LocalizedClientLink
+                              href="/store?sortBy=created_at"
+                              onClick={закрыть}
+                              className="mt-8 block"
+                            >
+                              <div className="relative aspect-[4/3] w-full overflow-hidden bg-mist">
+                                <Image
+                                  src={снимок}
+                                  alt=""
+                                  fill
+                                  sizes="100vw"
+                                  className="object-cover object-center"
+                                />
+                              </div>
+                              <span className="mt-5 block text-center text-base tracking-[0.1em] text-ink underline underline-offset-[6px]">
+                                Новинки
+                              </span>
+                            </LocalizedClientLink>
+                          )}
+
+                          <div className="mt-10 flex flex-col gap-y-4 border-t border-rule pt-6">
+                            {СЛУЖЕБНЫЕ.map((с) => (
+                              <LocalizedClientLink
+                                key={с.адрес}
+                                href={с.адрес}
+                                onClick={закрыть}
+                                className="text-base text-muted"
+                              >
+                                {с.имя}
+                              </LocalizedClientLink>
+                            ))}
+                          </div>
+
+                          <div className="mt-8 flex flex-col gap-y-5 text-ink">
+                            {!!locales?.length && (
+                              <div
+                                className="flex justify-between"
+                                onMouseEnter={languageToggleState.open}
+                                onMouseLeave={languageToggleState.close}
+                              >
+                                <LanguageSelect
+                                  toggleState={languageToggleState}
+                                  locales={locales}
+                                  currentLocale={currentLocale}
+                                />
+                                <ArrowRightMini
+                                  className={clx(
+                                    "transition-transform duration-150",
+                                    languageToggleState.state ? "-rotate-90" : ""
+                                  )}
+                                />
+                              </div>
+                            )}
+                            <div
+                              className="flex justify-between"
+                              onMouseEnter={countryToggleState.open}
+                              onMouseLeave={countryToggleState.close}
+                            >
+                              {regions && (
+                                <CountrySelect
+                                  toggleState={countryToggleState}
+                                  regions={regions}
+                                />
+                              )}
+                              <ArrowRightMini
+                                className={clx(
+                                  "transition-transform duration-150",
+                                  countryToggleState.state ? "-rotate-90" : ""
+                                )}
+                              />
+                            </div>
+                            <Text className="txt-compact-small text-muted">
+                              © {new Date().getFullYear()} Volento. Все права
+                              защищены.
+                            </Text>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </PopoverPanel>
+                </Transition>
+              </>
+            )
+          }}
         </Popover>
       </div>
     </div>
