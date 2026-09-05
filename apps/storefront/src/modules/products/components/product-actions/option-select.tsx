@@ -82,8 +82,8 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="label-type text-muted">
-        Выберите {title.toLowerCase()}
+      <span className="text-sm text-muted">
+        {title}: <span className="text-ink">{current ?? "не выбран"}</span>
       </span>
 
       {isHeight ? (

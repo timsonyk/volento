@@ -38,8 +38,9 @@ const ColorSelect = async ({ product, countryCode }: ColorSelectProps) => {
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="label-type text-muted">
-        Цвет{currentColor ? `: ${currentColor.toLowerCase()}` : ""}
+      <span className="text-sm text-muted">
+        Цвет:{" "}
+        <span className="text-ink">{currentColor?.toLowerCase() ?? "—"}</span>
       </span>
       <div className="flex flex-wrap gap-3" data-testid="product-colors">
         {colors.map((c) => {

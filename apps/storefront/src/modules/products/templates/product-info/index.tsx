@@ -55,7 +55,7 @@ const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
       )}
 
       {article && (
-        <span className="label-type mt-6 text-muted">Артикул {article}</span>
+        <span className="mt-5 text-sm text-muted">Артикул {article}</span>
       )}
     </div>
   )

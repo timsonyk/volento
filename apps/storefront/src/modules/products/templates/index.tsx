@@ -27,10 +27,14 @@ type ProductTemplateProps = {
  * цена, описание, цвет, размеры, кнопка. Фотографии во всю ширину, поэтому
  * поля даёт не общий контейнер, а сами блоки.
  *
- * На компьютере два столбца: слева фотографии столбцом, справа сведения —
- * они прилипают к верху, чтобы кнопка «в корзину» оставалась на виду, пока
+ * На компьютере два столбца: слева фотографии, справа сведения — они
+ * прилипают к верху, чтобы кнопка «в корзину» оставалась на виду, пока
  * листаешь снимки. Раньше столбца было три (сведения слева, фото в
  * середине, кнопки справа) — читать приходилось зигзагом.
+ *
+ * Ширина фотографий по замерам референса — 38 % окна. Половина, как было
+ * сначала, давала снимок почти в полтора экрана высотой: кадр 2:3 на
+ * широком мониторе растёт быстрее, чем кажется.
  */
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
   product,
@@ -71,12 +75,12 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           />
         </div>
 
-        <div className="small:flex small:items-start small:gap-x-10 small:px-[50px] small:pb-10">
-          <div className="small:w-[52%]">
+        <div className="small:flex small:items-start small:gap-x-[7%] small:px-[50px] small:pb-16">
+          <div className="small:w-[38%] small:shrink-0">
             <ImageGallery images={images} />
           </div>
 
-          <div className="flex flex-col gap-y-7 px-4 pb-12 pt-8 small:sticky small:top-24 small:w-[48%] small:max-w-[520px] small:px-0 small:pt-0">
+          <div className="flex flex-col gap-y-6 px-4 pb-12 pt-8 small:sticky small:top-24 small:max-w-[560px] small:flex-1 small:px-0 small:pt-0">
             {сведения}
           </div>
         </div>
