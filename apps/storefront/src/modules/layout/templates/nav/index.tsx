@@ -59,7 +59,8 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
         <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">
           {/* слева: разделы. Шторка — только на телефоне, на компьютере
               вместо неё ряд разделов с раскрывающейся панелью.
-              Поиск переехал вправо, к кабинету и корзине */}
+              Поиск на телефоне остался слева, у шторки, а на компьютере
+              переехал вправо, к кабинету и корзине */}
           <div className="flex flex-1 basis-0 items-center gap-x-6 text-ink">
             <div className="small:hidden">
               <SideMenu
@@ -68,6 +69,14 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 currentLocale={currentLocale}
               />
             </div>
+            <LocalizedClientLink
+              href="/search"
+              aria-label="Поиск по каталогу"
+              className="transition-opacity hover:opacity-60 small:hidden"
+              data-testid="nav-search-link-mobile"
+            >
+              <SearchIcon />
+            </LocalizedClientLink>
             <DesktopMenu
               пункты={[
                 { имя: "Новинки", адрес: "/store?sortBy=created_at" },
@@ -100,7 +109,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
             <LocalizedClientLink
               href="/search"
               aria-label="Поиск по каталогу"
-              className="transition-opacity hover:opacity-60"
+              className="hidden transition-opacity hover:opacity-60 small:block"
               data-testid="nav-search-link"
             >
               <SearchIcon />
