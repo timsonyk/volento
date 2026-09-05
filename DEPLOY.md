@@ -114,6 +114,26 @@ gunzip -c /var/backups/volento/volento_ГГГГ-ММ-ДД_ЧЧ-ММ.sql.gz \
 
 Восстанавливать сначала в отдельную базу, посмотреть, что данные на месте, и только потом заменять рабочую. Проверка восстановления делалась — дамп разворачивается полностью.
 
+## Шрифты
+
+Лежат в `apps/storefront/public/fonts/` и подключены в `src/styles/fonts.css` — с Google не тянутся: внешняя зависимость один раз уже уронила сборку, да и покупателям незачем ходить на чужие домены.
+
+| Шрифт | Где | Файл |
+|---|---|---|
+| Doloman Pavljenko Light | заголовки блоков, надпись на баннере, цена товара | `doloman-pavljenko.woff2` |
+| Prata | запасной для заголовков | `prata-*.woff2` |
+| Manrope | весь остальной текст | `manrope-*.woff2` |
+
+Фирменный шрифт под лицензией SIL OFL, её копия — `doloman-pavljenko-LICENSE.txt` рядом с файлом. Начертание одно, Light; жирного нет, и подделывать его браузером не нужно.
+
+Исходник был `.otf` (85 КБ), в `.woff2` сжался до 27 КБ пакетом `wawoff2`. Если понадобится добавить ещё начертание:
+
+```bash
+npx --yes -p wawoff2 node -e "const w=require('wawoff2'),f=require('fs');w.compress(f.readFileSync('шрифт.otf')).then(o=>f.writeFileSync('шрифт.woff2',Buffer.from(o)))"
+```
+
+Роли задаются переменными в `src/styles/globals.css`: `--font-display` (заголовки) и `--font-sans` (текст). Размер заголовков главной — в одном месте, `modules/home/components/section-heading`.
+
 ## Скрипты
 
 Лежат в `scripts/` в репозитории, на сервер ставятся копированием:

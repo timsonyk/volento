@@ -4,7 +4,7 @@
 @import "tailwindcss/utilities";
 
 :root {
-  --font-display: 'Prata', Georgia, serif;
+  --font-display: 'Doloman Pavljenko', 'Prata', Georgia, serif;
   --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
