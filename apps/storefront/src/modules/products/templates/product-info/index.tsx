@@ -1,12 +1,8 @@
+import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
-
-type ProductInfoProps = {
-  product: HttpTypes.StoreProduct
-}
 
 /** Цвет показан отдельным переключателем — в заголовке он лишний. */
-function stripColor(title: string, color?: string) {
+export function stripColor(title: string, color?: string) {
   if (!color) {
     return title
   }
@@ -16,42 +12,51 @@ function stripColor(title: string, color?: string) {
     : title
 }
 
-const ProductInfo = ({ product }: ProductInfoProps) => {
+/**
+ * Название, цена и описание товара — в том же порядке, что на референсе.
+ *
+ * Цена здесь, а не в блоке с размерами: покупатель должен увидеть её сразу
+ * под названием, до всяких выборов. Приставку «от» ставим только если
+ * размеры и правда стоят по-разному — иначе она сбивает с толку.
+ */
+const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
   const color = product.metadata?.color as string | undefined
   const article = product.metadata?.article as string | undefined
+  const { cheapestPrice } = getProductPrice({ product })
+
+  const цены = (product.variants ?? [])
+    .map((v) => v.calculated_price?.calculated_amount)
+    .filter((c): c is number => typeof c === "number")
+  const ценыРазные = цены.length > 1 && new Set(цены).size > 1
 
   return (
-    <div id="product-info">
-      <div className="mx-auto flex flex-col lg:max-w-[500px]">
-        {product.collection && (
-          <LocalizedClientLink
-            href={`/collections/${product.collection.handle}`}
-            className="label-type mb-4 text-muted hover:text-ink"
-          >
-            {product.collection.title}
-          </LocalizedClientLink>
-        )}
+    <div id="product-info" className="flex flex-col">
+      <h1
+        className="font-display text-[28px] leading-[1.15] text-ink xsmall:text-[36px]"
+        data-testid="product-title"
+      >
+        {stripColor(product.title, color)}
+      </h1>
 
-        <h1
-          className="font-display text-[2rem] leading-[1.15] text-ink"
-          data-testid="product-title"
+      {cheapestPrice && (
+        <p className="mt-4 text-xl text-ink" data-testid="product-page-price">
+          {ценыРазные && "от "}
+          {cheapestPrice.calculated_price}
+        </p>
+      )}
+
+      {product.description && (
+        <p
+          className="mt-6 whitespace-pre-line text-base leading-relaxed text-ink"
+          data-testid="product-description"
         >
-          {stripColor(product.title, color)}
-        </h1>
+          {product.description}
+        </p>
+      )}
 
-        {article && (
-          <span className="label-type mt-4 text-muted">Артикул {article}</span>
-        )}
-
-        {product.description && (
-          <p
-            className="mt-6 whitespace-pre-line text-sm leading-relaxed text-muted"
-            data-testid="product-description"
-          >
-            {product.description}
-          </p>
-        )}
-      </div>
+      {article && (
+        <span className="label-type mt-6 text-muted">Артикул {article}</span>
+      )}
     </div>
   )
 }

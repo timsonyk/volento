@@ -121,6 +121,15 @@ export default function ProductActions({
   const inView = useIntersection(actionsRef, "0px")
 
   // add the selected variant to the cart
+  // размеры одного товара обычно стоят одинаково; тогда цену показывает
+  // только блок под названием
+  const ценыРазные =
+    new Set(
+      (product.variants ?? [])
+        .map((v) => v.calculated_price?.calculated_amount)
+        .filter((c) => typeof c === "number")
+    ).size > 1
+
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) return null
 
@@ -160,7 +169,12 @@ export default function ProductActions({
           )}
         </div>
 
-        <ProductPrice product={product} variant={selectedVariant} />
+        {/* Цена размера показывается здесь, только если размеры стоят
+            по-разному: обычная цена уже стоит под названием, и повторять
+            её вторым разом ни к чему. */}
+        {ценыРазные && (
+          <ProductPrice product={product} variant={selectedVariant} />
+        )}
 
         <Button
           onClick={handleAddToCart}
