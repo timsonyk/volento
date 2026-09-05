@@ -119,20 +119,20 @@ gunzip -c /var/backups/volento/volento_ГГГГ-ММ-ДД_ЧЧ-ММ.sql.gz \
 
 Лежат в `apps/storefront/public/fonts/` и подключены в `src/styles/fonts.css` — с Google не тянутся: внешняя зависимость один раз уже уронила сборку, да и покупателям незачем ходить на чужие домены.
 
-| Шрифт | Где | Файл |
+Весь сайт набран **Lora** — антиква с мягкими засечками, лицензия SIL OFL (копия рядом с файлами, `lora-LICENSE.txt`). Шрифт переменный: насыщенности от 400 до 700 настоящие, поэтому `font-medium` и `font-bold` работают честно, подделывать жирность обводкой не нужно.
+
+Файл разбит по алфавитам, браузер тянет только нужные куски:
+
+| Файл | Что покрывает | Размер |
 |---|---|---|
-| Doloman Pavljenko Light | весь сайт | `doloman-pavljenko.woff2` |
-| Prata, Manrope | запасные, если фирменный не загрузится | `prata-*.woff2`, `manrope-*.woff2` |
+| `lora-cyrillic.woff2` | русский | 21 КБ |
+| `lora-cyrillic-ext.woff2` | остальная кириллица | 23 КБ |
+| `lora-latin.woff2` | латиница | 37 КБ |
+| `lora-latin-ext.woff2` | расширенная латиница | 20 КБ |
 
-Фирменный шрифт под лицензией SIL OFL, её копия — `doloman-pavljenko-LICENSE.txt` рядом с файлом. Начертание одно, Light. Полужирного в файле нет, и `font-bold` использовать не стоит — браузер дорисовывает его грубым скачком. Насыщенность добавляется обводкой в цвет текста (`-webkit-text-stroke`), она даёт любую промежуточную жирность: 0.6px в заголовках главной, 0.3px в подписях под карточками.
+Роли задаются переменными в `src/styles/globals.css`: `--font-display` (заголовки) и `--font-sans` (текст) — сейчас обе указывают на Lora. Размер заголовков главной — в одном месте, `modules/home/components/section-heading`.
 
-Исходник был `.otf` (85 КБ), в `.woff2` сжался до 27 КБ пакетом `wawoff2`. Если понадобится добавить ещё начертание:
-
-```bash
-npx --yes -p wawoff2 node -e "const w=require('wawoff2'),f=require('fs');w.compress(f.readFileSync('шрифт.otf')).then(o=>f.writeFileSync('шрифт.woff2',Buffer.from(o)))"
-```
-
-Роли задаются переменными в `src/styles/globals.css`: `--font-display` (заголовки) и `--font-sans` (текст). Размер заголовков главной — в одном месте, `modules/home/components/section-heading`.
+Прежние Doloman Pavljenko, Prata и Manrope удалены: они больше нигде не использовались, а мёртвые файлы в раздаче только путают.
 
 ## Скрипты
 
