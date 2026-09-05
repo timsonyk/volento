@@ -42,7 +42,7 @@ export default async function CategoryTiles({
   }
 
   return (
-    <section id="siluety" className="pb-16 small:pb-24">
+    <section id="siluety" className="pb-3 small:pb-12">
       <ul className="no-scrollbar flex snap-x snap-mandatory gap-x-4 overflow-x-auto scroll-pl-4 px-4 small:grid small:grid-cols-3 small:gap-x-0 small:overflow-visible small:px-0">
         {filled.map(({ category, cover }) => (
           <li key={category.id} className="w-[88vw] shrink-0 snap-start small:w-auto">

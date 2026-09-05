@@ -39,7 +39,7 @@ export default async function HomeProductGrid({
   const colorsByModel = await listModelColors({ products, countryCode })
 
   return (
-    <section id="podborka-tovary" className="pb-20 small:pb-28">
+    <section id="podborka-tovary" className="pb-2 small:pb-4">
       <ul className="grid grid-cols-2 gap-x-1.5 gap-y-10 [&>li:nth-child(n+3)]:hidden xsmall:grid-cols-4 xsmall:[&>li:nth-child(n+3)]:block small:gap-y-14">
         {products.map((product) => (
           <li key={product.id}>
