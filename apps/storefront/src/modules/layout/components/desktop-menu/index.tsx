@@ -58,7 +58,7 @@ export default function DesktopMenu({
               aria-expanded={открыт}
               onFocus={открыть}
               onClick={() => setОткрыт((v) => !v)}
-              className="text-sm text-ink underline-offset-[6px] transition-opacity hover:opacity-60 aria-expanded:underline"
+              className="text-base text-ink underline-offset-[6px] transition-opacity hover:opacity-60 aria-expanded:underline"
             >
               Каталог
             </button>
@@ -68,7 +68,7 @@ export default function DesktopMenu({
               <LocalizedClientLink
                 href={п.адрес}
                 onFocus={закрыть}
-                className="text-sm text-ink transition-opacity hover:opacity-60"
+                className="text-base text-ink transition-opacity hover:opacity-60"
               >
                 {п.имя}
               </LocalizedClientLink>
@@ -90,14 +90,14 @@ export default function DesktopMenu({
         <div className="content-container grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(0,2fr)] gap-x-10 py-10">
           {колонки.map((к) => (
             <div key={к.заголовок}>
-              <p className="mb-6 text-sm text-ink">{к.заголовок}</p>
+              <p className="mb-6 text-base text-ink">{к.заголовок}</p>
               <ul className="flex flex-col gap-y-3">
                 {к.ссылки.map((с) => (
                   <li key={с.адрес}>
                     <LocalizedClientLink
                       href={с.адрес}
                       onClick={() => setОткрыт(false)}
-                      className="text-sm text-muted transition-colors hover:text-ink"
+                      className="text-base text-muted transition-colors hover:text-ink"
                     >
                       {с.имя}
                     </LocalizedClientLink>
