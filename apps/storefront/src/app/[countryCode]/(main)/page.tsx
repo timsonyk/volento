@@ -2,8 +2,7 @@ import { Metadata } from "next"
 
 import CategoryTiles from "@modules/home/components/category-tiles"
 import ClosingBanner from "@modules/home/components/closing-banner"
-import HomeProductGrid from "@modules/home/components/product-grid"
-import FeatureBanner from "@modules/home/components/feature-banner"
+import FeatureBlock from "@modules/home/components/feature-block"
 import Hero from "@modules/home/components/hero"
 import LatestProducts from "@modules/home/components/latest-products"
 import { getRegion } from "@lib/data/regions"
@@ -29,8 +28,7 @@ export default async function Home(props: {
       <Hero countryCode={countryCode} />
       <LatestProducts region={region} countryCode={countryCode} />
       <CategoryTiles region={region} />
-      <FeatureBanner countryCode={countryCode} />
-      <HomeProductGrid region={region} countryCode={countryCode} limit={4} />
+      <FeatureBlock region={region} countryCode={countryCode} />
       <ClosingBanner countryCode={countryCode} />
     </>
   )
