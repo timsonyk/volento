@@ -22,6 +22,8 @@
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit"
   },
   "dependencies": {
+    "@gorgo/medusa-fulfillment-apiship": "2.0.0-beta.5",
+    "@gorgo/medusa-integration": "0.2.1",
     "@medusajs/admin-sdk": "2.18.0",
     "@medusajs/admin-shared": "2.18.0",
     "@medusajs/caching": "2.18.0",
@@ -33,10 +35,10 @@
     "@medusajs/medusa": "2.18.0",
     "@medusajs/ui": "4.2.0",
     "@tanstack/react-query": "5.64.2",
+    "medusa-payment-tochka": "0.1.20",
     "react-i18next": "13.5.0",
     "react-router-dom": "6.30.4",
-    "zod": "4.2.0",
-    "medusa-payment-tochka": "0.1.20"
+    "zod": "4.2.0"
   },
   "devDependencies": {
     "@medusajs/test-utils": "2.18.0",

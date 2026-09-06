@@ -2,6 +2,12 @@ import { loadEnv, defineConfig } from "@medusajs/framework/utils"
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd())
 
+// Доставка через ApiShip — агрегатор служб: одна интеграция, а внутри
+// СДЭК, Почта, Boxberry, Яндекс и ещё три десятка. Ключ и режим задаются
+// не здесь, а в админке (Настройки → Интеграции): плагин умеет хранить
+// их сам, шифрует секреты и проверяет связь до сохранения.
+const APISHIP_ID = "apiship-1"
+
 // Эквайринг Точки. Провайдер подключается, только когда есть доступы:
 // без токена Medusa не поднялась бы вовсе, а нам важно, чтобы витрина
 // работала и до подключения оплаты.
@@ -57,7 +63,40 @@ module.exports = defineConfig({
   admin: {
     disable: process.env.ADMIN_DISABLED === "true",
   },
+  plugins: [
+    {
+      resolve: "@gorgo/medusa-integration",
+      options: {
+        encryptionKey: process.env.INTEGRATION_ENCRYPTION_KEY,
+        providers: [
+          {
+            resolve:
+              "@gorgo/medusa-fulfillment-apiship/providers/integration-apiship",
+            id: APISHIP_ID,
+            options: {},
+          },
+        ],
+      },
+    },
+    {
+      resolve: "@gorgo/medusa-fulfillment-apiship",
+      options: {},
+    },
+  ],
   modules: [
+    {
+      resolve: "@medusajs/medusa/fulfillment",
+      options: {
+        providers: [
+          {
+            resolve:
+              "@gorgo/medusa-fulfillment-apiship/providers/fulfillment-apiship",
+            id: "apiship",
+            options: { id: APISHIP_ID },
+          },
+        ],
+      },
+    },
     {
       // Фотографии товаров. upload_dir вынесен из .medusa/server:
       // сборка стирает эту папку целиком, и снимки исчезли бы при обновлении.
