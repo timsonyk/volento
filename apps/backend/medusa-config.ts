@@ -27,9 +27,12 @@ const оплатаТочки = process.env.TOCHKA_JWT_TOKEN
                 paymentPurpose: "Оплата заказа в Volento",
                 // облачная касса Точки: чек по 54-ФЗ формирует сам банк
                 withReceipt: true,
+                // УСН «доходы» (6 %) и НДС 5 % — по словам Тимофея.
+                // Ставку в чеке банк ставит ту, что придёт отсюда, поэтому
+                // менять её можно переменными, не трогая код.
                 taxSystemCode: process.env.TOCHKA_TAX_SYSTEM || "usn_income",
-                taxItemDefault: process.env.TOCHKA_VAT_ITEM || "vat0",
-                taxShippingDefault: process.env.TOCHKA_VAT_SHIPPING || "vat0",
+                taxItemDefault: process.env.TOCHKA_VAT_ITEM || "vat5",
+                taxShippingDefault: process.env.TOCHKA_VAT_SHIPPING || "vat5",
               },
             },
           ],
