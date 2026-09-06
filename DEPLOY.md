@@ -191,6 +191,7 @@ gunzip -c /var/backups/volento/volento_ГГГГ-ММ-ДД_ЧЧ-ММ.sql.gz \
 | `build-catalog.py` | Готовит `catalog.json` из складской выгрузки `.xlsx` |
 | `import-catalog.js` | Заводит товары и остатки из `catalog.json` через админ-API |
 | `smoke-test.sh` | Проверка цикла товар → корзина → сумма |
+| `check-checkout.js` | Проверка связей корзины с доставкой и оплатой — то, что ломается при конфликте версий `@mikro-orm` |
 | `setup-banner.js` | Заводит запись «Картинки главной страницы» и шпаргалку с размерами в её описании |
 
 Конфиг nginx лежит в `deploy/nginx/volento.conf` — это выгрузка рабочего файла с сервера, включая блоки, которые дописал certbot.
