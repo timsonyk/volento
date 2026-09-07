@@ -24,7 +24,10 @@ import { getLocale } from "./locale-actions"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+    // shipping_methods.data хранит выбор ApiShip: тариф и пункт выдачи.
+    // Без него после обновления страницы покупателю пришлось бы выбирать
+    // пункт заново.
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +shipping_methods.data"
 
   if (!id) {
     return null
@@ -220,16 +223,24 @@ export async function deleteLineItem(lineId: string) {
 export async function setShippingMethod({
   cartId,
   shippingMethodId,
+  data,
 }: {
   cartId: string
   shippingMethodId: string
+  /** выбор ApiShip: тариф и, для самовывоза, пункт выдачи */
+  data?: Record<string, unknown>
 }) {
   const headers = {
     ...(await getAuthHeaders()),
   }
 
   return sdk.store.cart
-    .addShippingMethod(cartId, { option_id: shippingMethodId }, {}, headers)
+    .addShippingMethod(
+      cartId,
+      { option_id: shippingMethodId, data },
+      {},
+      headers
+    )
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
@@ -470,4 +481,32 @@ export async function listCartOptions() {
     headers,
     cache: "force-cache",
   })
+}
+
+/**
+ * Убирает выбранный способ доставки из корзины.
+ *
+ * Нужен, когда покупатель передумал: без этого выбор пропадал бы только
+ * с экрана, а в корзине оставался прежний тариф и пункт выдачи.
+ */
+export async function removeShippingMethodFromCart(shippingMethodId: string) {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("fulfillment")),
+  }
+
+  return sdk.client
+    .fetch(`/store/shipping-methods/${shippingMethodId}`, {
+      method: "DELETE",
+      headers,
+      next,
+    })
+    .then(async () => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+    })
+    .catch(() => null)
 }

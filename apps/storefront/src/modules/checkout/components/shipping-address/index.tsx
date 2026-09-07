@@ -205,12 +205,15 @@ const ShippingAddress = ({
           required
           data-testid="shipping-email-input"
         />
+        {/* Телефон обязателен: без него ApiShip не считает доставку и не
+            создаёт отправление, да и курьер звонит перед приездом. */}
         <Input
           label="Телефон"
           name="shipping_address.phone"
           autoComplete="tel"
           value={formData["shipping_address.phone"]}
           onChange={handleChange}
+          required
           data-testid="shipping-phone-input"
         />
       </div>
