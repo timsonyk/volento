@@ -33,24 +33,26 @@ fi
 # Город берётся из APISHIP_CITY, по умолчанию Москва. Заплатка временная:
 # при обновлении плагина строка изменится и правка перестанет применяться —
 # сборка об этом скажет, но не упадёт.
-ГОРОД=${APISHIP_CITY:-Москва}
-ПЛАГИН=/home/volento/volento/node_modules/@gorgo/medusa-fulfillment-apiship/.medusa/server/src/admin
-СТАРОЕ='availableOperation=[1,3];providerKey=${providerKey}`'
-НОВОЕ="availableOperation=[1,3];providerKey=\${providerKey};city=$ГОРОД\`"
-исправлено=0
-for f in "$ПЛАГИН/index.js" "$ПЛАГИН/index.mjs"; do
-  if [ -f "$f" ] && grep -qF "$СТАРОЕ" "$f"; then
-    python3 - "$f" "$СТАРОЕ" "$НОВОЕ" <<'PYEOF'
-import sys
-путь, старое, новое = sys.argv[1], sys.argv[2], sys.argv[3]
+# Имена переменных здесь латиницей не для красоты: bash не умеет
+# кириллические имена и падает на них с «command not found».
+CITY=${APISHIP_CITY:-Москва}
+PLUGIN_ADMIN=/home/volento/volento/node_modules/@gorgo/medusa-fulfillment-apiship/.medusa/server/src/admin
+OLD='availableOperation=[1,3];providerKey=${providerKey}`'
+NEW="availableOperation=[1,3];providerKey=\${providerKey};city=$CITY\`"
+PATCHED=0
+for f in "$PLUGIN_ADMIN/index.js" "$PLUGIN_ADMIN/index.mjs"; do
+  if [ -f "$f" ] && grep -qF "$OLD" "$f"; then
+    OLD="$OLD" NEW="$NEW" FILE="$f" python3 - <<'PYEOF'
+import os
+путь = os.environ["FILE"]
 s = open(путь, encoding="utf-8").read()
-open(путь, "w", encoding="utf-8").write(s.replace(старое, новое))
+open(путь, "w", encoding="utf-8").write(s.replace(os.environ["OLD"], os.environ["NEW"]))
 PYEOF
-    исправлено=$((исправлено + 1))
+    PATCHED=$((PATCHED + 1))
   fi
 done
-if [ "$исправлено" -gt 0 ]; then
-  echo "ApiShip: список пунктов приёма ограничен городом $ГОРОД"
+if [ "$PATCHED" -gt 0 ]; then
+  echo "ApiShip: список пунктов приёма ограничен городом $CITY"
 else
   echo "ВНИМАНИЕ: заплатка ApiShip не применилась — проверьте, не починили ли её в плагине" >&2
 fi
