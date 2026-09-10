@@ -147,8 +147,15 @@ const Shipping: React.FC<ShippingProps> = ({
   useEffect(() => {
     let cancelled = false
 
+    // Без выбранного способа доставки спрашивать список служб бессмысленно:
+    // плагин по нему определяет, к какой из настроенных интеграций
+    // обращаться, и без него отвечает ошибкой.
+    if (!shippingMethodId) {
+      return
+    }
+
       ; (async () => {
-        const response = await retrieveProviders(shippingMethodId ?? undefined)
+        const response = await retrieveProviders(shippingMethodId)
         const providers = response?.providers
         if (cancelled) return
 
