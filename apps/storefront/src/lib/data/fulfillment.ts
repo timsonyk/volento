@@ -128,11 +128,62 @@ export const retrieveCalculation = async (
     })
 }
 
+/**
+ * Адреса пунктов выдачи по их номерам.
+ *
+ * Номеров приходит много — в Москве это тысячи. Одним запросом их не
+ * спросить: адрес запроса вырастает до десятков тысяч знаков, и сервер
+ * отвечает «Request-URI Too Large». Поэтому спрашиваем порциями.
+ */
+const РАЗМЕР_ПОРЦИИ = 150
+
+const ПОЛЯ_ПУНКТА = [
+  "id",
+  "description",
+  "providerKey",
+  "name",
+  "address",
+  "photos",
+  "worktime",
+  "timetable",
+  "lat",
+  "lng",
+].join(",")
+
+/** Оставляет только пункты, которые можно поставить на карту. */
+const пригодные = (points: Array<Record<string, any>>): ApishipPoint[] =>
+  (points ?? []).flatMap((point) => {
+    if (
+      point.id === undefined ||
+      point.id === null ||
+      point.lat === undefined ||
+      point.lat === null ||
+      point.lng === undefined ||
+      point.lng === null
+    ) {
+      return []
+    }
+
+    return [
+      {
+        ...point,
+        id: String(point.id),
+        lat: point.lat,
+        lng: point.lng,
+        worktime: point.worktime as Record<string, string> | undefined,
+      },
+    ]
+  })
+
 export const getPointAddresses = async (
   cartId: string,
   shippingOptionId: string,
   pointIds: Array<number>
 ): Promise<{ points: ApishipPoint[] } | null> => {
+  if (!pointIds.length) {
+    return { points: [] }
+  }
+
   const headers = {
     ...(await getAuthHeaders()),
   }
@@ -141,70 +192,37 @@ export const getPointAddresses = async (
     ...(await getCacheOptions("fulfillment")),
   }
 
-  if (!pointIds.length) {
-    return {
-      points: [],
-    }
+  const порции: Array<Array<number>> = []
+  for (let i = 0; i < pointIds.length; i += РАЗМЕР_ПОРЦИИ) {
+    порции.push(pointIds.slice(i, i + РАЗМЕР_ПОРЦИИ))
   }
 
-  const filter = `id=[${pointIds.join(",")}]`
-  const fields = [
-    "id",
-    "description",
-    "providerKey",
-    "name",
-    "address",
-    "photos",
-    "worktime",
-    "timetable",
-    "lat",
-    "lng",
-  ].join(",")
-  const key = `apiship:points:${cartId}:${shippingOptionId}`
-
-  return sdk.client
-    .fetch<{ points: Array<Record<string, any>> }>(
-      `/store/apiship/points`,
-      {
-        method: "GET",
-        headers,
-        query: {
-          key,
-          filter,
-          fields,
-          shipping_option_id: shippingOptionId,
-        },
-        next,
-      }
-    )
-    .then(({ points }) => ({
-      points: (points ?? []).flatMap((point) => {
-        if (
-          point.id === undefined ||
-          point.id === null ||
-          point.lat === undefined ||
-          point.lat === null ||
-          point.lng === undefined ||
-          point.lng === null
-        ) {
-          return []
-        }
-
-        return [
+  try {
+    const ответы = await Promise.all(
+      порции.map((порция, n) =>
+        sdk.client.fetch<{ points: Array<Record<string, any>> }>(
+          `/store/apiship/points`,
           {
-            ...point,
-            id: String(point.id),
-            lat: point.lat,
-            lng: point.lng,
-            worktime: point.worktime as Record<string, string> | undefined,
-          },
-        ]
-      }),
-    }))
-    .catch((e) => {
-      console.error("ApiShip: не удалось получить пункты выдачи", e)
-      return null
-    })
+            method: "GET",
+            headers,
+            query: {
+              // ключ кеша свой на каждую порцию, иначе они затрут друг друга
+              key: `apiship:points:${cartId}:${shippingOptionId}:${n}`,
+              filter: `id=[${порция.join(",")}]`,
+              fields: ПОЛЯ_ПУНКТА,
+              shipping_option_id: shippingOptionId,
+            },
+            next,
+          }
+        )
+      )
+    )
+
+    return { points: ответы.flatMap((о) => пригодные(о.points)) }
+  } catch (e) {
+    console.error("ApiShip: не удалось получить пункты выдачи", e)
+    return null
+  }
 }
 
 export const retrieveProviders = async (

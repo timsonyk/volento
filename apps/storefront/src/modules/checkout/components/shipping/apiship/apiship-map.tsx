@@ -291,7 +291,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       )}
       {showNoPoints && (
         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-          <Text className="text-ui-fg-muted">No pickup points found for this shipping method.</Text>
+          <Text className="text-ui-fg-muted">Для этого способа доставки пунктов выдачи не нашлось.</Text>
         </div>
       )}
       {!isLoading && activePoint && isPanelOpen && !showNoPoints && (
