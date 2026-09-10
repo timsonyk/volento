@@ -1,6 +1,7 @@
 import Image from "next/image"
 
 import { listCategories } from "@lib/data/categories"
+import { getHomeContent } from "@lib/data/home-banner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
@@ -8,8 +9,15 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  * по центру внизу. Блока подписки на рассылку нет намеренно — форма,
  * которая никуда не отправляет письма, хуже её отсутствия.
  */
-export default async function Footer() {
-  const productCategories = await listCategories()
+export default async function Footer({
+  countryCode,
+}: {
+  countryCode: string
+}) {
+  const [productCategories, { реквизиты }] = await Promise.all([
+    listCategories(),
+    getHomeContent(countryCode),
+  ])
   const topCategories = (productCategories ?? [])
     .filter((c) => !c.parent_category)
     .slice(0, 6)
@@ -71,13 +79,38 @@ export default async function Footer() {
           </nav>
 
           <nav className="small:col-span-2">
-            <span className="label-type text-paper/50">Помощь</span>
+            <span className="label-type text-paper/50">Покупателю</span>
             <ul className="mt-5 flex flex-col gap-y-3">
-              <li>
-                <LocalizedClientLink href="/account" className={linkClass}>
-                  Личный кабинет
-                </LocalizedClientLink>
-              </li>
+              {[
+                { имя: "О бренде", адрес: "/o-brende" },
+                { имя: "Доставка", адрес: "/dostavka" },
+                { имя: "Оплата", адрес: "/oplata" },
+                { имя: "Возврат и обмен", адрес: "/vozvrat" },
+                { имя: "Личный кабинет", адрес: "/account" },
+              ].map((с) => (
+                <li key={с.адрес}>
+                  <LocalizedClientLink href={с.адрес} className={linkClass}>
+                    {с.имя}
+                  </LocalizedClientLink>
+                </li>
+              ))}
+              {/* Юридические страницы появляются, только когда в админке
+                  заполнены реквизиты продавца: до тех пор они отдают 404,
+                  и ссылка вела бы в ошибку. */}
+              {реквизиты && (
+                <>
+                  <li>
+                    <LocalizedClientLink href="/politika" className={linkClass}>
+                      Обработка данных
+                    </LocalizedClientLink>
+                  </li>
+                  <li>
+                    <LocalizedClientLink href="/oferta" className={linkClass}>
+                      Публичная оферта
+                    </LocalizedClientLink>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
         </div>

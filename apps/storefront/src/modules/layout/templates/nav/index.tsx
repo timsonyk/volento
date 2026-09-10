@@ -37,8 +37,9 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
   // У раздела без подразделов колонка не пустует: ставим в неё ссылку на
   // сам раздел, иначе получался бы заголовок над пустотой.
   //
-  // Страниц «о бренде», «доставка», «возврат» ещё нет — как появятся,
-  // добавить их колонкой сюда, а не плодить ссылки в никуда.
+  // Справочные страницы — отдельной колонкой. Юридических тут нет
+  // намеренно: они открываются, только когда в админке заполнены
+  // реквизиты, и до тех пор ссылка вела бы в ошибку.
   const верхние = (categories ?? []).filter((c) => !c.parent_category)
 
   const дерево = верхние.map((c) => ({
@@ -49,6 +50,16 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
       адрес: `/categories/${d.handle}`,
     })),
   }))
+
+  const справка = {
+    заголовок: "Покупателю",
+    ссылки: [
+      { имя: "О бренде", адрес: "/o-brende" },
+      { имя: "Доставка", адрес: "/dostavka" },
+      { имя: "Оплата", адрес: "/oplata" },
+      { имя: "Возврат и обмен", адрес: "/vozvrat" },
+    ],
+  }
 
   const колонки = верхние.map((c) => {
     const дети = (c.category_children ?? []).map((d) => ({
@@ -63,6 +74,8 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
         : [{ имя: "Смотреть всё", адрес: `/categories/${c.handle}` }],
     }
   })
+
+  колонки.push(справка)
 
   return (
     <div className="sticky inset-x-0 top-0 z-50">
