@@ -116,6 +116,41 @@ module.exports = defineConfig({
       },
     },
     {
+      // Письма покупателям. Шлём со служебного ящика zakaz@volento.com
+      // через почту Рег.ру, отвечать просим на info@ — так живая переписка
+      // не мешается с автоматикой и не страдает от её репутации.
+      //
+      // Провайдер «local» оставлен нарочно: Medusa требует хоть один канал
+      // по умолчанию, а в нём копятся уведомления админки.
+      resolve: "@medusajs/medusa/notification",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/notification-local",
+            id: "local",
+            options: { name: "Локальные уведомления", channels: ["feed"] },
+          },
+          {
+            resolve: "@perseidesjs/notification-nodemailer/providers/nodemailer",
+            id: "nodemailer",
+            options: {
+              from: process.env.EMAIL_FROM,
+              channels: ["email"],
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT ?? 465),
+              // 465 — это шифрование с первой секунды, без него пароль
+              // ушёл бы по открытому каналу
+              secure: Number(process.env.SMTP_PORT ?? 465) === 465,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.EVENTS_REDIS_URL,
