@@ -2,7 +2,10 @@
 
 import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod, removeShippingMethodFromCart } from "@lib/data/cart"
-import { calculatePriceForShippingOption, retrieveProviders } from "@lib/data/fulfillment"
+import {
+  calculatePriceForShippingOption,
+  retrieveProviders,
+} from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
 import { CheckCircleSolid, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
@@ -16,7 +19,7 @@ import {
   ApishipPickupPointModal,
   ApishipCourierModal,
   ApishipChosen,
-  days
+  days,
 } from "./apiship"
 
 const PICKUP_OPTION_ON = "__PICKUP_ON"
@@ -67,41 +70,49 @@ const Shipping: React.FC<ShippingProps> = ({
   >({})
   const [error, setError] = useState<string | null>(null)
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(
-    cart.shipping_methods?.at(-1)?.shipping_option_id || null
+    cart.shipping_methods?.at(-1)?.shipping_option_id || null,
   )
 
   const [providersMap, setProvidersMap] = useState<Record<string, string>>({})
   const [apishipChosen, setApishipChosen] = useState<any | null>(null)
-  const [apishipPickupPointModalOpen, setApishipPickupPointModalOpen] = useState(false)
+  const [apishipPickupPointModalOpen, setApishipPickupPointModalOpen] =
+    useState(false)
   const [apishipCourierModalOpen, setApishipCourierModalOpen] = useState(false)
 
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "delivery"
+  // Раздел всегда открыт: оформление одностраничное.
+  const isOpen = true
 
   const _shippingMethods = availableShippingMethods?.filter(
-    (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
+    (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup",
   )
 
   const _pickupMethods = availableShippingMethods?.filter(
-    (sm) => sm.service_zone?.fulfillment_set?.type === "pickup"
+    (sm) => sm.service_zone?.fulfillment_set?.type === "pickup",
   )
 
   const hasPickupOptions = !!_pickupMethods?.length
 
-  const isApishipCalculated = (option?: HttpTypes.StoreCartShippingOption | null) =>
-    option?.price_type === "calculated" && option?.provider_id === "apiship_apiship"
+  const isApishipCalculated = (
+    option?: HttpTypes.StoreCartShippingOption | null,
+  ) =>
+    option?.price_type === "calculated" &&
+    option?.provider_id === "apiship_apiship"
 
   const isApishipToDoor = (option?: HttpTypes.StoreCartShippingOption | null) =>
     isApishipCalculated(option) && option?.data?.deliveryType === 1
 
-  const isApishipToPoint = (option?: HttpTypes.StoreCartShippingOption | null) =>
-    isApishipCalculated(option) && option?.data?.deliveryType === 2
+  const isApishipToPoint = (
+    option?: HttpTypes.StoreCartShippingOption | null,
+  ) => isApishipCalculated(option) && option?.data?.deliveryType === 2
 
   const activeShippingOption = useMemo(() => {
-    return _shippingMethods?.find((option) => option.id === shippingMethodId) ?? null
+    return (
+      _shippingMethods?.find((option) => option.id === shippingMethodId) ?? null
+    )
   }, [_shippingMethods, shippingMethodId])
 
   const apishipMode = useMemo<"point" | "door" | null>(() => {
@@ -125,8 +136,10 @@ const Shipping: React.FC<ShippingProps> = ({
       return
     }
     const chosenMode =
-      apishipChosen?.deliveryType === 2 ? "point"
-        : apishipChosen?.deliveryType === 1 ? "door"
+      apishipChosen?.deliveryType === 2
+        ? "point"
+        : apishipChosen?.deliveryType === 1
+          ? "door"
           : null
 
     const hasValidChosen = !!apishipChosen && chosenMode === apishipMode
@@ -154,23 +167,25 @@ const Shipping: React.FC<ShippingProps> = ({
       return
     }
 
-      ; (async () => {
-        const response = await retrieveProviders(shippingMethodId)
-        const providers = response?.providers
-        if (cancelled) return
+    ;(async () => {
+      const response = await retrieveProviders(shippingMethodId)
+      const providers = response?.providers
+      if (cancelled) return
 
-        const map: Record<string, string> = {}
-        for (const provider of providers ?? []) {
-          if (!provider.key || !provider.name) {
-            continue
-          }
-
-          map[provider.key] = provider.name
+      const map: Record<string, string> = {}
+      for (const provider of providers ?? []) {
+        if (!provider.key || !provider.name) {
+          continue
         }
-        setProvidersMap(map)
-      })()
 
-    return () => { cancelled = true }
+        map[provider.key] = provider.name
+      }
+      setProvidersMap(map)
+    })()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -218,13 +233,10 @@ const Shipping: React.FC<ShippingProps> = ({
     router.push(pathname + "?step=delivery", { scroll: false })
   }
 
-  const handleSubmit = () => {
-    router.push(pathname + "?step=payment", { scroll: false })
-  }
 
   const handleSetShippingMethod = async (
     id: string,
-    variant: "shipping" | "pickup"
+    variant: "shipping" | "pickup",
   ) => {
     setError(null)
 
@@ -266,7 +278,7 @@ const Shipping: React.FC<ShippingProps> = ({
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && cart.shipping_methods?.length === 0,
-            }
+            },
           )}
         >
           Доставка
@@ -307,7 +319,7 @@ const Shipping: React.FC<ShippingProps> = ({
                     value={showPickupOptions}
                     onChange={(value) => {
                       const id = _pickupMethods.find(
-                        (option) => !option.insufficient_inventory
+                        (option) => !option.insufficient_inventory,
                       )?.id
 
                       if (id) {
@@ -323,16 +335,14 @@ const Shipping: React.FC<ShippingProps> = ({
                         {
                           "border-ui-border-interactive":
                             showPickupOptions === PICKUP_OPTION_ON,
-                        }
+                        },
                       )}
                     >
                       <div className="flex items-center gap-x-4">
                         <MedusaRadio
                           checked={showPickupOptions === PICKUP_OPTION_ON}
                         />
-                        <span className="text-base-regular">
-                          Самовывоз
-                        </span>
+                        <span className="text-base-regular">Самовывоз</span>
                       </div>
                       <span className="justify-self-end text-ui-fg-base">
                         -
@@ -367,7 +377,7 @@ const Shipping: React.FC<ShippingProps> = ({
                               option.id === shippingMethodId,
                             "hover:shadow-brders-none cursor-not-allowed":
                               isDisabled,
-                          }
+                          },
                         )}
                       >
                         <div className="flex items-center gap-x-4">
@@ -386,15 +396,17 @@ const Shipping: React.FC<ShippingProps> = ({
                             })
                           ) : calculatedPricesMap[option.id] ? (
                             option.provider_id === "apiship_apiship" ? (
-                              "from " + convertToLocale({
-                                amount: calculatedPricesMap[option.id],
-                                currency_code: cart?.currency_code,
-                              })
-                            ) :
+                              "from " +
                               convertToLocale({
                                 amount: calculatedPricesMap[option.id],
                                 currency_code: cart?.currency_code,
                               })
+                            ) : (
+                              convertToLocale({
+                                amount: calculatedPricesMap[option.id],
+                                currency_code: cart?.currency_code,
+                              })
+                            )
                           ) : isLoadingPrices ? (
                             <Loader />
                           ) : (
@@ -410,15 +422,22 @@ const Shipping: React.FC<ShippingProps> = ({
                   onClose={async (cancel?: boolean) => {
                     setApishipPickupPointModalOpen(false)
                     if (cancel) {
-                      await removeShippingMethodFromCart(cart.shipping_methods?.[0]?.id!)
+                      await removeShippingMethodFromCart(
+                        cart.shipping_methods?.[0]?.id!,
+                      )
                       setShippingMethodId(null)
                     }
                   }}
                   cart={cart}
                   shippingOptionId={shippingMethodId}
-                  initialChosen={apishipChosen?.deliveryType === 2 ? apishipChosen : null}
+                  initialChosen={
+                    apishipChosen?.deliveryType === 2 ? apishipChosen : null
+                  }
                   onPriceUpdate={(id, amount) => {
-                    setCalculatedPricesMap((prev) => ({ ...prev, [id]: amount }))
+                    setCalculatedPricesMap((prev) => ({
+                      ...prev,
+                      [id]: amount,
+                    }))
                   }}
                   onError={(msg) => setError(msg)}
                   onChosenChange={(chosen) => setApishipChosen(chosen)}
@@ -429,15 +448,22 @@ const Shipping: React.FC<ShippingProps> = ({
                   onClose={async (cancel?: boolean) => {
                     setApishipCourierModalOpen(false)
                     if (cancel) {
-                      await removeShippingMethodFromCart(cart.shipping_methods?.[0]?.id!)
+                      await removeShippingMethodFromCart(
+                        cart.shipping_methods?.[0]?.id!,
+                      )
                       setShippingMethodId(null)
                     }
                   }}
                   cart={cart}
                   shippingOptionId={shippingMethodId}
-                  initialChosen={apishipChosen?.deliveryType === 1 ? apishipChosen : null}
+                  initialChosen={
+                    apishipChosen?.deliveryType === 1 ? apishipChosen : null
+                  }
                   onPriceUpdate={(id, amount) => {
-                    setCalculatedPricesMap((prev) => ({ ...prev, [id]: amount }))
+                    setCalculatedPricesMap((prev) => ({
+                      ...prev,
+                      [id]: amount,
+                    }))
                   }}
                   onError={(msg) => setError(msg)}
                   onChosenChange={(chosen) => setApishipChosen(chosen)}
@@ -447,13 +473,17 @@ const Shipping: React.FC<ShippingProps> = ({
                   <ApishipChosen
                     chosen={apishipChosen}
                     onRemove={async () => {
-                      await removeShippingMethodFromCart(cart.shipping_methods?.[0]?.id!)
+                      await removeShippingMethodFromCart(
+                        cart.shipping_methods?.[0]?.id!,
+                      )
                       setApishipChosen(null)
                       setShippingMethodId(null)
                     }}
                     onEdit={() => {
-                      if (apishipMode === "point") setApishipPickupPointModalOpen(true)
-                      if (apishipMode === "door") setApishipCourierModalOpen(true)
+                      if (apishipMode === "point")
+                        setApishipPickupPointModalOpen(true)
+                      if (apishipMode === "door")
+                        setApishipCourierModalOpen(true)
                     }}
                   />
                 )}
@@ -495,7 +525,7 @@ const Shipping: React.FC<ShippingProps> = ({
                                 option.id === shippingMethodId,
                               "hover:shadow-brders-none cursor-not-allowed":
                                 option.insufficient_inventory,
-                            }
+                            },
                           )}
                         >
                           <div className="flex items-start gap-x-4">
@@ -509,7 +539,7 @@ const Shipping: React.FC<ShippingProps> = ({
                               <span className="text-base-regular text-ui-fg-muted">
                                 {formatAddress(
                                   option.service_zone?.fulfillment_set?.location
-                                    ?.address
+                                    ?.address,
                                 )}
                               </span>
                             </div>
@@ -534,23 +564,6 @@ const Shipping: React.FC<ShippingProps> = ({
               error={error}
               data-testid="delivery-option-error-message"
             />
-            <Button
-              size="large"
-              className="mt"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              disabled={
-                !cart.shipping_methods?.[0] ||
-                shippingMethodId === null ||
-                (
-                  (_shippingMethods?.find((o) => o.id === shippingMethodId)?.provider_id === "apiship_apiship")
-                  && !apishipChosen
-                )
-              }
-              data-testid="submit-delivery-option-button"
-            >
-              Перейти к оплате
-            </Button>
           </div>
         </>
       ) : (
@@ -565,24 +578,30 @@ const Shipping: React.FC<ShippingProps> = ({
                   <Text className="txt-medium text-ui-fg-subtle">
                     {cart.shipping_methods!.at(-1)!.name}
                   </Text>
-                  {(apishipChosen && apishipChosen.point?.address) && (
+                  {apishipChosen && apishipChosen.point?.address && (
                     <Text className="txt-medium text-ui-fg-subtle">
                       {apishipChosen.point.address}
                     </Text>
                   )}
                   {apishipChosen && (
                     <Text className="txt-medium text-ui-fg-subtle">
-                      {
-                        [apishipChosen?.tariff?.tariffName,
-                        typeof (typeof apishipChosen.tariff.deliveryCostOriginal === "number"
+                      {[
+                        apishipChosen?.tariff?.tariffName,
+                        typeof (typeof apishipChosen.tariff
+                          .deliveryCostOriginal === "number"
                           ? apishipChosen.tariff.deliveryCostOriginal
                           : apishipChosen.tariff.deliveryCost) === "number"
-                          ? `RUB ${(typeof apishipChosen.tariff.deliveryCostOriginal === "number"
-                            ? apishipChosen.tariff.deliveryCostOriginal
-                            : apishipChosen.tariff.deliveryCost)}` : "RUB —",
+                          ? `RUB ${
+                              typeof apishipChosen.tariff
+                                .deliveryCostOriginal === "number"
+                                ? apishipChosen.tariff.deliveryCostOriginal
+                                : apishipChosen.tariff.deliveryCost
+                            }`
+                          : "RUB —",
                         days?.(apishipChosen?.tariff) || null,
-                        ].filter(Boolean).join(" · ")
-                      }
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </Text>
                   )}
                 </div>

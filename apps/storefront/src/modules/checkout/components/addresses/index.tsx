@@ -8,7 +8,7 @@ import Divider from "@modules/common/components/divider"
 import { Heading, Text } from "@modules/common/components/ui"
 import Spinner from "@modules/common/icons/spinner"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useActionState } from "react"
+import { useActionState, useRef } from "react"
 import BillingAddress from "../billing_address"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
@@ -25,12 +25,13 @@ const Addresses = ({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "address"
+  // Раздел всегда открыт: оформление одностраничное.
+  const isOpen = true
 
   const { state: sameAsBilling, toggle: toggleSameAsBilling } = useToggleState(
     cart?.shipping_address && cart?.billing_address
       ? compareAddresses(cart?.shipping_address, cart?.billing_address)
-      : true
+      : true,
   )
 
   const handleEdit = () => {
@@ -38,6 +39,31 @@ const Addresses = ({
   }
 
   const [message, formAction] = useActionState(setAddresses, null)
+
+  const форма = useRef<HTMLFormElement>(null)
+  const прошлое = useRef<string>("")
+
+  /**
+   * Сохраняет адрес, как только он заполнен целиком.
+   *
+   * Срабатывает при уходе из поля. Отправляем, только если форма
+   * действительно заполнена и с прошлого раза что-то изменилось — иначе
+   * каждый переход между полями слал бы запрос.
+   */
+  const сохранитьЕслиГотово = () => {
+    const el = форма.current
+    if (!el || !el.checkValidity()) {
+      return
+    }
+
+    const слепок = JSON.stringify(Array.from(new FormData(el).entries()))
+    if (слепок === прошлое.current) {
+      return
+    }
+
+    прошлое.current = слепок
+    el.requestSubmit()
+  }
 
   return (
     <div className="bg-white">
@@ -62,7 +88,7 @@ const Addresses = ({
         )}
       </div>
       {isOpen ? (
-        <form action={formAction}>
+        <form action={formAction} ref={форма} onBlur={сохранитьЕслиГотово}>
           <div className="pb-8">
             <ShippingAddress
               customer={customer}
@@ -83,8 +109,12 @@ const Addresses = ({
                 <BillingAddress cart={cart} />
               </div>
             )}
+            {/* Кнопки «перейти к доставке» больше нет: адрес сохраняется
+                сам, когда поля заполнены и покупатель ушёл из последнего.
+                Иначе на одностраничном оформлении пришлось бы жать кнопку
+                ради того, чтобы ниже посчиталась доставка. */}
             <SubmitButton className="mt-6" data-testid="submit-address-button">
-              Перейти к доставке
+              Сохранить адрес
             </SubmitButton>
             <ErrorMessage error={message} data-testid="address-error-message" />
           </div>

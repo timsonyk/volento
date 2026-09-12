@@ -27,7 +27,7 @@ const Payment = ({
   availablePaymentMethods: { id: string }[]
 }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
-    (paymentSession) => paymentSession.status === "pending"
+    (paymentSession) => paymentSession.status === "pending",
   )
 
   const [isLoading, setIsLoading] = useState(false)
@@ -35,14 +35,15 @@ const Payment = ({
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.provider_id ?? ""
+    activeSession?.provider_id ?? "",
   )
 
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOpen = searchParams.get("step") === "payment"
+  // Раздел всегда открыт: оформление одностраничное.
+  const isOpen = true
 
   const setPaymentMethod = async (method: string) => {
     setError(null)
@@ -55,11 +56,15 @@ const Payment = ({
   }
 
   const paidByGiftcard = !!(
-    (cart as unknown as Record<string, unknown>)?.gift_cards && ((cart as unknown as Record<string, unknown>)?.gift_cards as unknown[])?.length > 0 && cart?.total === 0
+    (cart as unknown as Record<string, unknown>)?.gift_cards &&
+    ((cart as unknown as Record<string, unknown>)?.gift_cards as unknown[])
+      ?.length > 0 &&
+    cart?.total === 0
   )
 
   const paymentReady =
-    (activeSession && (cart?.shipping_methods?.length ?? 0) !== 0) || paidByGiftcard
+    (activeSession && (cart?.shipping_methods?.length ?? 0) !== 0) ||
+    paidByGiftcard
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
@@ -68,7 +73,7 @@ const Payment = ({
 
       return params.toString()
     },
-    [searchParams]
+    [searchParams],
   )
 
   const handleEdit = () => {
@@ -77,39 +82,49 @@ const Payment = ({
     })
   }
 
-  const handleSubmit = async () => {
-    setIsLoading(true)
-    try {
-      const shouldInputCard =
-        isStripeLike(selectedPaymentMethod) && !activeSession
-
-      const checkActiveSession =
-        activeSession?.provider_id === selectedPaymentMethod
-
-      if (!checkActiveSession) {
-        await initiatePaymentSession(cart, {
-          provider_id: selectedPaymentMethod,
-        })
-      }
-
-      if (!shouldInputCard) {
-        return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
-        )
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     setError(null)
   }, [isOpen])
+
+  /**
+   * Заводит платёжную запись, как только выбран способ оплаты.
+   *
+   * Раньше это делала кнопка «перейти к проверке». На одностраничном
+   * оформлении такой кнопки нет, а без платёжной записи не появляется
+   * кнопка «Оформить заказ» — поэтому делаем то же самое молча.
+   */
+  useEffect(() => {
+    if (!selectedPaymentMethod || paidByGiftcard) {
+      return
+    }
+    if (activeSession?.provider_id === selectedPaymentMethod) {
+      return
+    }
+    // карту вводят в отдельной форме — там сессия заводится своим чередом
+    if (isStripeLike(selectedPaymentMethod)) {
+      return
+    }
+
+    let отменено = false
+    setIsLoading(true)
+    initiatePaymentSession(cart, { provider_id: selectedPaymentMethod })
+      .catch((err) => {
+        if (!отменено) {
+          setError(err instanceof Error ? err.message : String(err))
+        }
+      })
+      .finally(() => {
+        if (!отменено) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      отменено = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPaymentMethod, activeSession?.provider_id])
 
   return (
     <div className="bg-white">
@@ -121,7 +136,7 @@ const Payment = ({
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && !paymentReady,
-            }
+            },
           )}
         >
           Оплата
@@ -189,22 +204,6 @@ const Payment = ({
             error={error}
             data-testid="payment-method-error-message"
           />
-
-          <Button
-            size="large"
-            className="mt-6"
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            disabled={
-              (isStripeLike(selectedPaymentMethod) && !cardComplete) ||
-              (!selectedPaymentMethod && !paidByGiftcard)
-            }
-            data-testid="submit-payment-button"
-          >
-            {!activeSession && isStripeLike(selectedPaymentMethod)
-              ? " Ввести данные карты"
-              : "Перейти к проверке"}
-          </Button>
         </div>
 
         <div className={isOpen ? "hidden" : "block"}>
