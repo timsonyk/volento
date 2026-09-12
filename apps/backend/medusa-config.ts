@@ -26,10 +26,13 @@ const оплатаТочки = process.env.TOCHKA_JWT_TOKEN
                 webhookPublicKeyJson: process.env.TOCHKA_WEBHOOK_PUBLIC_KEY,
                 // песочница включается сама, пока NODE_ENV не production
                 developerMode: process.env.TOCHKA_DEVELOPER_MODE === "true",
-                // двухстадийная оплата: деньги замораживаем при заказе и
-                // списываем после подтверждения склада — тогда отказ склада
-                // не требует возврата
-                preAuthorization: process.env.TOCHKA_PREAUTH !== "false",
+                // Пока обычная оплата: деньги списываются сразу.
+                // Двухстадийную (заморозить при заказе, списать после
+                // подтверждения склада) включим вместе с синхронизацией
+                // склада — раньше в ней нет смысла: подтверждать наличие
+                // всё равно некому, а покупатель видит «удержание» вместо
+                // списания и звонит с вопросами.
+                preAuthorization: process.env.TOCHKA_PREAUTH === "true",
                 paymentPurpose: "Оплата заказа в Volento",
                 // облачная касса Точки: чек по 54-ФЗ формирует сам банк
                 withReceipt: true,
