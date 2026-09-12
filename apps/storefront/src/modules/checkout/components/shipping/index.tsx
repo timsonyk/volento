@@ -11,7 +11,6 @@ import { CheckCircleSolid, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { Button, clx, Heading, Text } from "@modules/common/components/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import CityField from "@modules/checkout/components/city-field"
 import MedusaRadio from "@modules/common/components/radio"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -303,9 +302,6 @@ const Shipping: React.FC<ShippingProps> = ({
       {isOpen ? (
         <>
           <div className="grid">
-            {/* Город спрашиваем здесь: без него служба не считает цену,
-                а полный адрес ей не нужен. */}
-            <CityField cart={cart} />
             <div className="flex flex-col">
               <span className="font-medium txt-medium text-ui-fg-base">
                 Способ доставки
