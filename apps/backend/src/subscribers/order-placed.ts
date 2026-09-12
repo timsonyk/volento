@@ -22,24 +22,14 @@ export default async function orderPlacedHandler({
     const { data: заказы } = await query.graph({
       entity: "order",
       filters: { id: data.id },
+      // Просим поля целиком, а не по одному: при перечислении по имени
+      // часть из них приходила пустой — в письме были «undefined шт.»
+      // и нули вместо сумм, хотя в заказе всё посчитано верно.
       fields: [
-        "id",
-        "display_id",
-        "email",
-        "currency_code",
-        "total",
-        "item_total",
-        "shipping_total",
-        "items.title",
-        "items.variant_title",
-        "items.quantity",
-        "items.total",
-        "shipping_address.first_name",
-        "shipping_address.last_name",
-        "shipping_address.address_1",
-        "shipping_address.city",
-        "shipping_address.postal_code",
-        "shipping_methods.name",
+        "*",
+        "items.*",
+        "shipping_address.*",
+        "shipping_methods.*",
       ],
     })
 
