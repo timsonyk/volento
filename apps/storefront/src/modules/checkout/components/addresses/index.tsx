@@ -9,7 +9,6 @@ import { Heading, Text } from "@modules/common/components/ui"
 import Spinner from "@modules/common/icons/spinner"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useActionState, useRef } from "react"
-import BillingAddress from "../billing_address"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
 import { SubmitButton } from "../submit-button"
@@ -97,18 +96,6 @@ const Addresses = ({
               cart={cart}
             />
 
-            {!sameAsBilling && (
-              <div>
-                <Heading
-                  level="h2"
-                  className="text-3xl-regular gap-x-4 pb-6 pt-8"
-                >
-                  Адрес плательщика
-                </Heading>
-
-                <BillingAddress cart={cart} />
-              </div>
-            )}
             {/* Кнопки «перейти к доставке» больше нет: адрес сохраняется
                 сам, когда поля заполнены и покупатель ушёл из последнего.
                 Иначе на одностраничном оформлении пришлось бы жать кнопку
