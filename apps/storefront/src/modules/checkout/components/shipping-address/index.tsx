@@ -111,24 +111,6 @@ const ShippingAddress = ({
       )}
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Имя"
-          name="shipping_address.first_name"
-          autoComplete="given-name"
-          value={formData["shipping_address.first_name"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-first-name-input"
-        />
-        <Input
-          label="Фамилия"
-          name="shipping_address.last_name"
-          autoComplete="family-name"
-          value={formData["shipping_address.last_name"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-last-name-input"
-        />
-        <Input
           label="Адрес"
           name="shipping_address.address_1"
           autoComplete="address-line1"
@@ -178,30 +160,6 @@ const ShippingAddress = ({
           вопрос в форме — лишний повод бросить заказ. Значение всегда
           «совпадает», его отправляет скрытое поле ниже. */}
       <input type="hidden" name="same_as_billing" value="on" />
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <Input
-          label="Email"
-          name="email"
-          type="email"
-          title="Введите корректный email."
-          autoComplete="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          data-testid="shipping-email-input"
-        />
-        {/* Телефон обязателен: без него ApiShip не считает доставку и не
-            создаёт отправление, да и курьер звонит перед приездом. */}
-        <Input
-          label="Телефон"
-          name="shipping_address.phone"
-          autoComplete="tel"
-          value={formData["shipping_address.phone"]}
-          onChange={handleChange}
-          required
-          data-testid="shipping-phone-input"
-        />
-      </div>
     </>
   )
 }

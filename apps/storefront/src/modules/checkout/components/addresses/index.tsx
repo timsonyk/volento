@@ -4,14 +4,12 @@ import useToggleState from "@lib/hooks/use-toggle-state"
 import compareAddresses from "@lib/util/compare-addresses"
 import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import Divider from "@modules/common/components/divider"
 import { Heading, Text } from "@modules/common/components/ui"
 import Spinner from "@modules/common/icons/spinner"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useActionState, useRef } from "react"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
-import { SubmitButton } from "../submit-button"
 
 const Addresses = ({
   cart,
@@ -96,13 +94,8 @@ const Addresses = ({
               cart={cart}
             />
 
-            {/* Кнопки «перейти к доставке» больше нет: адрес сохраняется
-                сам, когда поля заполнены и покупатель ушёл из последнего.
-                Иначе на одностраничном оформлении пришлось бы жать кнопку
-                ради того, чтобы ниже посчиталась доставка. */}
-            <SubmitButton className="mt-6" data-testid="submit-address-button">
-              Сохранить адрес
-            </SubmitButton>
+            {/* Кнопки нет: адрес сохраняется сам, когда поля заполнены
+                и покупатель ушёл из последнего. */}
             <ErrorMessage error={message} data-testid="address-error-message" />
           </div>
         </form>
@@ -193,7 +186,6 @@ const Addresses = ({
           </div>
         </div>
       )}
-      <Divider className="mt-8" />
     </div>
   )
 }

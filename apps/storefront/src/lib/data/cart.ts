@@ -73,7 +73,7 @@ export async function getOrSetCart(countryCode: string) {
     const cartResp = await sdk.store.cart.create(
       { region_id: region.id, locale: locale || undefined },
       {},
-      headers
+      headers,
     )
     cart = cartResp.cart
 
@@ -148,7 +148,7 @@ export async function addToCart({
         quantity,
       },
       {},
-      headers
+      headers,
     )
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
@@ -239,7 +239,7 @@ export async function setShippingMethod({
       cartId,
       { option_id: shippingMethodId, data },
       {},
-      headers
+      headers,
     )
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
@@ -250,7 +250,7 @@ export async function setShippingMethod({
 
 export async function initiatePaymentSession(
   cart: HttpTypes.StoreCart,
-  data: HttpTypes.StoreInitializePaymentSession
+  data: HttpTypes.StoreInitializePaymentSession,
 ) {
   const headers = {
     ...(await getAuthHeaders()),
@@ -314,7 +314,7 @@ export async function removeDiscount(code: string) {
 
 export async function removeGiftCard(
   codeToRemove: string,
-  giftCards: any[]
+  giftCards: any[],
   // giftCards: GiftCard[]
 ) {
   //   const cartId = getCartId()
@@ -334,7 +334,7 @@ export async function removeGiftCard(
 
 export async function submitPromotionForm(
   currentState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   const code = formData.get("code") as string
   try {
@@ -393,7 +393,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   }
 
   redirect(
-    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
+    `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`,
   )
 }
 
@@ -509,4 +509,57 @@ export async function removeShippingMethodFromCart(shippingMethodId: string) {
       revalidateTag(cartCacheTag)
     })
     .catch(() => null)
+}
+
+/**
+ * Дописывает в заказ часть полей, не стирая остальные.
+ *
+ * Поля оформления разбиты на блоки: адрес отдельно, данные получателя
+ * отдельно. Обычное сохранение заменяет адрес целиком, поэтому блок с
+ * контактами затирал бы улицу, а блок с адресом — почту. Здесь мы
+ * подмешиваем присланное к тому, что уже лежит в заказе.
+ */
+export async function updateCheckoutFields(поля: {
+  email?: string
+  адрес?: Record<string, string>
+  заметки?: Record<string, string>
+}) {
+  const cartId = await getCartId()
+  if (!cartId) {
+    throw new Error("Корзина не найдена")
+  }
+
+  const корзина = await retrieveCart(cartId)
+  const прежний = (корзина?.shipping_address ?? {}) as Record<string, unknown>
+
+  const адрес = {
+    first_name: прежний.first_name ?? "",
+    last_name: прежний.last_name ?? "",
+    address_1: прежний.address_1 ?? "",
+    address_2: прежний.address_2 ?? "",
+    city: прежний.city ?? "",
+    postal_code: прежний.postal_code ?? "",
+    province: прежний.province ?? "",
+    country_code: прежний.country_code ?? "",
+    phone: прежний.phone ?? "",
+    ...(поля.адрес ?? {}),
+  }
+
+  const данные: Record<string, unknown> = {
+    shipping_address: адрес,
+    billing_address: адрес,
+  }
+
+  if (поля.email) {
+    данные.email = поля.email
+  }
+
+  if (поля.заметки) {
+    данные.metadata = {
+      ...((корзина?.metadata as Record<string, unknown>) ?? {}),
+      ...поля.заметки,
+    }
+  }
+
+  await updateCart(данные as HttpTypes.StoreUpdateCart)
 }

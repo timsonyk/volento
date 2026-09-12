@@ -11,7 +11,6 @@ import { CheckCircleSolid, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
 import { Button, clx, Heading, Text } from "@modules/common/components/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import Divider from "@modules/common/components/divider"
 import MedusaRadio from "@modules/common/components/radio"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -232,7 +231,6 @@ const Shipping: React.FC<ShippingProps> = ({
   const handleEdit = () => {
     router.push(pathname + "?step=delivery", { scroll: false })
   }
-
 
   const handleSetShippingMethod = async (
     id: string,
@@ -610,7 +608,6 @@ const Shipping: React.FC<ShippingProps> = ({
           </div>
         </div>
       )}
-      <Divider className="mt-8" />
     </div>
   )
 }

@@ -7,7 +7,6 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, {
   StripeCardContainer,
 } from "@modules/checkout/components/payment-container"
-import Divider from "@modules/common/components/divider"
 import {
   Button,
   Container,
@@ -81,7 +80,6 @@ const Payment = ({
       scroll: false,
     })
   }
-
 
   useEffect(() => {
     setError(null)
@@ -257,7 +255,6 @@ const Payment = ({
           ) : null}
         </div>
       </div>
-      <Divider className="mt-8" />
     </div>
   )
 }
