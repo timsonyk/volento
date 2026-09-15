@@ -185,7 +185,9 @@ const Shipping: React.FC<ShippingProps> = ({
     return () => {
       cancelled = true
     }
-  }, [])
+    // Завязано на выбранный способ: при пустом мы выходим выше, и без
+    // этой зависимости названия служб так и не подтягивались.
+  }, [shippingMethodId])
 
   useEffect(() => {
     if (!isOpen) return
@@ -226,7 +228,11 @@ const Shipping: React.FC<ShippingProps> = ({
     if (_pickupMethods?.find((m) => m.id === shippingMethodId)) {
       setShowPickupOptions(PICKUP_OPTION_ON)
     }
-  }, [availableShippingMethods])
+    // Город обязателен: без него служба доставки не считает цену, вариант
+    // остаётся серым. Оформление одностраничное, город вводят уже после
+    // того, как блок доставки отрисовался, — поэтому пересчитываем на
+    // каждую смену города, а не один раз при загрузке.
+  }, [availableShippingMethods, cart.shipping_address?.city, cart.id])
 
   const handleEdit = () => {
     router.push(pathname + "?step=delivery", { scroll: false })
