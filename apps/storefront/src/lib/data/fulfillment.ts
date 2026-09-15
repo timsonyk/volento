@@ -137,6 +137,18 @@ export const retrieveCalculation = async (
  */
 const РАЗМЕР_ПОРЦИИ = 150
 
+/**
+ * Короткий отпечаток списка пунктов. Нужен в ключе кеша: без него ответ
+ * для первого выбранного города залипал и подставлялся всем следующим.
+ */
+const отпечаток = (ids: Array<number>): string => {
+  let h = 0
+  for (const id of ids) {
+    h = (Math.imul(h, 31) + id) >>> 0
+  }
+  return h.toString(36)
+}
+
 const ПОЛЯ_ПУНКТА = [
   "id",
   "description",
@@ -206,8 +218,10 @@ export const getPointAddresses = async (
             method: "GET",
             headers,
             query: {
-              // ключ кеша свой на каждую порцию, иначе они затрут друг друга
-              key: `apiship:points:${cartId}:${shippingOptionId}:${n}`,
+              // ключ свой на каждую порцию, иначе порции затрут друг друга,
+              // и обязательно с отпечатком самих пунктов — иначе при смене
+              // города вернутся точки прошлого
+              key: `apiship:points:${cartId}:${shippingOptionId}:${n}:${отпечаток(порция)}`,
               filter: `id=[${порция.join(",")}]`,
               fields: ПОЛЯ_ПУНКТА,
               shipping_option_id: shippingOptionId,
