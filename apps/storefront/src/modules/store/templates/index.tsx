@@ -27,9 +27,9 @@ const StoreTemplate = ({
   const sort = sortBy || "created_at"
 
   return (
-    <div className="content-container py-10" data-testid="category-container">
+    <div className="content-container pt-6 pb-12" data-testid="category-container">
       <h1
-        className="mb-6 text-center text-base text-ink"
+        className="mb-4 text-center text-base text-ink"
         data-testid="store-page-title"
       >
         Все товары

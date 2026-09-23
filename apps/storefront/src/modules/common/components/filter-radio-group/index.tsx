@@ -27,7 +27,9 @@ const FilterRadioGroup = ({
 }: FilterRadioGroupProps) => {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-      <Text className="label-type text-muted">{title}</Text>
+      <Text className="label-type sr-only text-muted xsmall:not-sr-only">
+        {title}
+      </Text>
       <RadioGroup
         data-testid={dataTestId}
         // !flex-row обязателен: у RadioGroup внутри жёстко задан столбец

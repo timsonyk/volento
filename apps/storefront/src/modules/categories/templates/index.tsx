@@ -48,7 +48,7 @@ export default function CategoryTemplate({
   собратьId(category)
 
   return (
-    <div className="content-container py-10" data-testid="category-container">
+    <div className="content-container pt-6 pb-12" data-testid="category-container">
       <div>
         <div className="mb-4 flex flex-row items-baseline justify-center gap-4 text-base">
           {parents &&
@@ -76,7 +76,7 @@ export default function CategoryTemplate({
             на чёрно-белом сайте он выглядел как чужая вставка. Проверяем
             длину, а не сам массив: пустой список рисовал пустой отступ. */}
         {!!category.category_children?.length && (
-          <nav className="mb-10" aria-label="Подразделы">
+          <nav className="mb-6" aria-label="Подразделы">
             <ul className="flex flex-wrap justify-center gap-x-7 gap-y-3">
               {category.category_children.map((c) => (
                 <li key={c.id}>
