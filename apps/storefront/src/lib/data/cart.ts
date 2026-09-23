@@ -227,7 +227,7 @@ export async function setShippingMethod({
 }: {
   cartId: string
   shippingMethodId: string
-  /** выбор ApiShip: тариф и, для самовывоза, пункт выдачи */
+  /** выбор ApiShip: тариф и, для доставки в ПВЗ, пункт выдачи */
   data?: Record<string, unknown>
 }) {
   const headers = {

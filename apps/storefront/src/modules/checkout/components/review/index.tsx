@@ -1,13 +1,22 @@
 "use client"
 
-import { Heading, Text, clx } from "@modules/common/components/ui"
+import { useState } from "react"
+
+import { Heading, clx } from "@modules/common/components/ui"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 import PaymentButton from "../payment-button"
-import { useSearchParams } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 
+/**
+ * Проверка заказа и согласие на обработку персональных данных.
+ *
+ * Галочка обязательно снята по умолчанию и отделена от кнопки: согласие,
+ * поставленное за покупателя заранее, Роскомнадзор согласием не считает.
+ * Пока не отмечена — кнопку оформления не даём нажать.
+ */
 const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
-  const searchParams = useSearchParams()
+  const [согласен, setСогласен] = useState(false)
 
   // Раздел всегда открыт: оформление одностраничное.
   const isOpen = true
@@ -26,32 +35,62 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
 
   return (
     <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
+      <div className="mb-6 flex flex-row items-center justify-between">
         <Heading
           level="h2"
           className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
+            "flex flex-row items-baseline gap-x-2 text-3xl-regular",
             {
-              "opacity-50 pointer-events-none select-none": !isOpen,
-            },
+              "pointer-events-none select-none opacity-50": !isOpen,
+            }
           )}
         >
           Проверка заказа
         </Heading>
       </div>
+
       {isOpen && previousStepsCompleted && (
         <>
-          <div className="flex items-start gap-x-1 w-full mb-6">
-            <div className="w-full">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                Нажимая кнопку Оформить заказ, вы подтверждаете, что прочитали,
-                поняли и принимаете наши Условия использования, Условия продажи
-                и Политику возврата, а также что ознакомились с Политикой
-                конфиденциальности Volento.
-              </Text>
-            </div>
-          </div>
-          <PaymentButton cart={cart} data-testid="submit-order-button" />
+          <label className="mb-6 flex cursor-pointer items-start gap-x-3">
+            <input
+              type="checkbox"
+              checked={согласен}
+              onChange={(e) => setСогласен(e.target.checked)}
+              className="mt-[3px] h-4 w-4 shrink-0 accent-ink"
+              data-testid="consent-checkbox"
+            />
+            <span className="text-sm leading-relaxed text-ink">
+              Я согласен на обработку моих персональных данных в соответствии
+              с{" "}
+              <LocalizedClientLink href="/politika" className="underline">
+                политикой конфиденциальности
+              </LocalizedClientLink>{" "}
+              и принимаю условия{" "}
+              <LocalizedClientLink href="/oferta" className="underline">
+                публичной оферты
+              </LocalizedClientLink>{" "}
+              и{" "}
+              <LocalizedClientLink href="/soglashenie" className="underline">
+                пользовательского соглашения
+              </LocalizedClientLink>
+              .
+            </span>
+          </label>
+
+          <PaymentButton
+            cart={cart}
+            blocked={!согласен}
+            data-testid="submit-order-button"
+          />
+
+          {!согласен && (
+            <p
+              className="mt-3 text-sm text-muted"
+              data-testid="consent-hint"
+            >
+              Чтобы оформить заказ, отметьте согласие выше.
+            </p>
+          )}
         </>
       )}
     </div>

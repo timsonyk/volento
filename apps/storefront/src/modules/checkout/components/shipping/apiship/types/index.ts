@@ -50,7 +50,7 @@ export type ApishipPoint = {
   worktime?: Record<string, string>
 } & Прочее
 
-/** Выбор покупателя: способ, тариф и, для самовывоза, пункт. */
+/** Выбор покупателя: способ, тариф и, для доставки в ПВЗ, пункт. */
 export type Chosen = {
   deliveryType: number
   tariff: ApishipTariff

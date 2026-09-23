@@ -11,13 +11,17 @@ import ErrorMessage from "../error-message"
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
   "data-testid": string
+  /** Покупатель не дал согласия на обработку данных — оформлять нельзя. */
+  blocked?: boolean
 }
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({
   cart,
   "data-testid": dataTestId,
+  blocked = false,
 }) => {
   const notReady =
+    blocked ||
     !cart ||
     !cart.shipping_address ||
     !cart.billing_address ||
