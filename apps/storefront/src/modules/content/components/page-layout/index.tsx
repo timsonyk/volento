@@ -45,3 +45,31 @@ export function Раздел({
     </section>
   )
 }
+
+/**
+ * Нумерованный пункт договора: номер висит слева от текста, а не внутри
+ * него, — так взгляд легко находит нужный пункт при ссылке на него.
+ */
+export function Пункт({
+  номер,
+  children,
+}: {
+  номер: string
+  children: React.ReactNode
+}) {
+  return (
+    <p className="grid grid-cols-[3.5rem_1fr] gap-x-2">
+      <span className="text-muted tabular-nums">{номер}</span>
+      <span>{children}</span>
+    </p>
+  )
+}
+
+/** Перечисление внутри пункта договора. */
+export function Перечень({ children }: { children: React.ReactNode }) {
+  return (
+    <ul className="ml-[3.5rem] flex list-disc flex-col gap-y-2 pl-5 text-ink">
+      {children}
+    </ul>
+  )
+}
