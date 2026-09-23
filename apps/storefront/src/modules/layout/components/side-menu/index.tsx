@@ -35,12 +35,21 @@ const СЛУЖЕБНЫЕ = [
   { имя: "Корзина", адрес: "/cart" },
 ]
 
+/** Показываются только при заполненных реквизитах — иначе страницы 404. */
+const ЮРИДИЧЕСКИЕ = [
+  { имя: "Публичная оферта", адрес: "/oferta" },
+  { имя: "Политика конфиденциальности", адрес: "/politika" },
+  { имя: "Пользовательское соглашение", адрес: "/soglashenie" },
+]
+
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
   разделы?: РазделМеню[]
   снимок?: string
+  /** Заполнены ли реквизиты продавца: от этого зависят юридические ссылки. */
+  юридические?: boolean
 }
 
 const SideMenu = ({
@@ -49,6 +58,7 @@ const SideMenu = ({
   currentLocale,
   разделы,
   снимок,
+  юридические = false,
 }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
@@ -156,7 +166,10 @@ const SideMenu = ({
                           </LocalizedClientLink>
                         )}
 
-                        <div className="mt-10 flex flex-col gap-y-4 border-t border-rule pt-6">
+                        {/* без верхней линии: последняя строка каталога уже
+                            закрыта своей border-b, две подряд читались как
+                            пустой блок */}
+                        <div className="mt-8 flex flex-col gap-y-4">
                           {СЛУЖЕБНЫЕ.map((с) => (
                             <LocalizedClientLink
                               key={с.адрес}
@@ -167,6 +180,17 @@ const SideMenu = ({
                               {с.имя}
                             </LocalizedClientLink>
                           ))}
+                          {юридические &&
+                            ЮРИДИЧЕСКИЕ.map((с) => (
+                              <LocalizedClientLink
+                                key={с.адрес}
+                                href={с.адрес}
+                                onClick={закрыть}
+                                className="text-base text-muted"
+                              >
+                                {с.имя}
+                              </LocalizedClientLink>
+                            ))}
                         </div>
 
                         <div className="mt-8 flex flex-col gap-y-5 text-ink">

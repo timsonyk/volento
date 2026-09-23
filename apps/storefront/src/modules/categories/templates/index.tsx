@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-import InteractiveLink from "@modules/common/components/interactive-link"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -72,18 +71,25 @@ export default function CategoryTemplate({
             <p>{category.description}</p>
           </div>
         )}
-        {category.category_children && (
-          <div className="mb-8 text-base-large">
-            <ul className="grid grid-cols-1 gap-2">
-              {category.category_children?.map((c) => (
+        {/* Подразделы — тихий ряд под названием, в одну строку с переносом.
+            Раньше это был синий список со стрелками из стартового шаблона:
+            на чёрно-белом сайте он выглядел как чужая вставка. Проверяем
+            длину, а не сам массив: пустой список рисовал пустой отступ. */}
+        {!!category.category_children?.length && (
+          <nav className="mb-10" aria-label="Подразделы">
+            <ul className="flex flex-wrap justify-center gap-x-7 gap-y-3">
+              {category.category_children.map((c) => (
                 <li key={c.id}>
-                  <InteractiveLink href={`/categories/${c.handle}`}>
+                  <LocalizedClientLink
+                    href={`/categories/${c.handle}`}
+                    className="text-sm uppercase tracking-[0.08em] text-muted underline-offset-[6px] transition-colors hover:text-ink hover:underline"
+                  >
                     {c.name}
-                  </InteractiveLink>
+                  </LocalizedClientLink>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
         )}
         <div className="mb-6 flex justify-end">
           <RefinementList
