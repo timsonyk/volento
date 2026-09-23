@@ -109,6 +109,14 @@ export default async function Footer({
                       Публичная оферта
                     </LocalizedClientLink>
                   </li>
+                  <li>
+                    <LocalizedClientLink
+                      href="/soglashenie"
+                      className={linkClass}
+                    >
+                      Пользовательское соглашение
+                    </LocalizedClientLink>
+                  </li>
                 </>
               )}
             </ul>

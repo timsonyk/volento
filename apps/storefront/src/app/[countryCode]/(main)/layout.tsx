@@ -5,6 +5,7 @@ import { retrieveCustomer } from "@lib/data/customer"
 import { getBaseURL } from "@lib/util/env"
 import { StoreCartShippingOption } from "@medusajs/types"
 import CartMismatchBanner from "@modules/layout/components/cart-mismatch-banner"
+import CookieNotice from "@modules/common/components/cookie-notice"
 import Footer from "@modules/layout/templates/footer"
 import Nav from "@modules/layout/templates/nav"
 import FreeShippingPriceNudge from "@modules/shipping/components/free-shipping-price-nudge"
@@ -44,6 +45,7 @@ export default async function PageLayout(props: {
       )}
       {props.children}
       <Footer countryCode={countryCode} />
+      <CookieNotice />
     </>
   )
 }
