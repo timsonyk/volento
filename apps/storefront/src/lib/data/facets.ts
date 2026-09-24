@@ -158,6 +158,8 @@ export const найтиТовары = async (
     фильтры.цвет?.length ||
     фильтры.новинки
 
+  console.log("[фильтр] выбрано:", JSON.stringify(фильтры))
+
   if (!естьЧто) {
     return null
   }
@@ -186,6 +188,9 @@ export const найтиТовары = async (
     return true
   }
 
+  const найдено = все.filter(подходит)
+  console.log("[фильтр] подошло товаров:", найдено.length, "из", все.length)
+
   // новые сверху: тем же порядком, что и «Новинки» в сортировке
   return все
     .filter(подходит)
@@ -199,6 +204,8 @@ export const прочитатьФильтры = async (
 ): Promise<ВыбранныеФильтры> => {
   const список = (v: string | string[] | undefined) =>
     typeof v === "string" ? v.split("~").filter(Boolean) : v
+
+  console.log("[фильтр] пришли ключи:", JSON.stringify(Object.keys(params)))
 
   return {
     сезон: список(params["сезон"]),
