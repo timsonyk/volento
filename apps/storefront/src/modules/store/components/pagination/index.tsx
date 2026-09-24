@@ -35,9 +35,16 @@ export function Pagination({
   ) => (
     <button
       key={p}
-      className={clx("txt-xlarge-plus text-ui-fg-muted", {
-        "text-ui-fg-base hover:text-ui-fg-subtle": isCurrent,
-      })}
+      // или/или, а не оба разом: раньше текущей странице добавлялся
+      // второй цвет поверх обычного, и какой победит, решал порядок
+      // правил в стилях — номер страницы ничем не выделялся
+      className={clx(
+        "px-2.5 py-2 text-base tabular-nums transition-colors",
+        isCurrent
+          ? "text-ink underline underline-offset-[6px]"
+          : "text-muted hover:text-ink"
+      )}
+      aria-current={isCurrent ? "page" : undefined}
       disabled={isCurrent}
       onClick={() => handlePageChange(p)}
     >
@@ -49,7 +56,7 @@ export function Pagination({
   const renderEllipsis = (key: string) => (
     <span
       key={key}
-      className="txt-xlarge-plus text-ui-fg-muted items-center cursor-default"
+      className="cursor-default px-1 text-base text-muted"
     >
       ...
     </span>

@@ -19,7 +19,11 @@ function stripColor(title: string, color?: string) {
     : title
 }
 
-export default async function ProductPreview({
+/**
+ * Не async намеренно: внутри нечего ждать, а так карточку можно рисовать
+ * и на сервере, и в браузере — это нужно кнопке «Показать ещё».
+ */
+export default function ProductPreview({
   product,
   isFeatured,
   colors,
@@ -84,7 +88,10 @@ export default async function ProductPreview({
 
           {swatches.length > 0 && (
             <div
-              className="flex min-w-0 items-center gap-x-1 overflow-hidden"
+              // без overflow-hidden: обводка выбранного кружка рисуется
+              // за его границей, и обрезка съедала её с четырёх сторон.
+              // Переполнения не будет — кружков не больше четырёх
+              className="flex min-w-0 items-center gap-x-1.5 py-0.5"
               data-testid="preview-colors"
             >
               {видимые.map((c) => (

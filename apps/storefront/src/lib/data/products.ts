@@ -244,3 +244,43 @@ export const listModelColors = async ({
 
   return byModel
 }
+
+/**
+ * Отдаёт следующую страницу каталога кнопке «Показать ещё».
+ *
+ * Возвращает сразу и товары, и цвета их моделей: иначе браузеру
+ * пришлось бы ходить на сервер дважды, и кружки цветов появлялись бы
+ * позже самих карточек.
+ */
+export const следующаяСтраницаТоваров = async ({
+  page,
+  queryParams,
+  sortBy,
+  countryCode,
+  optionValueIds,
+}: {
+  page: number
+  queryParams?: ProductListQueryParams
+  sortBy?: SortOptions
+  countryCode: string
+  optionValueIds?: OptionValueIds
+}): Promise<{
+  products: HttpTypes.StoreProduct[]
+  colorsByModel: Record<string, ModelColor[]>
+  естьЕщё: boolean
+}> => {
+  const {
+    response: { products, count },
+  } = await listProductsWithSort({
+    page,
+    queryParams,
+    sortBy,
+    countryCode,
+    optionValueIds,
+  })
+
+  const colorsByModel = await listModelColors({ products, countryCode })
+  const показано = page * (queryParams?.limit || 12)
+
+  return { products, colorsByModel, естьЕщё: показано < count }
+}
