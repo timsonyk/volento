@@ -30,6 +30,15 @@ export type РазделМеню = {
   дети: { имя: string; адрес: string }[]
 }
 
+/**
+ * Группа разделов под неподписанной шапкой: «Женщинам», «Мужчинам».
+ * Обе группы всегда раскрыты — подпись не кнопка, нажимать не на что.
+ */
+export type ГруппаМеню = {
+  имя: string
+  разделы: { имя: string; адрес: string }[]
+}
+
 const СЛУЖЕБНЫЕ = [
   { имя: "Личный кабинет", адрес: "/account" },
   { имя: "Корзина", адрес: "/cart" },
@@ -46,7 +55,7 @@ type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
   locales: Locale[] | null
   currentLocale: string | null
-  разделы?: РазделМеню[]
+  группы?: ГруппаМеню[]
   снимок?: string
   /** Заполнены ли реквизиты продавца: от этого зависят юридические ссылки. */
   юридические?: boolean
@@ -56,7 +65,7 @@ const SideMenu = ({
   regions,
   locales,
   currentLocale,
-  разделы,
+  группы,
   снимок,
   юридические = false,
 }: SideMenuProps) => {
@@ -133,16 +142,26 @@ const SideMenu = ({
                           Каталог целиком
                           <ArrowRightMini />
                         </LocalizedClientLink>
-                        {(разделы ?? []).map((р) => (
-                          <LocalizedClientLink
-                            key={р.адрес}
-                            href={р.адрес}
-                            onClick={закрыть}
-                            className={строка}
-                          >
-                            {р.имя}
-                            <ArrowRightMini />
-                          </LocalizedClientLink>
+                        {(группы ?? []).map((г) => (
+                          <div key={г.имя} className="mt-8 first:mt-7">
+                            {/* Подпись, а не кнопка: пол — это заголовок
+                                группы, а не раздел каталога. Нажимать
+                                не на что, оба списка открыты сразу. */}
+                            <p className="pb-3 text-xs uppercase tracking-[0.16em] text-muted">
+                              {г.имя}
+                            </p>
+                            {г.разделы.map((р) => (
+                              <LocalizedClientLink
+                                key={р.адрес}
+                                href={р.адрес}
+                                onClick={закрыть}
+                                className={строка}
+                              >
+                                {р.имя}
+                                <ArrowRightMini />
+                              </LocalizedClientLink>
+                            ))}
+                          </div>
                         ))}
 
                         {снимок && (
