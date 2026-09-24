@@ -71,8 +71,12 @@ const SideMenu = ({
 }: SideMenuProps) => {
   const countryToggleState = useToggleState()
   const languageToggleState = useToggleState()
+  // Названия разделов набраны мельче подписи группы и строки стоят
+  // плотнее: иначе «Брюки» перевешивали «Женщинам», и подпись читалась
+  // как служебная пометка, а не как заголовок. Высота строки остаётся
+  // 48 px — под палец.
   const строка =
-    "flex w-full items-center justify-between border-b border-rule py-5 text-left text-xl text-ink"
+    "flex w-full items-center justify-between border-b border-rule py-3.5 text-left text-[17px] text-ink"
 
   return (
     <div className="h-full">
