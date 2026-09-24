@@ -18,8 +18,9 @@ import { getAuthHeaders, getCacheOptions } from "./cookies"
  * раздела.
  */
 
-/** Метка, которой в админке помечают новинки. */
-export const МЕТКА_НОВИНКИ = "новинка"
+// Метка, которой в админке помечают новинки. Без export: в файле с
+// "use server" наружу можно отдавать только асинхронные функции.
+const МЕТКА_НОВИНКИ = "новинка"
 
 export type Признак = {
   значение: string
@@ -207,4 +208,3 @@ export const прочитатьФильтры = async (
   }
 }
 
-export type { HttpTypes }
