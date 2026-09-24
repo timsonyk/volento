@@ -28,11 +28,30 @@ SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10"
 }
 
 шаг "1/4  Забираю свежий код"
-на_сервере 'cd /home/volento/volento && sudo -u volento git pull --ff-only 2>&1 | tail -3' || {
-  echo "Не удалось подключиться к серверу."
-  echo "Проверьте, что вы в сети БЕЗ VPN — из-под VPN сервер отвечает через раз."
+# ВАЖНО: без `set -o pipefail` на стороне сервера код возврата берётся от
+# `tail`, а он успешен всегда. Из-за этого упавший git pull проходил
+# незамеченным: скрипт собирал старый код и рапортовал «Готово».
+нужен=$(git rev-parse HEAD)
+на_сервере 'cd /home/volento/volento && set -o pipefail && sudo -u volento git pull --ff-only 2>&1 | tail -3' || {
+  echo
+  echo "Не удалось забрать код."
+  echo "Если написано про access rights — у сервера отвалился DNS хостера,"
+  echo "это бывает; просто запустите выкатку ещё раз."
+  echo "Если связи нет совсем — проверьте, что вы в сети БЕЗ VPN."
   exit 1
 }
+
+# Страховка: сверяем, что на сервере оказался именно тот коммит.
+стало=$(на_сервере 'sudo -u volento git -C /home/volento/volento rev-parse HEAD' | tr -d "[:space:]")
+if [ "$стало" != "$нужен" ]; then
+  echo
+  echo "На сервере другой коммит:"
+  echo "  нужен: $нужен"
+  echo "  стоит: $стало"
+  echo "Сборка остановлена, чтобы не выкатить старое."
+  exit 1
+fi
+echo "  код на сервере совпадает с локальным"
 
 шаг "2/4  Собираю витрину (несколько минут)"
 на_сервере 'sudo -u volento setsid /home/volento/build-only.sh > /home/volento/deploy.log 2>&1 < /dev/null & echo "  сборка запущена"'
