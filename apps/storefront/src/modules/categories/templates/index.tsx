@@ -79,26 +79,6 @@ export default async function CategoryTemplate({
             <p>{category.description}</p>
           </div>
         )}
-        {/* Подразделы — тихий ряд под названием, в одну строку с переносом.
-            Раньше это был синий список со стрелками из стартового шаблона:
-            на чёрно-белом сайте он выглядел как чужая вставка. Проверяем
-            длину, а не сам массив: пустой список рисовал пустой отступ. */}
-        {!!category.category_children?.length && (
-          <nav className="mb-6" aria-label="Подразделы">
-            <ul className="flex flex-wrap justify-center gap-x-7 gap-y-3">
-              {category.category_children.map((c) => (
-                <li key={c.id}>
-                  <LocalizedClientLink
-                    href={`/categories/${c.handle}`}
-                    className="text-sm uppercase tracking-[0.08em] text-muted underline-offset-[6px] transition-colors hover:text-ink hover:underline"
-                  >
-                    {c.name}
-                  </LocalizedClientLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
         <FilterBar признаки={признаки} />
 
         {/* заглушек столько же, сколько товаров на странице: список
