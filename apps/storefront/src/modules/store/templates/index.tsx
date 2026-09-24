@@ -1,8 +1,9 @@
 import { Suspense } from "react"
 
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { ВыбранныеФильтры, найтиТовары, собратьПризнаки } from "@lib/data/facets"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
+import FilterBar from "@modules/store/components/filter-bar"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 import PaginatedProducts from "./paginated-products"
@@ -12,19 +13,26 @@ import PaginatedProducts from "./paginated-products"
  * компактной строкой над сеткой, а не отдельной колонкой слева —
  * колонка съедала треть экрана и сдвигала товары.
  */
-const StoreTemplate = ({
+const StoreTemplate = async ({
   sortBy,
   page,
   countryCode,
   optionValueIds,
+  фильтры,
 }: {
   sortBy?: SortOptions
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
+  фильтры?: ВыбранныеФильтры
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
+
+  const [признаки, отобранные] = await Promise.all([
+    собратьПризнаки(),
+    найтиТовары(фильтры ?? {}),
+  ])
 
   return (
     <div className="content-container pt-6 pb-12" data-testid="category-container">
@@ -35,9 +43,7 @@ const StoreTemplate = ({
         Все товары
       </h1>
 
-      <div className="mb-6 flex justify-end">
-        <RefinementList sortBy={sort} />
-      </div>
+      <FilterBar признаки={признаки} />
 
       <Suspense fallback={<SkeletonProductGrid />}>
         <PaginatedProducts
@@ -45,6 +51,8 @@ const StoreTemplate = ({
           page={pageNumber}
           countryCode={countryCode}
           optionValueIds={optionValueIds}
+          productsIds={отобранные ?? undefined}
+          ничегоНеНайдено={отобранные?.length === 0}
         />
       </Suspense>
     </div>

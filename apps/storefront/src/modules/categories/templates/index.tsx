@@ -2,25 +2,28 @@ import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
+import FilterBar from "@modules/store/components/filter-bar"
+import { ВыбранныеФильтры, найтиТовары, собратьПризнаки } from "@lib/data/facets"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 
-export default function CategoryTemplate({
+export default async function CategoryTemplate({
   category,
   sortBy,
   page,
   countryCode,
   optionValueIds,
+  фильтры,
 }: {
   category: HttpTypes.StoreProductCategory
   sortBy?: SortOptions
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
+  фильтры?: ВыбранныеФильтры
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -46,6 +49,11 @@ export default function CategoryTemplate({
     c.category_children?.forEach(собратьId)
   }
   собратьId(category)
+
+  const [признаки, отобранные] = await Promise.all([
+    собратьПризнаки(idsРаздела),
+    найтиТовары(фильтры ?? {}, idsРаздела),
+  ])
 
   return (
     <div className="content-container pt-6 pb-12" data-testid="category-container">
@@ -91,13 +99,7 @@ export default function CategoryTemplate({
             </ul>
           </nav>
         )}
-        <div className="mb-6 flex justify-end">
-          <RefinementList
-            sortBy={sort}
-            data-testid="sort-by-container"
-            hideOptionsPicker
-          />
-        </div>
+        <FilterBar признаки={признаки} />
 
         {/* заглушек столько же, сколько товаров на странице: список
             товаров категории мы больше не запрашиваем, он весил мегабайты */}

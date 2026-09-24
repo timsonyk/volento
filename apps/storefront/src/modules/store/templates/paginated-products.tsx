@@ -22,6 +22,7 @@ export default async function PaginatedProducts({
   productsIds,
   countryCode,
   optionValueIds,
+  ничегоНеНайдено,
 }: {
   sortBy?: SortOptions
   page: number
@@ -30,7 +31,20 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   countryCode: string
   optionValueIds?: OptionValueIds
+  /** фильтр отработал и не нашёл ни одного товара */
+  ничегоНеНайдено?: boolean
 }) {
+  // Пустой список id в запрос не отправляем: Medusa поймёт его как
+  // «без условия» и вернёт весь каталог, хотя показать надо ничего.
+  if (ничегоНеНайдено) {
+    return (
+      <p className="py-16 text-center text-base text-muted">
+        По выбранным условиям ничего не нашлось. Попробуйте снять часть
+        фильтров.
+      </p>
+    )
+  }
+
   const queryParams: PaginatedProductsParams = {
     limit: 12,
   }
