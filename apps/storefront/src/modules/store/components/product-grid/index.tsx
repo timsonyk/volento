@@ -93,7 +93,7 @@ const ProductGrid = ({
         data-testid="products-list"
       >
         {товары.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className="h-full">
             <ProductPreview
               product={p}
               region={region}

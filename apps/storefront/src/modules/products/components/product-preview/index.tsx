@@ -59,9 +59,9 @@ export default function ProductPreview({
   return (
     <LocalizedClientLink
       href={`/products/${product.handle}`}
-      className="group block"
+      className="group block h-full"
     >
-      <div data-testid="product-wrapper">
+      <div className="flex h-full flex-col" data-testid="product-wrapper">
         <PreviewGallery
           images={photos}
           alt={stripColor(product.title, color)}
@@ -73,13 +73,16 @@ export default function ProductPreview({
             Подпись сдвинута от края фото: 13 px на телефоне, 21 дальше.
             Кегль поднят против замеров по просьбе. */}
         <h3
-          className="mt-[11px] line-clamp-2 min-h-[2.4em] pl-[13px] text-sm leading-[1.2] text-ink xsmall:mt-2.5 xsmall:min-h-[2.8em] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]"
+          // без минимальной высоты: она оставляла дыру под короткими
+          // названиями. Цены выравнивает mt-auto ниже — он прижимает
+          // строку с ценой к низу карточки
+          className="mt-[11px] line-clamp-2 pl-[13px] text-sm leading-[1.2] text-ink xsmall:mt-2.5 xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]"
           data-testid="product-title"
         >
           {stripColor(product.title, color)}
         </h3>
 
-        <div className="flex items-center justify-between gap-x-3 pl-[13px] text-sm leading-[1.2] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]">
+        <div className="mt-auto flex items-center justify-between gap-x-3 pt-1 pl-[13px] text-sm leading-[1.2] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]">
           {cheapestPrice && (
             <div className="flex shrink-0 gap-x-2">
               <PreviewPrice price={cheapestPrice} />

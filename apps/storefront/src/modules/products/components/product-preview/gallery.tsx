@@ -26,8 +26,11 @@ export default function PreviewGallery({
     setIndex((i) => (i + direction + images.length) % images.length)
   }
 
+  // Группа названа (group/gallery), поэтому и условие показа должно быть
+  // именованным: group-hover:… к ней не относится, и стрелки оставались
+  // прозрачными — доехать до них можно было только клавиатурой.
   const arrow =
-    "absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center bg-paper/90 text-ink opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+    "absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center bg-paper/90 text-ink opacity-0 transition-opacity duration-200 group-hover/gallery:opacity-100 focus-visible:opacity-100"
 
   return (
     <div className="group/gallery relative aspect-[2/3] w-full overflow-hidden bg-mist">
