@@ -1,5 +1,6 @@
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
+import ProductDescription from "@modules/products/components/product-description"
 
 /** Цвет показан отдельным переключателем — в заголовке он лишний. */
 export function stripColor(title: string, color?: string) {
@@ -46,12 +47,7 @@ const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
       )}
 
       {product.description && (
-        <p
-          className="mt-6 whitespace-pre-line text-base leading-relaxed text-ink"
-          data-testid="product-description"
-        >
-          {product.description}
-        </p>
+        <ProductDescription text={product.description} />
       )}
 
       {article && (

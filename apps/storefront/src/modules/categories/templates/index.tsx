@@ -101,9 +101,9 @@ export default function CategoryTemplate({
 
         <Suspense
           fallback={
-            <SkeletonProductGrid
-              numberOfProducts={category.products?.length ?? 8}
-            />
+            {/* столько же, сколько товаров на странице: список товаров
+                категории мы больше не запрашиваем, он весил мегабайты */}
+            <SkeletonProductGrid numberOfProducts={12} />
           }
         >
           <PaginatedProducts

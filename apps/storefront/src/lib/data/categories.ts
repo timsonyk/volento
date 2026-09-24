@@ -14,8 +14,11 @@ export const listCategories = async (query?: Record<string, unknown>) => {
       "/store/product-categories",
       {
         query: {
+          // *products отсюда убран намеренно: меню и подвалу нужны
+          // только названия, а с боевым каталогом этот запрос весил
+          // 6,3 МБ и выполнялся при каждой отрисовке страницы
           fields:
-            "*category_children, *products, *parent_category, *parent_category.parent_category",
+            "id, name, handle, rank, *category_children, *parent_category, *parent_category.parent_category",
           limit,
           ...query,
         },
