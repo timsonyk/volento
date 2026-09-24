@@ -39,7 +39,7 @@ const VerticalMeasure: React.FC<{
             disabled={disabled}
             aria-pressed={selected}
             data-testid="option-button"
-            className="group flex items-center gap-x-3 py-2 text-left disabled:opacity-40"
+            className="group flex min-w-[72px] items-center gap-x-3 py-2.5 text-left disabled:opacity-40"
           >
             <span
               aria-hidden
@@ -95,7 +95,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
           dataTestId={dataTestId}
         />
       ) : (
-        <div className="flex flex-wrap gap-x-5 gap-y-2" data-testid={dataTestId}>
+        <div className="flex flex-wrap gap-y-1" data-testid={dataTestId}>
           {values.map((v) => (
             <button
               key={v}
@@ -105,7 +105,9 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
               aria-pressed={v === current}
               data-testid="option-button"
               className={clx(
-                "py-1 text-base tabular-nums underline-offset-[6px] transition-colors duration-200 disabled:opacity-40",
+                // px-2.5 вместо промежутка снаружи: на глаз расстояние
+                // прежнее, а палец получает 40×44 вместо 19×32
+                "px-2.5 py-2.5 text-base tabular-nums underline-offset-[6px] transition-colors duration-200 disabled:opacity-40",
                 v === current
                   ? "text-ink underline"
                   : "text-muted hover:text-ink"

@@ -69,7 +69,7 @@ export default async function ProductPreview({
             Подпись сдвинута от края фото: 13 px на телефоне, 21 дальше.
             Кегль поднят против замеров по просьбе. */}
         <h3
-          className="mt-[11px] pl-[13px] text-sm leading-[1.2] text-ink xsmall:mt-2.5 xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]"
+          className="mt-[11px] line-clamp-2 min-h-[2.4em] pl-[13px] text-sm leading-[1.2] text-ink xsmall:mt-2.5 xsmall:min-h-[2.8em] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]"
           data-testid="product-title"
         >
           {stripColor(product.title, color)}

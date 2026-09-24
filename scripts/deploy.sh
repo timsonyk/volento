@@ -43,7 +43,11 @@ for i in $(seq 1 40); do
     echo "  сборка завершена"
     break
   fi
-  if на_сервере 'grep -aqiE "error:|failed" /home/volento/deploy.log && echo ПЛОХО' | grep -q ПЛОХО; then
+  # Признак провала ставит сам build-only.sh по коду возврата npm.
+  # Искать в логе слово «failed» нельзя: Next пишет его в обычных
+  # предупреждениях — например, когда ответ не влез в кеш, — и выкатка
+  # обрывалась на успешной сборке.
+  if на_сервере 'grep -aq BUILD_FAILED /home/volento/deploy.log && echo ПЛОХО' | grep -q ПЛОХО; then
     echo "  ОШИБКА сборки, последние строки:"
     на_сервере 'tail -15 /home/volento/deploy.log'
     exit 1
