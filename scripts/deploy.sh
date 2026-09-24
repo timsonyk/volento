@@ -31,7 +31,7 @@ SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10"
 # ВАЖНО: без `set -o pipefail` на стороне сервера код возврата берётся от
 # `tail`, а он успешен всегда. Из-за этого упавший git pull проходил
 # незамеченным: скрипт собирал старый код и рапортовал «Готово».
-нужен=$(git rev-parse HEAD)
+want=$(git rev-parse HEAD)   # только латиница: bash не умеет кириллицу в именах
 на_сервере 'cd /home/volento/volento && set -o pipefail && sudo -u volento git pull --ff-only 2>&1 | tail -3' || {
   echo
   echo "Не удалось забрать код."
@@ -42,12 +42,12 @@ SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10"
 }
 
 # Страховка: сверяем, что на сервере оказался именно тот коммит.
-стало=$(на_сервере 'sudo -u volento git -C /home/volento/volento rev-parse HEAD' | tr -d "[:space:]")
-if [ "$стало" != "$нужен" ]; then
+have=$(на_сервере 'sudo -u volento git -C /home/volento/volento rev-parse HEAD' | tr -d "[:space:]")
+if [ "$have" != "$want" ]; then
   echo
   echo "На сервере другой коммит:"
-  echo "  нужен: $нужен"
-  echo "  стоит: $стало"
+  echo "  нужен: $want"
+  echo "  стоит: $have"
   echo "Сборка остановлена, чтобы не выкатить старое."
   exit 1
 fi
