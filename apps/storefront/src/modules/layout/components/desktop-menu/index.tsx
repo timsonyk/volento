@@ -31,13 +31,26 @@ const ПОДЧЁРКИВАНИЕ =
 
 export type Колонка = { заголовок: string; адрес?: string; ссылки: Раздел[] }
 
+/** Группа колонок под общей подписью: «Женщинам», «Мужчинам». */
+export type ГруппаКолонок = { имя: string; колонки: Колонка[] }
+
+/**
+ * Подпись группы. Такая же в шторке на телефоне — и там и тут она
+ * должна сразу отвечать на вопрос «почему Брюки дважды».
+ * Поэтому тёмная и с большим межбуквенным просветом, а не серая мелочь.
+ */
+export const ПОДПИСЬ_ГРУППЫ =
+  "text-[13px] uppercase tracking-[0.2em] text-ink"
+
 export default function DesktopMenu({
   пункты,
-  колонки,
+  группы,
+  справка,
   снимок,
 }: {
   пункты: Раздел[]
-  колонки: Колонка[]
+  группы: ГруппаКолонок[]
+  справка: Колонка
   снимок?: string
 }) {
   const [открыт, setОткрыт] = useState(false)
@@ -101,35 +114,30 @@ export default function DesktopMenu({
             : "pointer-events-none -translate-y-2 opacity-0")
         }
       >
-        <div className="content-container flex gap-x-10 py-10">
-          {колонки.map((к) => (
-            <div key={к.заголовок} className="min-w-[150px]">
-              {к.адрес ? (
-                <LocalizedClientLink
-                  href={к.адрес}
-                  onClick={() => setОткрыт(false)}
-                  className="mb-6 block text-base text-ink transition-opacity hover:opacity-60"
-                >
-                  {к.заголовок}
-                </LocalizedClientLink>
-              ) : (
-                <p className="mb-6 text-base text-ink">{к.заголовок}</p>
-              )}
-              <ul className="flex flex-col gap-y-3">
-                {к.ссылки.map((с) => (
-                  <li key={с.адрес}>
-                    <LocalizedClientLink
-                      href={с.адрес}
-                      onClick={() => setОткрыт(false)}
-                      className="text-base text-muted transition-colors hover:text-ink"
-                    >
-                      {с.имя}
-                    </LocalizedClientLink>
-                  </li>
+        <div className="content-container flex gap-x-12 py-10">
+          {группы.map((г) => (
+            <div key={г.имя} className="flex flex-col gap-y-6">
+              <p className={ПОДПИСЬ_ГРУППЫ}>{г.имя}</p>
+              <div className="flex gap-x-10">
+                {г.колонки.map((к) => (
+                  <Колонка
+                    key={к.заголовок}
+                    колонка={к}
+                    закрыть={() => setОткрыт(false)}
+                  />
                 ))}
-              </ul>
+              </div>
             </div>
           ))}
+
+          <div className="flex flex-col gap-y-6">
+            {/* пустая строка вместо подписи: колонка справки должна
+                стоять вровень с разделами, а своей подписи у неё нет */}
+            <p className={ПОДПИСЬ_ГРУППЫ} aria-hidden>
+              &nbsp;
+            </p>
+            <Колонка колонка={справка} закрыть={() => setОткрыт(false)} />
+          </div>
 
           {снимок && (
             <LocalizedClientLink
@@ -148,6 +156,44 @@ export default function DesktopMenu({
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+/** Одна колонка: заголовок раздела и ссылки под ним. */
+function Колонка({
+  колонка,
+  закрыть,
+}: {
+  колонка: Колонка
+  закрыть: () => void
+}) {
+  return (
+    <div className="min-w-[140px]">
+      {колонка.адрес ? (
+        <LocalizedClientLink
+          href={колонка.адрес}
+          onClick={закрыть}
+          className="mb-5 block text-base text-ink transition-opacity hover:opacity-60"
+        >
+          {колонка.заголовок}
+        </LocalizedClientLink>
+      ) : (
+        <p className="mb-5 text-base text-ink">{колонка.заголовок}</p>
+      )}
+      <ul className="flex flex-col gap-y-3">
+        {колонка.ссылки.map((с) => (
+          <li key={с.адрес}>
+            <LocalizedClientLink
+              href={с.адрес}
+              onClick={закрыть}
+              className="text-base text-muted transition-colors hover:text-ink"
+            >
+              {с.имя}
+            </LocalizedClientLink>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

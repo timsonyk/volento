@@ -92,7 +92,11 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
     ],
   }
 
-  const колонки = верхние.map((c) => {
+  const вколонку = (c: {
+    name: string
+    handle: string
+    category_children?: { name: string; handle: string }[] | null
+  }) => {
     const дети = (c.category_children ?? []).map((d) => ({
       имя: d.name,
       адрес: `/categories/${d.handle}`,
@@ -104,9 +108,25 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
         ? [...дети, { имя: "Все", адрес: `/categories/${c.handle}` }]
         : [{ имя: "Смотреть всё", адрес: `/categories/${c.handle}` }],
     }
-  })
+  }
 
-  колонки.push(справка)
+  // На компьютере та же раскладка, что в шторке на телефоне: два
+  // именованных блока. Без подписи над колонками «Брюки» встречались
+  // дважды подряд, и было непонятно, чем они отличаются.
+  const группыКолонок = [
+    {
+      имя: "Женщинам",
+      колонки: верхние.filter((c) => c.handle !== МУЖСКОЙ).map(вколонку),
+    },
+    {
+      имя: "Мужчинам",
+      колонки: (мужской?.category_children ?? []).length
+        ? (мужской?.category_children ?? []).map(вколонку)
+        : мужской
+          ? [вколонку(мужской)]
+          : [],
+    },
+  ].filter((г) => г.колонки.length > 0)
 
   return (
     <div className="sticky inset-x-0 top-0 z-50">
@@ -143,7 +163,8 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 { имя: "Новинки", адрес: "/store?sortBy=created_at" },
                 { имя: "Скидки", адрес: "/collections/skidki" },
               ]}
-              колонки={колонки}
+              группы={группыКолонок}
+              справка={справка}
               снимок={оформление.картинка("середина")}
             />
           </div>

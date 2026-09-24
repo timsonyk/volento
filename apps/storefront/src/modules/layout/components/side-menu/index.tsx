@@ -143,11 +143,15 @@ const SideMenu = ({
                           <ArrowRightMini />
                         </LocalizedClientLink>
                         {(группы ?? []).map((г) => (
-                          <div key={г.имя} className="mt-8 first:mt-7">
+                          <div key={г.имя} className="mt-11 first:mt-7">
                             {/* Подпись, а не кнопка: пол — это заголовок
                                 группы, а не раздел каталога. Нажимать
-                                не на что, оба списка открыты сразу. */}
-                            <p className="pb-3 text-xs uppercase tracking-[0.16em] text-muted">
+                                не на что, оба списка открыты сразу.
+
+                                Тёмная и с большим просветом между букв:
+                                серой мелочью она не отвечала на вопрос,
+                                почему «Брюки» в списке дважды. */}
+                            <p className="pb-4 text-[13px] uppercase tracking-[0.2em] text-ink">
                               {г.имя}
                             </p>
                             {г.разделы.map((р) => (
