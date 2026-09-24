@@ -81,7 +81,7 @@ sleep 20
 echo "  служба: $(systemctl is-active volento-storefront)"'
 
 шаг "4/4  Проверяю страницы"
-на_сервере 'for p in /ru /ru/store /ru/products/bryuki-pryamye-chernye; do
+на_сервере 'for p in /ru /ru/store /ru/products/bryuki-klassicheskie-sero-siniy; do
   printf "  %-38s %s\n" "$p" "$(curl -s -o /dev/null -m 15 -w "%{http_code}" -L "http://127.0.0.1:8000$p")"
 done'
 
