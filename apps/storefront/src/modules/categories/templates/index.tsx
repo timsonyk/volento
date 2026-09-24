@@ -90,6 +90,8 @@ export default async function CategoryTemplate({
             categoryIds={idsРаздела}
             countryCode={countryCode}
             optionValueIds={optionValueIds}
+            productsIds={отобранные ?? undefined}
+            ничегоНеНайдено={отобранные?.length === 0}
           />
         </Suspense>
       </div>

@@ -75,17 +75,6 @@ export default async function PaginatedProducts({
     return null
   }
 
-  console.log(
-    "[сетка] id в запросе:",
-    Array.isArray((queryParams as Record<string, unknown>).id)
-      ? ((queryParams as Record<string, unknown>).id as string[]).length
-      : "нет",
-    "| разделов:",
-    (queryParams.category_id ?? []).length,
-    "| сортировка:",
-    sortBy
-  )
-
   const {
     response: { products, count },
   } = await listProductsWithSort({
@@ -98,8 +87,6 @@ export default async function PaginatedProducts({
 
   // цвета всех моделей страницы — одним запросом, а не по одному на карточку
   const colorsByModel = await listModelColors({ products, countryCode })
-
-  console.log("[сетка] вернулось:", products.length, "| count:", count)
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
