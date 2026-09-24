@@ -32,14 +32,19 @@ export default async function FeatureBlock({
     listProducts({
       regionId: region.id,
       queryParams: {
-        limit: 2,
+        // просим с запасом: служебная запись «Оформление сайта» приходит
+        // наравне с товарами и отсеивается уже после ответа. При limit: 2
+        // она съедала половину блока, и справа зияла пустота
+        limit: 6,
         fields: "*variants.calculated_price,+metadata,+tags",
       },
     }),
   ])
 
-  const products = response.products
-  if (!products?.length) {
+  const products = (response.products ?? []).slice(0, 2)
+
+  // вторая карточка обязательна: одна оставляла половину блока пустой
+  if (products.length < 2) {
     return null
   }
 
