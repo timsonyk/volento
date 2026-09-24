@@ -132,14 +132,36 @@ export const listProductsWithSort = async ({
   const optionFilters = Array.from(
     new Set((optionValueIds || []).filter(Boolean))
   )
+  const общие = {
+    ...queryParams,
+    ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
+  }
 
+  // «Новинки» — сортировка по дате, её умеет сам сервер. Тогда просим
+  // ровно страницу: на боевом каталоге сотня товаров со всеми вариантами
+  // весила 17,9 МБ и считалась 4,4 секунды, страница из двенадцати —
+  // 1,8 МБ и полсекунды.
+  if (sortBy === "created_at") {
+    const { response, nextPage } = await listProducts({
+      pageParam: page,
+      queryParams: { ...общие, order: "-created_at", limit },
+      countryCode,
+    })
+
+    return { response, nextPage, queryParams }
+  }
+
+  // Сортировка по цене так не работает: цена у товара — минимум по его
+  // вариантам, сервер по ней упорядочить не может. Приходится забирать
+  // список целиком, но без картинок и опций вариантов — в сетке каталога
+  // они не нужны, а вес ответа это режет вдвое.
   const {
     response: { products },
   } = await listProducts({
     pageParam: 0,
     queryParams: {
-      ...queryParams,
-      ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
+      ...общие,
+      fields: "*variants.calculated_price,+metadata,+tags,",
       limit: 100,
     },
     countryCode,
