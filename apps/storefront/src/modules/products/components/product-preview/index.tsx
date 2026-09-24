@@ -45,6 +45,13 @@ export default async function ProductPreview({
   // кружки внутри ссылки на карточку — только показывают, какие цвета есть
   const swatches = (colors ?? []).length > 1 ? colors! : []
 
+  // На телефоне карточка узкая: у модели бывает девять цветов, и ряд
+  // кружков выдавливал сам себя за край экрана. Показываем четыре, дальше
+  // счётчик — все цвета всё равно видны в самой карточке товара.
+  const СКОЛЬКО_КРУЖКОВ = 4
+  const видимые = swatches.slice(0, СКОЛЬКО_КРУЖКОВ)
+  const остальные = swatches.length - видимые.length
+
   return (
     <LocalizedClientLink
       href={`/products/${product.handle}`}
@@ -68,31 +75,36 @@ export default async function ProductPreview({
           {stripColor(product.title, color)}
         </h3>
 
-        <div className="flex items-center justify-between gap-x-4 pl-[13px] text-sm leading-[1.2] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]">
+        <div className="flex items-center justify-between gap-x-3 pl-[13px] text-sm leading-[1.2] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]">
           {cheapestPrice && (
-            <div className="flex gap-x-2">
+            <div className="flex shrink-0 gap-x-2">
               <PreviewPrice price={cheapestPrice} />
             </div>
           )}
 
           {swatches.length > 0 && (
             <div
-              className="flex shrink-0 items-center gap-x-1.5"
+              className="flex min-w-0 items-center gap-x-1 overflow-hidden"
               data-testid="preview-colors"
             >
-              {swatches.map((c) => (
+              {видимые.map((c) => (
                 <span
                   key={c.id}
                   title={c.color}
                   aria-hidden
                   className={
                     c.id === product.id
-                      ? "h-3 w-3 rounded-full border border-paper ring-1 ring-ink"
-                      : "h-3 w-3 rounded-full border border-rule"
+                      ? "h-3 w-3 shrink-0 rounded-full border border-paper ring-1 ring-ink"
+                      : "h-3 w-3 shrink-0 rounded-full border border-rule"
                   }
                   style={{ backgroundColor: c.hex }}
                 />
               ))}
+              {остальные > 0 && (
+                <span aria-hidden className="shrink-0 text-xs text-muted">
+                  +{остальные}
+                </span>
+              )}
               <span className="sr-only">
                 Цвета модели: {swatches.map((c) => c.color).join(", ")}
               </span>
