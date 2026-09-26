@@ -17,8 +17,9 @@ SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10 \
 закрыть_канал() { ssh -O exit $SSH_OPTS volento 2>/dev/null; }
 trap закрыть_канал EXIT
 
-начало=$(date +%s)
-сколько() { echo "  (${1}: $(( $(date +%s) - начало )) с от старта)"; }
+# Имя только латиницей: bash не умеет кириллицу в именах переменных.
+start=$(date +%s)
+сколько() { echo "  (${1}: $(( $(date +%s) - start )) с от старта)"; }
 
 шаг() { printf "\n\033[1m%s\033[0m\n" "$1"; }
 
