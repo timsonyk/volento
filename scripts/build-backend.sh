@@ -57,6 +57,68 @@ else
   echo "ВНИМАНИЕ: заплатка ApiShip не применилась — проверьте, не починили ли её в плагине" >&2
 fi
 
+
+# Заплатка вторая: расчёт доставки считает заказ одной коробкой.
+#
+# В плагине две функции. Та, что собирает накладную, складывает вещи в одно
+# место: вес суммирует, толщину складывает стопкой, длину и ширину берёт
+# максимальные. Та, что считает цену для витрины, перечисляет вещи по одной
+# и отправляет в ApiShip столько мест, сколько вещей в корзине.
+#
+# Перевозчик берёт за место: восемь пар брюк считались как восемь посылок и
+# стоили около 800 рублей вместо 322 за одну коробку. При этом поедет всё
+# равно одна коробка — накладная-то собрана верно. Покупателю показывалась
+# цена вдвое-втрое выше настоящей.
+#
+# Применяем в расчёте то же правило, что у них в накладной; оно же описано
+# в документации ApiShip (складывать наименьшие стороны, брать максимум из
+# остальных двух).
+#
+# Заплатка временная — авторам написано. Если в новой версии код изменится,
+# правка не применится, сборка скажет об этом и продолжится.
+MAPPING=/home/volento/volento/node_modules/@gorgo/medusa-fulfillment-apiship/.medusa/server/src/providers/fulfillment-apiship/utils/mapping.js
+if [ -f "$MAPPING" ]; then
+  FILE="$MAPPING" python3 - <<'PYEOF' || echo "ВНИМАНИЕ: заплатка «одна коробка» не применилась — проверьте плагин" >&2
+import os
+import sys
+
+путь = os.environ["FILE"]
+s = open(путь, encoding="utf-8").read()
+
+НАЧАЛО = "const places = items.flatMap((item) => {"
+if "__одна_коробка" in s:
+    print("ApiShip: расчёт уже считает заказ одной коробкой")
+    sys.exit(0)
+if НАЧАЛО not in s:
+    sys.exit(1)
+
+i = s.index(НАЧАЛО)
+# конец блока — ближайшее закрытие flatMap на том же уровне отступа
+к = s.index("\n    });", i)
+конец = к + len("\n    });")
+
+замена = """const __одна_коробка = items.flatMap((item) => {
+        const weight = item.variant?.weight ?? apishipOptions.default_product_weight;
+        const height = item.variant?.height ?? apishipOptions.default_product_height;
+        const length = item.variant?.length ?? apishipOptions.default_product_length;
+        const width = item.variant?.width ?? apishipOptions.default_product_width;
+        return Array.from({ length: item.quantity }, () => ({ height, length, width, weight }));
+    });
+    const __стороны = __одна_коробка.map((e) => [e.height, e.width, e.length].sort((a, b) => a - b));
+    const places = __одна_коробка.length === 0 ? [] : [{
+        height: __стороны.reduce((s, d) => s + d[0], 0),
+        length: Math.max(...__стороны.map((d) => d[1])),
+        width: Math.max(...__стороны.map((d) => d[2])),
+        weight: __одна_коробка.reduce((s, e) => s + e.weight, 0),
+    }];"""
+
+open(путь, "w", encoding="utf-8").write(s[:i] + замена + s[конец:])
+print("ApiShip: расчёт теперь считает заказ одной коробкой")
+PYEOF
+else
+  echo "ВНИМАНИЕ: файл расчёта ApiShip не найден" >&2
+fi
+
 npx medusa build
 
 cd .medusa/server

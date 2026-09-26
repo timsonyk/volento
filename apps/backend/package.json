@@ -22,7 +22,7 @@
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit"
   },
   "dependencies": {
-    "@gorgo/medusa-fulfillment-apiship": "2.0.0-beta.5",
+    "@gorgo/medusa-fulfillment-apiship": "2.0.2",
     "@gorgo/medusa-integration": "0.2.1",
     "@medusajs/admin-sdk": "2.18.0",
     "@medusajs/admin-shared": "2.18.0",
