@@ -19,6 +19,8 @@ type ItemProps = {
   item: HttpTypes.StoreCartLineItem
   type?: "full" | "preview"
   currencyCode: string
+  /** Сколько этого размера осталось. undefined — учёт не поштучный. */
+  остаток?: number
 }
 
 /**
@@ -27,38 +29,26 @@ type ItemProps = {
  * Раньше список всегда предлагал до десяти штук, сколько бы ни лежало на
  * складе: человек выбирал пять, склад отказывал, и в строке появлялась
  * английская ошибка от Medusa. Теперь в списке ровно то, что есть.
+ *
+ * Остаток приходит снаружи: в ответе корзины его нет, его добывает
+ * отдельный запрос (lib/data/ostatki.ts).
  */
 const ПОТОЛОК = 10
 
-/** Остаток на складе или null, если размер не считаем поштучно. */
-const остатокСклада = (item: HttpTypes.StoreCartLineItem) => {
-  const v = item.variant
-  if (!v || v.manage_inventory === false || v.allow_backorder) {
-    return null
-  }
-  return v.inventory_quantity ?? 0
-}
-
-const сколькоМожно = (item: HttpTypes.StoreCartLineItem) => {
-  const остаток = остатокСклада(item)
-  if (остаток === null) {
-    return ПОТОЛОК
-  }
-  // Уже лежащее в корзине показываем, даже если остаток успел упасть, —
-  // иначе выбранное число пропало бы из списка и выглядело бы поломкой.
-  return Math.min(ПОТОЛОК, Math.max(остаток, item.quantity))
-}
-
-const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
+const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const можно = сколькоМожно(item)
-  const остаток = остатокСклада(item)
+  // Уже лежащее в корзине оставляем в списке, даже если остаток успел
+  // упасть, — иначе выбранное число пропало бы и выглядело поломкой.
+  const можно =
+    остаток === undefined
+      ? ПОТОЛОК
+      : Math.min(ПОТОЛОК, Math.max(остаток, item.quantity))
   // Остаток мог упасть уже после того, как товар положили в корзину:
   // предупреждаем сразу, а не на кнопке «Оформить заказ».
   const нехватает =
-    остаток !== null && остаток < item.quantity
+    остаток !== undefined && остаток < item.quantity
       ? остаток > 0
         ? `В наличии только ${остаток} — уменьшите количество.`
         : "Этого размера больше нет в наличии."
@@ -73,7 +63,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       quantity,
     })
       .catch((err: Error) => {
-        setError(поЧеловечески(err.message, остатокСклада(item)))
+        setError(поЧеловечески(err.message, остаток))
       })
       .finally(() => {
         setUpdating(false)

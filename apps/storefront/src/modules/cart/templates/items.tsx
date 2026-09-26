@@ -1,3 +1,4 @@
+import { остаткиКорзины } from "@lib/data/ostatki"
 import repeat from "@lib/util/repeat"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Table } from "@modules/common/components/ui"
@@ -9,8 +10,11 @@ type ItemsTemplateProps = {
   cart?: HttpTypes.StoreCart
 }
 
-const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
+const ItemsTemplate = async ({ cart }: ItemsTemplateProps) => {
   const items = cart?.items
+  // Остатки спрашиваем здесь, на сервере: в ответе корзины их нет, а без
+  // них строка не знает, сколько штук вообще можно выбрать.
+  const остатки = await остаткиКорзины(cart ?? null)
   return (
     <div>
       <div className="pb-3 flex items-center">
@@ -42,6 +46,9 @@ const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
                       key={item.id}
                       item={item}
                       currencyCode={cart?.currency_code}
+                      остаток={
+                        item.variant_id ? остатки[item.variant_id] : undefined
+                      }
                     />
                   )
                 })
