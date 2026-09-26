@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
 import MedusaCTA from "@modules/layout/components/medusa-cta"
@@ -24,12 +26,22 @@ export default function CheckoutLayout({
               Назад
             </span>
           </LocalizedClientLink>
+          {/* Тот же знак, что в шапке магазина: набранное текстом слово
+              шло системным шрифтом и выбивалось из оформления. */}
           <LocalizedClientLink
             href="/"
-            className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
+            aria-label="Volento — на главную"
+            className="flex items-center transition-opacity hover:opacity-60"
             data-testid="store-link"
           >
-            Volento
+            <Image
+              src="/volento-logo.png"
+              alt="Volento"
+              width={2691}
+              height={632}
+              priority
+              className="h-[30px] w-auto"
+            />
           </LocalizedClientLink>
           <div className="flex-1 basis-0" />
         </nav>
