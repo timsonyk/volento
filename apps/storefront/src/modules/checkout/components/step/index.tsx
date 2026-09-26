@@ -71,10 +71,12 @@ const Шаг = ({
       )}
     >
       <div className="mb-4 flex items-baseline gap-x-3">
+        {/* Цифра того же кегля, что и заголовок: мелкий номер сбоку
+            выглядел случайной пометкой, а не нумерацией пунктов. */}
         <span
           className={clx(
-            "text-[13px] tabular-nums",
-            открыт ? "text-muted" : "text-rule"
+            "text-3xl-regular tabular-nums transition-colors",
+            открыт ? "text-ink" : "text-muted"
           )}
           aria-hidden
         >
@@ -98,7 +100,7 @@ const Шаг = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="h-4 w-4 self-center text-ink"
+            className="h-5 w-5 self-center text-ink"
             aria-label="пункт пройден"
           >
             <path d="m5 12.5 4.5 4.5L19 7" />

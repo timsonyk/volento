@@ -27,7 +27,10 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     // shipping_methods.data хранит выбор ApiShip: тариф и пункт выдачи.
     // Без него после обновления страницы покупателю пришлось бы выбирать
     // пункт заново.
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +shipping_methods.data"
+    // inventory_quantity нужен корзине: без него список количества
+    // предлагал до десяти штук любого размера, и склад отказывал уже
+    // после выбора.
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +shipping_methods.data, +items.variant.inventory_quantity, +items.variant.manage_inventory, +items.variant.allow_backorder"
 
   if (!id) {
     return null
