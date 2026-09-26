@@ -61,9 +61,9 @@ const VerticalMeasure: React.FC<{
             <span
               className={clx(
                 "text-sm tabular-nums transition-colors",
-                нету && "line-through decoration-from-font",
+                нету && "line-through decoration-2",
                 selected ? "text-ink" : "text-muted group-hover:text-ink",
-                нету && "opacity-45"
+                нету && "opacity-55"
               )}
             >
               {v}
@@ -121,7 +121,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
                 // px-2.5 вместо промежутка снаружи: на глаз расстояние
                 // прежнее, а палец получает 40×44 вместо 19×32
                 "px-2.5 py-2.5 text-base tabular-nums underline-offset-[6px] transition-colors duration-200 disabled:opacity-40",
-                нет?.has(v) && "line-through decoration-from-font opacity-45",
+                нет?.has(v) && "line-through decoration-2 opacity-55",
                 v === current
                   ? "text-ink underline"
                   : "text-muted hover:text-ink"
