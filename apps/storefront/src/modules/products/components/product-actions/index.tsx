@@ -113,6 +113,72 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
+  /**
+   * Что есть в наличии.
+   *
+   * Размер перечёркнут, если ни в одном росте его нет. Если хоть один
+   * рост есть — размер живой, а перечёркнутыми окажутся те роста,
+   * которых нет именно в этом размере.
+   */
+  const наличие = useMemo(() => {
+    const найти = (имя: string) =>
+      (product.options ?? []).find(
+        (o) => (o.title ?? "").trim().toLowerCase() === имя
+      )?.id
+
+    const размерId = найти("размер")
+    const ростId = найти("рост")
+
+    const размеры = new Set<string>()
+    const ростаУРазмера = new Map<string, Set<string>>()
+    const всеРоста = new Set<string>()
+
+    for (const v of product.variants ?? []) {
+      const есть = v.manage_inventory
+        ? (v.inventory_quantity ?? 0) > 0 || !!v.allow_backorder
+        : true
+      if (!есть) {
+        continue
+      }
+
+      const карта = optionsAsKeymap(v.options) ?? {}
+      const размер = размерId ? карта[размерId] : undefined
+      const рост = ростId ? карта[ростId] : undefined
+
+      if (размер) {
+        размеры.add(размер)
+        if (рост) {
+          const набор = ростаУРазмера.get(размер) ?? new Set<string>()
+          набор.add(рост)
+          ростаУРазмера.set(размер, набор)
+        }
+      }
+      if (рост) {
+        всеРоста.add(рост)
+      }
+    }
+
+    return { размерId, ростId, размеры, ростаУРазмера, всеРоста }
+  }, [product.variants, product.options])
+
+  /** Значения, которые надо перечеркнуть у конкретной опции. */
+  const перечеркнуть = (id: string, значения: string[]) => {
+    if (id === наличие.размерId) {
+      return new Set(значения.filter((v) => !наличие.размеры.has(v)))
+    }
+    if (id === наличие.ростId) {
+      // размер уже выбран — смотрим роста именно для него
+      const выбранныйРазмер = наличие.размерId
+        ? options[наличие.размерId]
+        : undefined
+      const доступные = выбранныйРазмер
+        ? (наличие.ростаУРазмера.get(выбранныйРазмер) ?? new Set<string>())
+        : наличие.всеРоста
+      return new Set(значения.filter((v) => !доступные.has(v)))
+    }
+    return undefined
+  }
+
   // add the selected variant to the cart
   // размеры одного товара обычно стоят одинаково; тогда цену показывает
   // только блок под названием
@@ -169,6 +235,10 @@ export default function ProductActions({
                       current={options[option.id]}
                       updateOption={setOptionValue}
                       title={option.title ?? ""}
+                      нет={перечеркнуть(
+                        option.id,
+                        (option.values ?? []).map((v) => v.value)
+                      )}
                       data-testid="product-options"
                       disabled={!!disabled || isAdding}
                     />

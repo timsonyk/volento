@@ -114,11 +114,15 @@ export default function DesktopMenu({
             : "pointer-events-none -translate-y-2 opacity-0")
         }
       >
-        <div className="content-container flex gap-x-12 py-10">
+        {/* Между блоками 96 px, между колонками внутри блока 32 —
+            втрое меньше. Разделители не нужны: группы читаются самим
+            расстоянием. Раньше промежутки были почти равны (48 и 40),
+            и три блока сливались в один сплошной ряд. */}
+        <div className="content-container flex gap-x-24 py-10">
           {группы.map((г) => (
             <div key={г.имя} className="flex flex-col gap-y-6">
               <p className={ПОДПИСЬ_ГРУППЫ}>{г.имя}</p>
-              <div className="flex gap-x-10">
+              <div className="flex gap-x-8">
                 {г.колонки.map((к) => (
                   <Колонка
                     key={к.заголовок}
