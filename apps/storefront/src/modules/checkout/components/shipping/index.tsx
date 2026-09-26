@@ -288,14 +288,6 @@ const Shipping: React.FC<ShippingProps> = ({
       {isOpen ? (
         <>
           <div className="grid">
-            <div className="flex flex-col">
-              <span className="font-medium txt-medium text-ui-fg-base">
-                Способ доставки
-              </span>
-              <span className="mb-4 text-ui-fg-muted txt-medium">
-                Как доставить заказ
-              </span>
-            </div>
             <div data-testid="delivery-options-container">
               <div className="pb-8 md:pt-0 pt-2">
                 {hasPickupOptions && (
@@ -380,7 +372,7 @@ const Shipping: React.FC<ShippingProps> = ({
                             })
                           ) : calculatedPricesMap[option.id] ? (
                             option.provider_id === "apiship_apiship" ? (
-                              "from " +
+                              "от " +
                               convertToLocale({
                                 amount: calculatedPricesMap[option.id],
                                 currency_code: cart?.currency_code,

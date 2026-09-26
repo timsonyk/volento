@@ -8,7 +8,17 @@
 # Запуск с компьютера:  bash scripts/deploy.sh
 set -uo pipefail
 
-SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10"
+# Одно соединение на всю выкатку. Без этого каждая команда заново
+# открывала TCP, поднимала шифрование и логинилась — по секунде-две на
+# вызов, а вызовов за выкатку набирается больше десятка.
+SSH_OPTS="-o ConnectTimeout=30 -o ServerAliveInterval=10 \
+  -o ControlMaster=auto -o ControlPath=/tmp/volento-ssh-%r@%h:%p -o ControlPersist=180"
+
+закрыть_канал() { ssh -O exit $SSH_OPTS volento 2>/dev/null; }
+trap закрыть_канал EXIT
+
+начало=$(date +%s)
+сколько() { echo "  (${1}: $(( $(date +%s) - начало )) с от старта)"; }
 
 шаг() { printf "\n\033[1m%s\033[0m\n" "$1"; }
 
@@ -56,10 +66,12 @@ echo "  код на сервере совпадает с локальным"
 шаг "2/4  Собираю витрину (несколько минут)"
 на_сервере 'sudo -u volento setsid /home/volento/build-only.sh > /home/volento/deploy.log 2>&1 < /dev/null & echo "  сборка запущена"'
 
-for i in $(seq 1 40); do
-  sleep 20
+# Шаг опроса в пять секунд, а не в двадцать: сборка обычно укладывается
+# в минуту, и на крупном шаге выкатка ждала уже собранное.
+for i in $(seq 1 160); do
+  sleep 5
   if на_сервере 'grep -aq ALL_DONE /home/volento/deploy.log && echo ГОТОВО' | grep -q ГОТОВО; then
-    echo "  сборка завершена"
+    echo "  сборка завершена"; сколько "сборка"
     break
   fi
   # Признак провала ставит сам build-only.sh по коду возврата npm.
@@ -71,18 +83,24 @@ for i in $(seq 1 40); do
     на_сервере 'tail -15 /home/volento/deploy.log'
     exit 1
   fi
-  printf "  жду... (%s)\n" "$i"
+  [ $((i % 6)) -eq 0 ] && printf "  жду... (%s с)\n" "$((i * 5))"
 done
 
 шаг "3/4  Перезапускаю витрину"
+# Ждём не фиксированные двадцать секунд, а первый успешный ответ:
+# витрина обычно поднимается за пять.
 на_сервере 'rm -rf /home/volento/volento/apps/storefront/.next/cache
 systemctl restart volento-storefront
-sleep 20
-echo "  служба: $(systemctl is-active volento-storefront)"'
+for t in $(seq 1 40); do
+  sleep 1
+  curl -s -o /dev/null -m 3 http://127.0.0.1:8000/ru && break
+done
+echo "  служба: $(systemctl is-active volento-storefront), поднялась за ${t} с"'
 
 шаг "4/4  Проверяю страницы"
 на_сервере 'for p in /ru /ru/store /ru/products/bryuki-klassicheskie-sero-siniy; do
   printf "  %-38s %s\n" "$p" "$(curl -s -o /dev/null -m 15 -w "%{http_code}" -L "http://127.0.0.1:8000$p")"
 done'
 
+сколько "всего"
 printf "\n\033[1mГотово. Откройте https://slytn.ru\033[0m\n"
