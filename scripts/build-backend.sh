@@ -36,7 +36,23 @@ fi
 # Имена переменных здесь латиницей не для красоты: bash не умеет
 # кириллические имена и падает на них с «command not found».
 CITY=${APISHIP_CITY:-Москва}
-PLUGIN_ADMIN=/home/volento/volento/node_modules/@gorgo/medusa-fulfillment-apiship/.medusa/server/src/admin
+
+# Плагин npm кладёт то в корень монорепозитория, то в папку бэкенда — решает
+# сам, и при обновлении версии место может смениться. Раньше путь был задан
+# жёстко на корень, и после переезда обе заплатки молча переставали
+# применяться. Поэтому ищем плагин в обоих местах.
+APISHIP_ROOT=""
+for d in /home/volento/volento/node_modules/@gorgo/medusa-fulfillment-apiship \
+         /home/volento/volento/apps/backend/node_modules/@gorgo/medusa-fulfillment-apiship; do
+  if [ -d "$d" ]; then APISHIP_ROOT="$d"; break; fi
+done
+if [ -z "$APISHIP_ROOT" ]; then
+  echo "ВНИМАНИЕ: плагин ApiShip не найден — заплатки не применены" >&2
+else
+  echo "плагин ApiShip: $APISHIP_ROOT"
+fi
+
+PLUGIN_ADMIN="$APISHIP_ROOT/.medusa/server/src/admin"
 OLD='availableOperation=[1,3];providerKey=${providerKey}`'
 NEW="availableOperation=[1,3];providerKey=\${providerKey};city=$CITY\`"
 PATCHED=0
@@ -76,7 +92,7 @@ fi
 #
 # Заплатка временная — авторам написано. Если в новой версии код изменится,
 # правка не применится, сборка скажет об этом и продолжится.
-MAPPING=/home/volento/volento/node_modules/@gorgo/medusa-fulfillment-apiship/.medusa/server/src/providers/fulfillment-apiship/utils/mapping.js
+MAPPING="$APISHIP_ROOT/.medusa/server/src/providers/fulfillment-apiship/utils/mapping.js"
 if [ -f "$MAPPING" ]; then
   FILE="$MAPPING" python3 - <<'PYEOF' || echo "ВНИМАНИЕ: заплатка «одна коробка» не применилась — проверьте плагин" >&2
 import os
