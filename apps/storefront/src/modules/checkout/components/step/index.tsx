@@ -29,6 +29,7 @@ const Шаг = ({
   открыт,
   готов,
   почему,
+  первый,
   children,
 }: {
   номер: number
@@ -37,6 +38,7 @@ const Шаг = ({
   открыт: boolean
   готов: boolean
   почему: string
+  первый?: boolean
   children: React.ReactNode
 }) => {
   const [плашка, setПлашка] = useState<{ x: number; y: number } | null>(null)
@@ -59,34 +61,24 @@ const Шаг = ({
   }
 
   return (
-    <section aria-label={заголовок} data-testid={`шаг-${номер}`}>
-      <div className="mb-5 flex items-center gap-x-3">
+    <section
+      aria-label={заголовок}
+      data-testid={`шаг-${номер}`}
+      className={clx(
+        // Разделитель ставим сверху у всех, кроме первого: так пункты
+        // отделены друг от друга, но страница не начинается с линии.
+        !первый && "mt-9 border-t border-rule pt-9"
+      )}
+    >
+      <div className="mb-4 flex items-baseline gap-x-3">
         <span
           className={clx(
-            "flex h-7 w-7 shrink-0 items-center justify-center border text-[13px] transition-colors",
-            готов
-              ? "border-ink bg-ink text-paper"
-              : открыт
-                ? "border-ink text-ink"
-                : "border-rule text-muted"
+            "text-[13px] tabular-nums",
+            открыт ? "text-muted" : "text-rule"
           )}
           aria-hidden
         >
-          {готов ? (
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-3.5 w-3.5"
-            >
-              <path d="m5 12.5 4.5 4.5L19 7" />
-            </svg>
-          ) : (
-            номер
-          )}
+          {номер}
         </span>
 
         <h2
@@ -97,10 +89,25 @@ const Шаг = ({
         >
           {заголовок}
         </h2>
+
+        {готов && (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 self-center text-ink"
+            aria-label="пункт пройден"
+          >
+            <path d="m5 12.5 4.5 4.5L19 7" />
+          </svg>
+        )}
       </div>
 
       {открыт && подпись && (
-        <p className="-mt-3 mb-5 max-w-lg text-sm leading-relaxed text-muted">
+        <p className="-mt-2 mb-4 max-w-lg text-sm leading-relaxed text-muted">
           {подпись}
         </p>
       )}
