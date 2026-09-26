@@ -6,6 +6,7 @@ import CityField from "@modules/checkout/components/city-field"
 import Recipient from "@modules/checkout/components/recipient"
 import Review from "@modules/checkout/components/review"
 import Shipping from "@modules/checkout/components/shipping"
+import Шаги from "@modules/checkout/components/steps"
 
 export default async function CheckoutForm({
   cart,
@@ -25,27 +26,29 @@ export default async function CheckoutForm({
     return null
   }
 
+  // Пункты идут по порядку и открываются по одному — этим занимается
+  // «Шаги». Сами блоки отрисованы здесь, на сервере, и передаются туда
+  // готовыми.
+  //
+  // Отдельного блока с адресом нет: проверено, что службе достаточно
+  // города — цена с одним городом и с полным адресом совпадает. Улицу
+  // будем спрашивать только у тех, кто выберет курьера.
+  //
+  // Порядок: город, доставка, получатель. Телефон для расчёта не нужен
+  // (тоже проверено), поэтому контакты можно спрашивать после того, как
+  // человек увидел цены и сроки.
   return (
-    // Блоки идут подряд, без разделительных линий: оформление
-    // одностраничное, и лишние границы дробят его на куски.
-    //
-    // Отдельного блока с адресом нет: проверено, что службе достаточно
-    // города — цена с одним городом и с полным адресом совпадает.
-    // Улицу будем спрашивать только у тех, кто выберет курьера.
-    //
-    // Порядок: город, доставка, получатель. Телефон для расчёта не нужен
-    // (тоже проверено), поэтому контакты можно спрашивать после того, как
-    // человек увидел цены и сроки.
-    <div className="grid w-full grid-cols-1 gap-y-10">
-      <CityField cart={cart} />
-
-      <Shipping cart={cart} availableShippingMethods={shippingMethods} />
-
-      <Recipient cart={cart} />
-
-      <Payment cart={cart} availablePaymentMethods={paymentMethods} />
-
-      <Review cart={cart} />
-    </div>
+    <Шаги
+      cart={cart}
+      город={<CityField cart={cart} />}
+      доставка={
+        <Shipping cart={cart} availableShippingMethods={shippingMethods} />
+      }
+      получатель={<Recipient cart={cart} />}
+      оплата={
+        <Payment cart={cart} availablePaymentMethods={paymentMethods} />
+      }
+      проверка={<Review cart={cart} />}
+    />
   )
 }

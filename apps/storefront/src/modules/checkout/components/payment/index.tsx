@@ -2,21 +2,15 @@
 import { RadioGroup } from "@headlessui/react"
 import { isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
-import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
+import { CreditCard } from "@medusajs/icons"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import PaymentContainer, {
   StripeCardContainer,
 } from "@modules/checkout/components/payment-container"
-import {
-  Button,
-  Container,
-  Heading,
-  Text,
-  clx,
-} from "@modules/common/components/ui"
+import { Button, Container, Text } from "@modules/common/components/ui"
 import { HttpTypes } from "@medusajs/types"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
+import { useОтметка } from "../steps/context"
 
 const Payment = ({
   cart,
@@ -33,13 +27,10 @@ const Payment = ({
   const [error, setError] = useState<string | null>(null)
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
+  const отметить = useОтметка()
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     activeSession?.provider_id ?? "",
   )
-
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
 
   // Раздел всегда открыт: оформление одностраничное.
   const isOpen = true
@@ -65,21 +56,11 @@ const Payment = ({
     (activeSession && (cart?.shipping_methods?.length ?? 0) !== 0) ||
     paidByGiftcard
 
-  const createQueryString = useCallback(
-    (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams)
-      params.set(name, value)
-
-      return params.toString()
-    },
-    [searchParams],
-  )
-
-  const handleEdit = () => {
-    router.push(pathname + "?" + createQueryString("step", "payment"), {
-      scroll: false,
-    })
-  }
+  // Способ оплаты выбран — открываем последний пункт, не дожидаясь,
+  // пока платёжная запись доедет с сервера.
+  useEffect(() => {
+    отметить("оплата", !!selectedPaymentMethod || paidByGiftcard)
+  }, [selectedPaymentMethod, paidByGiftcard, отметить])
 
   useEffect(() => {
     setError(null)
@@ -126,32 +107,7 @@ const Payment = ({
 
   return (
     <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <Heading
-          level="h2"
-          className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
-            {
-              "opacity-50 pointer-events-none select-none":
-                !isOpen && !paymentReady,
-            },
-          )}
-        >
-          Оплата
-          {!isOpen && paymentReady && <CheckCircleSolid />}
-        </Heading>
-        {!isOpen && paymentReady && (
-          <Text>
-            <button
-              onClick={handleEdit}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-              data-testid="edit-payment-button"
-            >
-              Изменить
-            </button>
-          </Text>
-        )}
-      </div>
+      {/* Заголовок пункта рисует обёртка «Шаг» — здесь он был бы вторым. */}
       <div>
         <div className={isOpen ? "block" : "hidden"}>
           {!paidByGiftcard && availablePaymentMethods?.length && (

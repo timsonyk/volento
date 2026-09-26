@@ -1,14 +1,16 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { updateCheckoutFields } from "@lib/data/cart"
 import города from "@lib/data/cities.json"
 import { HttpTypes } from "@medusajs/types"
 import Input from "@modules/common/components/input"
 
+import { useОтметка } from "../steps/context"
+
 /**
- * Город доставки — первое, что спрашивают на странице.
+ * Город доставки — первый пункт оформления.
  *
  * Заменил собой блок с полным адресом: проверка показала, что службе
  * достаточно города — цена с одним городом, с индексом и с улицей
@@ -20,17 +22,41 @@ import Input from "@modules/common/components/input"
  * (scripts/collect-cities.js): это города, куда действительно возят, а не
  * все населённые пункты страны. Список лежит рядом файлом, поэтому
  * подсказки появляются мгновенно и не зависят от чужого сервиса.
+ *
+ * Город принимаем только из этого списка. Город не из списка службы не
+ * узнают, и следующий пункт оказался бы пустым — с непонятной причиной.
+ * Лучше сказать об этом сразу и своими словами.
  */
 type Город = [string] | [string, string]
 
 const СПИСОК = города as Город[]
 const СКОЛЬКО_ПОКАЗЫВАТЬ = 8
 
+const ИЗВЕСТНЫЕ = new Set(СПИСОК.map(([имя]) => имя.toLowerCase()))
+
 const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
   const [город, setГород] = useState(cart?.shipping_address?.city ?? "")
   const [открыт, setОткрыт] = useState(false)
-  const [ошибка, setОшибка] = useState<string | null>(null)
+  const [трогали, setТрогали] = useState(false)
+  const [сбой, setСбой] = useState<string | null>(null)
   const прошлый = useRef(cart?.shipping_address?.city ?? "")
+  const отметить = useОтметка()
+
+  const чистый = город.trim()
+  const подходит = ИЗВЕСТНЫЕ.has(чистый.toLowerCase())
+
+  // Пока не подходит — следующий пункт остаётся закрытым.
+  useEffect(() => {
+    отметить("город", подходит && !сбой)
+  }, [подходит, сбой, отметить])
+
+  const ошибка = сбой
+    ? `Не удалось сохранить город: ${сбой}`
+    : !трогали || подходит
+      ? null
+      : !чистый
+        ? "Укажите город — без него не посчитать доставку"
+        : "Выберите город из подсказок: в другие мы пока не возим"
 
   const подсказки = useMemo(() => {
     const запрос = город.trim().toLowerCase()
@@ -63,22 +89,26 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
 
   const сохранить = async (значение: string) => {
     const чистое = значение.trim()
-    if (!чистое || чистое === прошлый.current) {
+    // Незнакомый город в заказ не пишем: следующий пункт всё равно не
+    // откроется, а в корзине осталась бы мусорная строка.
+    if (!ИЗВЕСТНЫЕ.has(чистое.toLowerCase()) || чистое === прошлый.current) {
       return
     }
     прошлый.current = чистое
 
     try {
-      setОшибка(null)
+      setСбой(null)
       await updateCheckoutFields({ адрес: { city: чистое, country_code: "ru" } })
     } catch (e) {
-      setОшибка((e as Error).message)
+      прошлый.current = ""
+      setСбой((e as Error).message)
     }
   }
 
   const выбрать = (имя: string) => {
     setГород(имя)
     setОткрыт(false)
+    setТрогали(true)
     сохранить(имя)
   }
 
@@ -98,15 +128,17 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
         // успевает сработать нажатие на подсказку.
         onBlur={() => {
           window.setTimeout(() => setОткрыт(false), 150)
+          setТрогали(true)
           сохранить(город)
         }}
-        required
+        обязательно
+        ошибка={ошибка}
         data-testid="delivery-city-input"
       />
 
       {открыт && подсказки.length > 0 && (
         <ul
-          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto border border-rule bg-paper shadow-lg"
+          className="absolute left-0 right-0 top-[52px] z-20 mt-1 max-h-72 overflow-y-auto border border-rule bg-paper shadow-lg"
           data-testid="city-suggestions"
         >
           {подсказки.map(([имя, регион]) => (
@@ -123,10 +155,6 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
             </li>
           ))}
         </ul>
-      )}
-
-      {ошибка && (
-        <p className="mt-2 text-sm text-red-600">Не удалось сохранить: {ошибка}</p>
       )}
     </div>
   )

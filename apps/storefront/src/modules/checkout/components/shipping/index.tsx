@@ -7,12 +7,11 @@ import {
   retrieveProviders,
 } from "@lib/data/fulfillment"
 import { convertToLocale } from "@lib/util/money"
-import { CheckCircleSolid, Loader } from "@medusajs/icons"
+import { Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { Button, clx, Heading, Text } from "@modules/common/components/ui"
+import { Button, clx, Text } from "@modules/common/components/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import MedusaRadio from "@modules/common/components/radio"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
   ApishipPickupPointModal,
@@ -20,6 +19,7 @@ import {
   ApishipChosen,
   days,
 } from "./apiship"
+import { useОтметка } from "../steps/context"
 
 const PICKUP_OPTION_ON = "__PICKUP_ON"
 const PICKUP_OPTION_OFF = "__PICKUP_OFF"
@@ -77,10 +77,7 @@ const Shipping: React.FC<ShippingProps> = ({
   const [apishipPickupPointModalOpen, setApishipPickupPointModalOpen] =
     useState(false)
   const [apishipCourierModalOpen, setApishipCourierModalOpen] = useState(false)
-
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
+  const отметить = useОтметка()
 
   // Раздел всегда открыт: оформление одностраничное.
   const isOpen = true
@@ -155,6 +152,23 @@ const Shipping: React.FC<ShippingProps> = ({
       setApishipPickupPointModalOpen(false)
     }
   }, [isOpen, apishipMode, apishipChosen])
+
+  // Пункт считается пройденным, когда выбран способ, а для ApiShip —
+  // ещё и пункт выдачи (или адрес курьеру). Без этого следующий пункт
+  // открылся бы, а отправление создать было бы не из чего.
+  const выбранРежим =
+    apishipChosen?.deliveryType === 2
+      ? "point"
+      : apishipChosen?.deliveryType === 1
+        ? "door"
+        : null
+
+  useEffect(() => {
+    отметить(
+      "доставка",
+      !!shippingMethodId && (!apishipMode || выбранРежим === apishipMode)
+    )
+  }, [shippingMethodId, apishipMode, выбранРежим, отметить])
 
   useEffect(() => {
     let cancelled = false
@@ -234,10 +248,6 @@ const Shipping: React.FC<ShippingProps> = ({
     // каждую смену города, а не один раз при загрузке.
   }, [availableShippingMethods, cart.shipping_address?.city, cart.id])
 
-  const handleEdit = () => {
-    router.push(pathname + "?step=delivery", { scroll: false })
-  }
-
   const handleSetShippingMethod = async (
     id: string,
     variant: "shipping" | "pickup",
@@ -274,37 +284,7 @@ const Shipping: React.FC<ShippingProps> = ({
 
   return (
     <div className="bg-white">
-      <div className="flex flex-row items-center justify-between mb-6">
-        <Heading
-          level="h2"
-          className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
-            {
-              "opacity-50 pointer-events-none select-none":
-                !isOpen && cart.shipping_methods?.length === 0,
-            },
-          )}
-        >
-          Доставка
-          {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-            <CheckCircleSolid />
-          )}
-        </Heading>
-        {!isOpen &&
-          cart?.shipping_address &&
-          cart?.billing_address &&
-          cart?.email && (
-            <Text>
-              <button
-                onClick={handleEdit}
-                className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-                data-testid="edit-delivery-button"
-              >
-                Изменить
-              </button>
-            </Text>
-          )}
-      </div>
+      {/* Заголовок пункта рисует обёртка «Шаг» — здесь он был бы вторым. */}
       {isOpen ? (
         <>
           <div className="grid">
