@@ -119,7 +119,11 @@ export default function DesktopMenu({
             блоками получается сам и всегда больше, чем 32 px между
             колонками внутри блока, — поэтому группы читаются
             расстоянием, без разделителей. */}
-        <div className="content-container flex justify-between gap-x-12 py-10">
+        <div className="content-container py-10">
+          {/* Ширину ограничиваем, иначе на широком мониторе «Покупателю»
+              убегает в самый угол. Левый край оставляем на месте — так
+              «Женщинам» стоит ровно под словом «Каталог» в шапке. */}
+          <div className="flex max-w-[1280px] justify-between gap-x-12">
           {группы.map((г) => (
             <div key={г.имя} className="flex flex-col gap-y-6">
               <p className={ПОДПИСЬ_ГРУППЫ}>{г.имя}</p>
@@ -159,6 +163,7 @@ export default function DesktopMenu({
               />
             </LocalizedClientLink>
           )}
+          </div>
         </div>
       </div>
     </div>
