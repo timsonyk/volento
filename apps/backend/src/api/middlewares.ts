@@ -15,5 +15,12 @@ export default defineMiddlewares({
         authenticate("customer", ["bearer"], { allowUnregistered: true }),
       ],
     },
+    {
+      matcher: "/store/vhod/telefon",
+      method: "POST",
+      middlewares: [
+        authenticate("customer", ["bearer"], { allowUnregistered: true }),
+      ],
+    },
   ],
 })

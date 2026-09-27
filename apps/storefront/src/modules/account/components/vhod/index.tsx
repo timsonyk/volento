@@ -73,6 +73,12 @@ const Вход = () => {
   }
 
   const ошибка = "ошибка" in шаг ? шаг.ошибка : undefined
+  // Ошибка знакомства может относиться к конкретному полю. Общую не
+  // вешаем на дату рождения: поле необязательное, а красная рамка на
+  // нём заставляла думать, что дело именно в нём.
+  const полеОшибки = шаг.шаг === "знакомство" ? шаг.поле : undefined
+  const уПоля = (имя: "телефон" | "дата") =>
+    полеОшибки === имя ? ошибка : undefined
 
   const подпись = "mb-2 text-sm text-muted"
   const кнопка =
@@ -221,6 +227,7 @@ const Вход = () => {
                 setПоля((п) => ({ ...п, телефон: телефономСМаской(e.target.value) }))
               }
               обязательно
+              ошибка={уПоля("телефон")}
               data-testid="vhod-telefon"
             />
             <Input
@@ -232,10 +239,32 @@ const Вход = () => {
               onChange={(e) =>
                 setПоля((п) => ({ ...п, рождение: сТочками(e.target.value) }))
               }
-              ошибка={ошибка}
+              ошибка={уПоля("дата")}
               data-testid="vhod-rozhdenie"
             />
           </div>
+
+          {ошибка && !полеОшибки && (
+            <p
+              className="mt-4 flex items-start gap-x-1.5 text-sm leading-snug text-red-600"
+              data-testid="vhod-oshibka"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                className="mt-[2px] h-4 w-4 shrink-0"
+                aria-hidden
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7.5v5" />
+                <path d="M12 16.2v.2" />
+              </svg>
+              <span>{ошибка}</span>
+            </p>
+          )}
 
           <button type="submit" disabled={идёт} className={`${кнопка} mt-6`}>
             {идёт ? "Сохраняю…" : "Готово"}
