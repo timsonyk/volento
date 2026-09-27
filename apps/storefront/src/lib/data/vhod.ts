@@ -127,13 +127,38 @@ export async function войтиПоКоду(
   // почти ничего не даёт, зато следующим шагом с ним можно её завести.
   await setAuthToken(ключ)
 
+  const заголовки = { authorization: `Bearer ${ключ}` }
+
   const знаем = await sdk.store.customer
-    .retrieve({}, { authorization: `Bearer ${ключ}` })
+    .retrieve({}, заголовки)
     .then(() => true)
     .catch(() => false)
 
   if (!знаем) {
-    return { шаг: "знакомство", почта: адрес }
+    // Аккаунт мог остаться с прежних времён, когда вход был по паролю.
+    // Тогда карточка покупателя есть, но с новой личностью не связана —
+    // просим сервер их связать. Если связывать нечего, знакомимся.
+    const связан = await sdk.client
+      .fetch<{ связан: boolean }>("/store/vhod/svyazat", {
+        method: "POST",
+        headers: заголовки,
+      })
+      .then((о) => !!о?.связан)
+      .catch((e) => {
+        console.error("Не удалось связать с прежним аккаунтом:", (e as Error)?.message)
+        return false
+      })
+
+    if (!связан) {
+      return { шаг: "знакомство", почта: адрес }
+    }
+
+    // Ключ был выписан на личность без покупателя — меняем на свежий,
+    // иначе «мои заказы» и «мой профиль» будут отлетать.
+    const свежий = await sdk.auth.refresh(заголовки)
+    if (typeof свежий === "string") {
+      await setAuthToken(свежий)
+    }
   }
 
   await послеВхода()
