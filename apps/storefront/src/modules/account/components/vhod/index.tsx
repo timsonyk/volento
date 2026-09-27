@@ -91,8 +91,7 @@ const Вход = () => {
         >
           <h1 className="mb-2 text-3xl-regular text-ink">Вход</h1>
           <p className="mb-7 text-sm leading-relaxed text-muted">
-            Введите почту — пришлём код из {ДЛИНА_КОДА} цифр. Пароль
-            придумывать не нужно.
+            Введите почту — пришлём код из {ДЛИНА_КОДА} цифр.
           </p>
 
           <Input
