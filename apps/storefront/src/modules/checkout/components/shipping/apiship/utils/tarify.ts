@@ -162,11 +162,16 @@ export const срокТарифа = (tariff: ApishipTariff) => {
   return `${min}–${max} ${дней(max)}`
 }
 
-/** Цена рублями, как в остальном магазине. */
+/**
+ * Цена рублями, как в остальном магазине.
+ *
+ * Округляем до рубля: Яндекс отдаёт цену с копейками, и в списке рядом с
+ * ровными ценами СДЭК «287,9 ₽» выглядело опечаткой.
+ */
 export const ценаСтрокой = (
   сумма: number | undefined,
   валюта = "rub"
 ) =>
   typeof сумма === "number"
-    ? convertToLocale({ amount: сумма, currency_code: валюта })
+    ? convertToLocale({ amount: Math.round(сумма), currency_code: валюта })
     : "—"
