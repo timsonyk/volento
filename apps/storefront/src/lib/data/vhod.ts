@@ -8,7 +8,7 @@ import {
   разобратьТелефон,
 } from "@lib/util/polya-znakomstva"
 
-import { getCacheTag, setAuthToken } from "./cookies"
+import { getAuthHeaders, getCacheTag, setAuthToken } from "./cookies"
 import { transferCart } from "./customer"
 
 /**
@@ -168,22 +168,41 @@ export async function завершитьЗнакомство(
     return { шаг: "знакомство", почта: адрес, ошибка: рождение.ошибка }
   }
 
+  // Ключ прикладываем руками: клиент не подставляет его сам, у каждого
+  // запроса свои заголовки. Без этого создание покупателя отлетало, а
+  // человек видел безликое «не получилось сохранить».
+  const ключ = await getAuthHeaders()
+  if (!("authorization" in ключ)) {
+    return {
+      шаг: "код",
+      почта: адрес,
+      ошибка: "Вход устарел. Запросите код заново.",
+    }
+  }
+
   try {
-    await sdk.store.customer.create({
-      email: адрес,
-      first_name: имя,
-      last_name: фамилия,
-      phone: телефон.значение,
-      ...(рождение?.годится ? { metadata: { дата_рождения: рождение.ISO } } : {}),
-    })
+    await sdk.store.customer.create(
+      {
+        email: адрес,
+        first_name: имя,
+        last_name: фамилия,
+        phone: телефон.значение,
+        ...(рождение?.годится ? { metadata: { дата_рождения: рождение.ISO } } : {}),
+      },
+      {},
+      ключ
+    )
 
     // Прежний ключ выписан на личность без покупателя. Меняем его на
     // свежий: иначе запросы «мои заказы» и «мой профиль» будут отлетать.
-    const свежий = await sdk.auth.refresh()
+    const свежий = await sdk.auth.refresh(ключ)
     if (typeof свежий === "string") {
       await setAuthToken(свежий)
     }
   } catch (e) {
+    // В журнал пишем как есть: без этого причина отказа терялась
+    // совсем, и о ней можно было только гадать.
+    console.error("Знакомство не сохранилось:", (e as Error)?.message ?? e)
     return {
       шаг: "знакомство",
       почта: адрес,
