@@ -224,7 +224,7 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
                                 value={k}
                                 className={clx(
                                   "flex items-center justify-between text-small-regular cursor-pointer py-2 border rounded-rounded pl-2 pr-3 hover:shadow-borders-interactive-with-active",
-                                  { "border-ui-border-interactive": checked }
+                                  { "border-ink": checked }
                                 )}
                               >
                                 <div className="flex gap-2 w-full">

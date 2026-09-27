@@ -223,6 +223,11 @@ export const getPointAddresses = async (
               // города вернутся точки прошлого
               key: `apiship:points:${cartId}:${shippingOptionId}:${n}:${отпечаток(порция)}`,
               filter: `id=[${порция.join(",")}]`,
+              // Без limit ручка отдаёт только пятьдесят пунктов, сколько
+              // бы идов ни спросили: из 2203 московских пунктов на карту
+              // попадали ровно 750 — по пятьдесят на каждую из пятнадцати
+              // порций.
+              limit: порция.length,
               fields: ПОЛЯ_ПУНКТА,
               shipping_option_id: shippingOptionId,
             },

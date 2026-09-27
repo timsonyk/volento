@@ -196,11 +196,14 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     for (const [id, { el }] of markersRef.current.entries()) {
       const sel = id === selectedPointId
 
-      el.style.background = sel ? "#3b82f6" : "white"
-      el.style.border = sel ? "2px solid #1d4ed8" : "2px solid rgba(0,0,0,0.25)"
+      // Выбранный пункт заливаем чёрным, как всё остальное в магазине:
+      // синий был из стандартной темы Medusa и выбивался из гаммы.
+      el.style.background = sel ? "#0B0B0B" : "white"
+      el.style.border = sel ? "2px solid #0B0B0B" : "2px solid rgba(0,0,0,0.25)"
 
       const dot = el.firstElementChild as HTMLElement | null
       if (dot) {
+        dot.style.background = sel ? "#0B0B0B" : "white"
         dot.style.border = sel
           ? "2px solid rgba(255,255,255,0.95)"
           : "2px solid rgba(0,0,0,0.25)"
@@ -496,7 +499,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                       }}
                       className={clx(
                         "flex items-center justify-between text-small-regular cursor-pointer py-2 border rounded-rounded pl-2 pr-3 hover:shadow-borders-interactive-with-active",
-                        { "border-ui-border-interactive": active }
+                        { "border-ink": active }
                       )}
                     >
                       <div className="flex gap-2 w-full">
