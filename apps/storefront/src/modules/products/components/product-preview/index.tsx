@@ -4,6 +4,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { ModelColor } from "types/global"
 import PreviewGallery from "./gallery"
 import PreviewPrice from "./price"
+import PreviewSizes, { размерыТовара } from "./sizes"
 
 /**
  * Название приходит с цветом в конце («…, чёрный»), а цвет показан
@@ -52,6 +53,11 @@ export default function ProductPreview({
   // На телефоне карточка узкая: у модели бывает девять цветов, и ряд
   // кружков выдавливал сам себя за край экрана. Показываем четыре, дальше
   // счётчик — все цвета всё равно видны в самой карточке товара.
+  // Размеры показываем при наведении вместо кружков цвета: строка одна,
+  // и держать в ней два ряда значков тесно. На телефоне наведения нет,
+  // поэтому там всегда видны цвета.
+  const размеры = размерыТовара(product)
+
   const СКОЛЬКО_КРУЖКОВ = 4
   const видимые = swatches.slice(0, СКОЛЬКО_КРУЖКОВ)
   const остальные = swatches.length - видимые.length
@@ -89,12 +95,20 @@ export default function ProductPreview({
             </div>
           )}
 
+          {размеры.length > 0 && (
+            <span className="hidden xsmall:group-hover:flex">
+              <PreviewSizes sizes={размеры} />
+            </span>
+          )}
+
           {swatches.length > 0 && (
             <div
               // без overflow-hidden: обводка выбранного кружка рисуется
               // за его границей, и обрезка съедала её с четырёх сторон.
               // Переполнения не будет — кружков не больше четырёх
-              className="flex min-w-0 items-center gap-x-1.5 py-0.5"
+              className={`flex min-w-0 items-center gap-x-1.5 py-0.5${
+                размеры.length ? " xsmall:group-hover:hidden" : ""
+              }`}
               data-testid="preview-colors"
             >
               {видимые.map((c) => (
