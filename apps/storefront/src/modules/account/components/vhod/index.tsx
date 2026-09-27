@@ -235,10 +235,6 @@ const Вход = () => {
               ошибка={ошибка}
               data-testid="vhod-rozhdenie"
             />
-            <p className="-mt-2 text-sm text-muted">
-              Телефон нужен курьеру. Дату рождения можно не указывать — она
-              нужна, только чтобы поздравить и подобрать подходящее.
-            </p>
           </div>
 
           <button type="submit" disabled={идёт} className={`${кнопка} mt-6`}>

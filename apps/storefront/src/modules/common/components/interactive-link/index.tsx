@@ -1,6 +1,15 @@
 import { ArrowUpRightMini } from "@medusajs/icons"
 import { Text } from "@modules/common/components/ui"
+
 import LocalizedClientLink from "../localized-client-link"
+
+/**
+ * Ссылка со стрелкой: «Служба поддержки», «Смотреть все» и подобные.
+ *
+ * Чёрная с подчёркиванием, а не синяя: синий приходил из стандартной
+ * темы Medusa и выбивался из чёрно-белой гаммы магазина. Подчёркивание
+ * остаётся вместо цвета — по нему видно, что это ссылка.
+ */
 type InteractiveLinkProps = {
   href: string
   children?: React.ReactNode
@@ -15,16 +24,15 @@ const InteractiveLink = ({
 }: InteractiveLinkProps) => {
   return (
     <LocalizedClientLink
-      className="flex gap-x-1 items-center group"
+      className="group flex items-center gap-x-1 text-ink"
       href={href}
       onClick={onClick}
       {...props}
     >
-      <Text className="text-ui-fg-interactive">{children}</Text>
-      <ArrowUpRightMini
-        className="group-hover:rotate-45 ease-in-out duration-150"
-        color="var(--fg-interactive)"
-      />
+      <Text className="underline underline-offset-4 decoration-rule transition-colors group-hover:decoration-ink">
+        {children}
+      </Text>
+      <ArrowUpRightMini className="duration-150 ease-in-out group-hover:rotate-45" />
     </LocalizedClientLink>
   )
 }
