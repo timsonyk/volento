@@ -20,19 +20,28 @@ export async function generateStaticParams() {
       return []
     }
 
-    const promises = countryCodes.map(async (country) => {
-      const { response } = await listProducts({
-        countryCode: country,
-        queryParams: { limit: 100, fields: "handle" },
+    // Каждую страну спрашиваем отдельно и падение одной не даём
+    // превратить в падение всех: один раз удалённый регион ещё сидел в
+    // кеше сборки, каталог по его стране не ответил — и без страниц
+    // остался весь магазин, включая работающую Россию.
+    const countryProducts = await Promise.all(
+      countryCodes.map(async (country) => {
+        try {
+          const { response } = await listProducts({
+            countryCode: country,
+            queryParams: { limit: 100, fields: "handle" },
+          })
+          return { country, products: response.products }
+        } catch (error) {
+          console.error(
+            `Страницы товаров: страна ${country} пропущена — ${
+              error instanceof Error ? error.message : "неизвестная ошибка"
+            }`
+          )
+          return { country, products: [] }
+        }
       })
-
-      return {
-        country,
-        products: response.products,
-      }
-    })
-
-    const countryProducts = await Promise.all(promises)
+    )
 
     return countryProducts
       .flatMap((countryData) =>
