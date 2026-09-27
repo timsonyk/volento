@@ -33,7 +33,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const почта = почтаКлючом(String((req.body as any)?.email ?? ""))
 
   if (!почта || !ПОХОЖЕ_НА_ПОЧТУ.test(почта)) {
-    return res.status(400).json({ ошибка: "Проверьте адрес почты" })
+    return res.status(400).json({ ошибка: "Проверьте адрес почты", message: "Проверьте адрес почты" })
   }
 
   const auth = req.scope.resolve(Modules.AUTH)
@@ -56,10 +56,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const рано = String(записан.error ?? "").startsWith("рано:")
     if (рано) {
       const секунд = Number(String(записан.error).split(":")[1] || 60)
-      return res.status(429).json({
-        ошибка: `Письмо уже отправлено. Следующее можно запросить через ${секунд} с.`,
-        черезСекунд: секунд,
-      })
+      const текст = `Письмо уже отправлено. Следующее можно запросить через ${секунд} с.`
+      // message дублирует наш текст нарочно: клиентская библиотека
+      // строит сообщение об ошибке именно по этому полю, а без него
+      // покупателю доставалось безликое «не получилось отправить».
+      return res.status(429).json({ ошибка: текст, message: текст, черезСекунд: секунд })
     }
     logger.error(`Вход по коду: не записал код для ${почта}: ${записан.error}`)
     return res.status(500).json({ ошибка: "Не получилось отправить письмо" })
