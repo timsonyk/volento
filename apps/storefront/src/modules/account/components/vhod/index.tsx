@@ -9,6 +9,10 @@ import {
   завершитьЗнакомство,
   запроситьКод,
 } from "@lib/data/vhod"
+import {
+  сТочками,
+  телефономСМаской,
+} from "@lib/util/polya-znakomstva"
 import Input from "@modules/common/components/input"
 
 /**
@@ -28,7 +32,12 @@ const Вход = () => {
   const [шаг, setШаг] = useState<ШагВхода>({ шаг: "почта" })
   const [почта, setПочта] = useState("")
   const [код, setКод] = useState("")
-  const [поля, setПоля] = useState({ фамилия: "", имя: "", возраст: "" })
+  const [поля, setПоля] = useState({
+    фамилия: "",
+    имя: "",
+    телефон: "",
+    рождение: "",
+  })
   const [идёт, начать] = useTransition()
   const [ждать, setЖдать] = useState(0)
   const router = useRouter()
@@ -175,8 +184,8 @@ const Вход = () => {
         >
           <h1 className="mb-2 text-3xl-regular text-ink">Давайте знакомиться</h1>
           <p className="mb-7 text-sm leading-relaxed text-muted">
-            Вы у нас впервые. Фамилию и имя печатают на посылке, без них
-            доставка не примет заказ.
+            Вы у нас впервые. Фамилию, имя и телефон печатают на посылке —
+            без них доставка не примет заказ.
           </p>
 
           <div className="flex flex-col gap-4">
@@ -199,22 +208,38 @@ const Вход = () => {
               обязательно
               data-testid="vhod-imya"
             />
+            {/* Телефон и дата набираются цифрами, а разделители
+                подставляются сами: так их не приходится печатать и
+                негде ошибиться в формате. */}
             <Input
-              label="Возраст"
-              name="age"
-              type="text"
-              inputMode="numeric"
-              maxLength={3}
-              value={поля.возраст}
+              label="Телефон"
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={поля.телефон}
               onChange={(e) =>
-                setПоля((п) => ({ ...п, возраст: e.target.value.replace(/\D/g, "") }))
+                setПоля((п) => ({ ...п, телефон: телефономСМаской(e.target.value) }))
               }
+              обязательно
+              data-testid="vhod-telefon"
+            />
+            <Input
+              label="Дата рождения"
+              name="birthday"
+              inputMode="numeric"
+              autoComplete="bday"
+              value={поля.рождение}
+              onChange={(e) =>
+                setПоля((п) => ({ ...п, рождение: сТочками(e.target.value) }))
+              }
+              обязательно
               ошибка={ошибка}
-              data-testid="vhod-vozrast"
+              data-testid="vhod-rozhdenie"
             />
             <p className="-mt-2 text-sm text-muted">
-              Возраст можно не указывать — он нужен только чтобы подбирать
-              для вас подходящее.
+              Телефон нужен курьеру, дата рождения — чтобы поздравить и
+              подобрать подходящее.
             </p>
           </div>
 
