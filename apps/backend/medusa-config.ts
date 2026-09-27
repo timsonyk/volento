@@ -154,6 +154,28 @@ module.exports = defineConfig({
       },
     },
     {
+      // Вход покупателя — по коду из письма, пароля у него нет вовсе.
+      //
+      // emailpass оставлен обязательно: по нему входит админка
+      // (/auth/user/emailpass). Стоит объявить модуль авторизации со
+      // своим списком — и провайдеры по умолчанию перестают
+      // подключаться, так что забыть его здесь значит запереть себя
+      // снаружи.
+      resolve: "@medusajs/medusa/auth",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/auth-emailpass",
+            id: "emailpass",
+          },
+          {
+            resolve: "./src/modules/auth-kod",
+            id: "kod",
+          },
+        ],
+      },
+    },
+    {
       resolve: "@medusajs/medusa/event-bus-redis",
       options: {
         redisUrl: process.env.EVENTS_REDIS_URL,
