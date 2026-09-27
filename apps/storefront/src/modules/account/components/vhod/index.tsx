@@ -1,8 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-
 import {
   ШагВхода,
   войтиПоКоду,
@@ -40,7 +38,6 @@ const Вход = () => {
   })
   const [идёт, начать] = useTransition()
   const [ждать, setЖдать] = useState(0)
-  const router = useRouter()
   const полеКода = useRef<HTMLInputElement>(null)
 
   // Отсчёт до следующего письма: без него человек жмёт «прислать ещё раз»
@@ -56,9 +53,13 @@ const Вход = () => {
       полеКода.current?.focus()
     }
     if (шаг.шаг === "готово") {
-      router.refresh()
+      // Перезагружаем страницу целиком, а не обновляем данные: кабинет
+      // и форма входа — разные ветки разметки, и выбирает между ними
+      // сервер по куке. Полная загрузка гарантирует, что он увидит
+      // свежую куку, а не отдаст из памяти прежний ответ.
+      window.location.reload()
     }
-  }, [шаг, router])
+  }, [шаг])
 
   const принять = (ответ: ШагВхода) => {
     setШаг(ответ)
