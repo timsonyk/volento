@@ -532,7 +532,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                 onChoose({ point: activePoint, tariff: selectedTariff })
               }}
               disabled={!selectedTariff || isSameAsChosen}
-              className="w-full mb-[16px] !overflow-visible"
+              className="mb-[16px] h-14 w-full !rounded-full text-base !overflow-visible"
             >
               Выбрать
             </Button>

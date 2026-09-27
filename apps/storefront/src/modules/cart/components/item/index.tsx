@@ -80,10 +80,12 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
             "small:w-24 w-12": type === "full",
           })}
         >
+          {/* Пропорции карточки товара, а не квадрат: квадратная
+              обрезка срезала модель и снимок выглядел обрубленным. */}
           <Thumbnail
             thumbnail={item.thumbnail}
             images={item.variant?.product?.images}
-            size="square"
+            className="rounded-lg"
           />
         </LocalizedClientLink>
       </Table.Cell>

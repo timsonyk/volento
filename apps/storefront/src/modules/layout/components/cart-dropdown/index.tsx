@@ -136,7 +136,7 @@ const CartDropdown = ({
                           <Thumbnail
                             thumbnail={item.thumbnail}
                             images={item.variant?.product?.images}
-                            size="square"
+                            className="rounded-lg"
                           />
                         </LocalizedClientLink>
                         <div className="flex flex-col justify-between flex-1">
