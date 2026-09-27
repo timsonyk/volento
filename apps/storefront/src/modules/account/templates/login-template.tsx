@@ -1,25 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import Вход from "@modules/account/components/vhod"
 
-import Register from "@modules/account/components/register"
-import Login from "@modules/account/components/login"
-
-export enum LOGIN_VIEW {
-  SIGN_IN = "sign-in",
-  REGISTER = "register",
-}
-
+/**
+ * Экран входа. Разделения на «вход» и «регистрацию» больше нет: и то и
+ * другое — одна дверь с кодом из письма.
+ */
 const LoginTemplate = () => {
-  const [currentView, setCurrentView] = useState("sign-in")
-
   return (
-    <div className="w-full flex justify-start px-8 py-8">
-      {currentView === "sign-in" ? (
-        <Login setCurrentView={setCurrentView} />
-      ) : (
-        <Register setCurrentView={setCurrentView} />
-      )}
+    <div className="flex w-full justify-center px-6 py-12">
+      <Вход />
     </div>
   )
 }
