@@ -141,7 +141,7 @@ export class ВходПоКоду extends AbstractAuthModuleProvider {
       return { success: false, error: ошибка.message }
     }
 
-    const мета = (this.getProviderIdentity_(личность)?.provider_metadata ??
+    const мета = (this.записьПровайдера(личность)?.provider_metadata ??
       {}) as ЗаписьКода
 
     if (!мета.отпечаток || !мета.годендо) {
@@ -173,13 +173,24 @@ export class ВходПоКоду extends AbstractAuthModuleProvider {
     }
   }
 
+  /**
+   * Наша запись у личности. У базового класса для этого есть свой метод,
+   * но в описаниях типов он не объявлен, поэтому ищем сами — заодно
+   * видно, что именно мы достаём.
+   */
+  private записьПровайдера(личность: any) {
+    return (личность?.provider_identities ?? []).find(
+      (запись: any) => запись.provider === ПРОВАЙДЕР
+    )
+  }
+
   private async метаданные(
     почта: string,
     личности: AuthIdentityProviderService
   ): Promise<Record<string, unknown>> {
     try {
       const личность = await личности.retrieve({ entity_id: почта })
-      return { ...(this.getProviderIdentity_(личность)?.provider_metadata ?? {}) }
+      return { ...(this.записьПровайдера(личность)?.provider_metadata ?? {}) }
     } catch {
       return {}
     }
