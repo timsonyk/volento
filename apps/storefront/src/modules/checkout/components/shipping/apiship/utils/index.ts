@@ -4,13 +4,9 @@ import {
 } from "../types"
 import { useEffect, useRef } from "react"
 
-export function days(tariff: ApishipTariff) {
-  const min = tariff.daysMin ?? 0
-  const max = tariff.daysMax ?? 0
-  if (!min && !max) return null
-  if (min === max) return min === 1 ? `${min} day` : `${min} days`
-  return `${min}–${max} days`
-}
+// Срок и цена тарифа теперь считаются в tarify.ts — там же, где отбор и
+// чистка названий, чтобы всё про тарифы лежало в одном месте.
+export * from "./tarify"
 
 export function useLatestRef<T>(value: T) {
   const ref = useRef(value)

@@ -10,11 +10,21 @@ import {
   ApishipTariff
 } from "./types"
 import {
-  days,
-  useLatestRef
+  годныеТарифы,
+  имяТарифа,
+  срокТарифа,
+  ценаСтрокой,
+  ценаТарифа,
+  useLatestRef,
 } from "./utils"
 
 const DEFAULT_CENTER: [number, number] = [37.618423, 55.751244]
+
+/** Отдельный слой под метки пунктов — с ним работает кластеризатор. */
+const ИСТОЧНИК = "пункты-выдачи"
+
+/** Сторона квадрата, в пределах которого метки собираются в гроздь. */
+const КЛЕТКА = 72
 
 type ApishipMapProps = {
   points: ApishipPoint[]
@@ -31,14 +41,14 @@ type ApishipMapProps = {
   providersMap: Record<string, string>
 }
 
-const WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const
+const ДНИ_НЕДЕЛИ = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"] as const
 
 const Schedule = ({ worktime }: { worktime: Record<string, string> }) => {
   if (!worktime || Object.keys(worktime).length === 0) return null
   return (
     <div className="flex flex-col gap-[1px]">
       {Object.keys(worktime).map((day) => {
-        const label = WEEK_DAYS[Number(day) - 1]
+        const label = ДНИ_НЕДЕЛИ[Number(day) - 1]
         const time = worktime[day]
         return (
           <div className="flex flex-row justify-between" key={day}>
@@ -76,7 +86,7 @@ function ensureYmaps3Loaded(params: { apikey: string; lang?: string }): Promise<
     )}`
     script.async = true
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error(`Failed to load Yandex Maps JS API v3 script: ${script.src}`))
+    script.onerror = () => reject(new Error(`Не загрузился скрипт Яндекс.Карт: ${script.src}`))
     document.head.appendChild(script)
   })
 
@@ -101,6 +111,9 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   const mapRef = useRef<any>(null)
   const markersRef = useRef<Map<string, { marker: any; el: HTMLDivElement }>>(new Map())
   const initPromiseRef = useRef<Promise<void> | null>(null)
+  const кластерРеф = useRef<any>(null)
+  const кластеризаторРеф = useRef<any>(null)
+  const охватРеф = useRef<[[number, number], [number, number]] | null>(null)
 
   const isSameAsChosen =
     !!chosen?.pointId &&
@@ -110,18 +123,39 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
   const onSelectPointRef = useLatestRef(onSelectPoint)
 
-  const center = useMemo<[number, number]>(() => {
-    const p = points?.[0]
-    return p ? [p.lng, p.lat] : DEFAULT_CENTER
+  // Показываем сразу весь охват, а не окрестности случайного первого
+  // пункта: раньше карта открывалась на нём с постоянным зумом, и куда
+  // возят на самом деле, было не видно.
+  const охват = useMemo(() => {
+    if (!points?.length) {
+      return null
+    }
+    let зап = points[0].lng, вост = points[0].lng
+    let сев = points[0].lat, юг = points[0].lat
+    for (const p of points) {
+      зап = Math.min(зап, p.lng); вост = Math.max(вост, p.lng)
+      юг = Math.min(юг, p.lat); сев = Math.max(сев, p.lat)
+    }
+    // немного воздуха по краям, чтобы метки не липли к рамке
+    const пх = Math.max((вост - зап) * 0.06, 0.01)
+    const пв = Math.max((сев - юг) * 0.06, 0.01)
+    return [
+      [зап - пх, сев + пв],
+      [вост + пх, юг - пв],
+    ] as [[number, number], [number, number]]
   }, [points])
+
+  охватРеф.current = охват
 
   const activePoint = useMemo(() => {
     return selectedPointId ? points.find((p) => p.id === selectedPointId) ?? null : null
   }, [points, selectedPointId])
 
+  // Показываем только то, что можем сдать в пункте выдачи, без повторов
+  // и по возрастанию цены.
   const activeTariffs = useMemo(() => {
     if (!selectedPointId) return []
-    return tariffsByPointId[selectedPointId] ?? []
+    return годныеТарифы(tariffsByPointId[selectedPointId] ?? [])
   }, [tariffsByPointId, selectedPointId])
 
   const selectedTariff = useMemo(() => {
@@ -131,16 +165,25 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
   const clearMarkers = useCallback(() => {
     const map = mapRef.current
-    if (!map) return
-    for (const { marker } of markersRef.current.values()) {
-      try {
-        map.removeChild(marker)
-      } catch { }
+    // Метки кластеризатора принадлежат ему: снимать их с карты руками
+    // нельзя, он сам решает, что сейчас показано.
+    if (map && !кластеризаторРеф.current) {
+      for (const { marker } of markersRef.current.values()) {
+        try {
+          map.removeChild(marker)
+        } catch { }
+      }
     }
     markersRef.current.clear()
   }, [])
 
   const destroyMap = useCallback(() => {
+    if (кластеризаторРеф.current) {
+      try {
+        mapRef.current?.removeChild?.(кластеризаторРеф.current)
+      } catch { }
+      кластеризаторРеф.current = null
+    }
     clearMarkers()
     try {
       mapRef.current?.destroy?.()
@@ -171,7 +214,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
     initPromiseRef.current = (async () => {
       const apikey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY
-      if (!apikey) throw new Error("NEXT_PUBLIC_YANDEX_MAPS_API_KEY is not set")
+      if (!apikey) throw new Error("Не задан NEXT_PUBLIC_YANDEX_MAPS_API_KEY")
 
       await ensureYmaps3Loaded({ apikey, lang: "ru_RU" })
       if (cancelled) return
@@ -181,13 +224,35 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       await ymaps3.ready
       if (cancelled) return
 
-      ymaps3.import.registerCdn("https://cdn.jsdelivr.net/npm/{package}", "@yandex/ymaps3-default-ui-theme@0.0")
+      ymaps3.import.registerCdn("https://cdn.jsdelivr.net/npm/{package}", [
+        "@yandex/ymaps3-default-ui-theme@0.0",
+        "@yandex/ymaps3-clusterer@0.0",
+      ])
 
       const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer } = ymaps3
 
-      const map = new YMap(containerRef.current!, { location: { center, zoom: 10 } })
+      const map = new YMap(containerRef.current!, {
+        location: охватРеф.current
+          ? { bounds: охватРеф.current }
+          : { center: DEFAULT_CENTER, zoom: 10 },
+      })
       map.addChild(new YMapDefaultSchemeLayer({}))
       map.addChild(new YMapDefaultFeaturesLayer({ zIndex: 1800 }))
+      map.addChild(new ymaps3.YMapFeatureDataSource({ id: ИСТОЧНИК }))
+      map.addChild(
+        new ymaps3.YMapLayer({ source: ИСТОЧНИК, type: "markers", zIndex: 1810 })
+      )
+
+      // Кластеризатор подгружается отдельным пакетом. Не подгрузился —
+      // рисуем метки по одной, как раньше: карта останется рабочей.
+      try {
+        const пакет = await ymaps3.import("@yandex/ymaps3-clusterer")
+        if (!cancelled) {
+          кластерРеф.current = пакет
+        }
+      } catch (e) {
+        console.error("Кластеризатор Яндекс.Карт не загрузился", e)
+      }
 
       mapRef.current = map
     })().catch((e) => console.error("Яндекс.Карты не запустились", e))
@@ -201,13 +266,89 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
   useEffect(() => {
     (async () => {
-      if (!initPromiseRef.current) return
+      if (!initPromiseRef.current || !охват) return
       await initPromiseRef.current
       try {
-        mapRef.current?.setLocation?.({ center, zoom: 10 })
+        mapRef.current?.setLocation?.({ bounds: охват, duration: 200 })
       } catch { }
     })()
-  }, [center])
+  }, [охват])
+
+  /** Метка одного пункта: белая капля с точкой внутри. */
+  const сделатьМетку = useCallback((p: ApishipPoint) => {
+    const el = document.createElement("div")
+    const SIZE = 18
+
+    el.style.width = `${SIZE}px`
+    el.style.height = `${SIZE}px`
+    el.style.background = "white"
+    el.style.border = "2px solid rgba(0,0,0,0.25)"
+    el.style.borderRadius = "50% 50% 50% 0"
+    el.style.transform = "rotate(-45deg)"
+    el.style.boxShadow = "0 2px 2px rgba(0,0,0,0.18)"
+    el.style.cursor = "pointer"
+    el.style.position = "relative"
+    el.style.transformOrigin = "50% 50%"
+
+    const dot = document.createElement("div")
+    dot.style.width = "8px"
+    dot.style.height = "8px"
+    dot.style.background = "white"
+    dot.style.border = "2px solid rgba(0,0,0,0.25)"
+    dot.style.borderRadius = "9999px"
+    dot.style.position = "absolute"
+    dot.style.left = "50%"
+    dot.style.top = "50%"
+    dot.style.transform = "translate(-50%, -50%) rotate(45deg)"
+    dot.style.boxSizing = "border-box"
+    el.appendChild(dot)
+
+    el.title = p.address ?? p.name ?? "Пункт выдачи"
+    el.addEventListener("click", (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onSelectPointRef.current(p.id)
+    })
+
+    return el
+  }, [onSelectPointRef])
+
+  /** Гроздь: кружок с числом пунктов, по нажатию приближает карту. */
+  const сделатьГроздь = useCallback(
+    (сколько: number, координаты: [number, number]) => {
+      const el = document.createElement("div")
+      const размер = сколько > 99 ? 46 : сколько > 9 ? 40 : 34
+
+      el.style.width = `${размер}px`
+      el.style.height = `${размер}px`
+      el.style.borderRadius = "9999px"
+      el.style.background = "#111"
+      el.style.color = "#fff"
+      el.style.display = "flex"
+      el.style.alignItems = "center"
+      el.style.justifyContent = "center"
+      el.style.fontSize = сколько > 99 ? "13px" : "14px"
+      el.style.border = "2px solid rgba(255,255,255,0.9)"
+      el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)"
+      el.style.cursor = "pointer"
+      el.textContent = String(сколько)
+      el.title = `${сколько} пунктов выдачи — нажмите, чтобы приблизить`
+
+      el.addEventListener("click", (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        const map = mapRef.current
+        if (!map) return
+        const зум = (map.zoom ?? 10) + 2
+        try {
+          map.setLocation({ center: координаты, zoom: Math.min(зум, 18), duration: 250 })
+        } catch { }
+      })
+
+      return el
+    },
+    []
+  )
 
   useEffect(() => {
     let cancelled = false;
@@ -221,59 +362,70 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       if (!map || !ymaps3) return
 
       const { YMapMarker } = ymaps3
+      const пакет = кластерРеф.current
 
       clearMarkers()
 
-      for (const p of points) {
-        const el = document.createElement("div")
-
-        const SIZE = 18
-
-        el.style.width = `${SIZE}px`
-        el.style.height = `${SIZE}px`
-
-        el.style.background = "white"
-        el.style.border = "2px solid rgba(0,0,0,0.25)"
-        el.style.borderRadius = "50% 50% 50% 0"
-        el.style.transform = "rotate(-45deg)"
-        el.style.boxShadow = "0 2px 2px rgba(0,0,0,0.18)"
-        el.style.cursor = "pointer"
-        el.style.position = "relative"
-        el.style.transformOrigin = "50% 50%"
-
-        const dot = document.createElement("div")
-        dot.style.width = "8px"
-        dot.style.height = "8px"
-        dot.style.background = "white"
-        dot.style.border = "2px solid rgba(0,0,0,0.25)"
-        dot.style.borderRadius = "9999px"
-        dot.style.position = "absolute"
-        dot.style.left = "50%"
-        dot.style.top = "50%"
-        dot.style.transform = "translate(-50%, -50%) rotate(45deg)"
-        dot.style.boxSizing = "border-box"
-
-        el.appendChild(dot)
-
-        el.title = p.name ?? p.address ?? `Point ${p.id}`
-
-        el.addEventListener("click", (e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onSelectPointRef.current(p.id)
-        })
-
-        const marker = new YMapMarker({ coordinates: [p.lng, p.lat] }, el)
-        map.addChild(marker)
-        markersRef.current.set(p.id, { marker, el })
+      // Без кластеризатора рисуем по метке на пункт. В Москве их больше
+      // двух тысяч: на дальнем зуме они сливаются в пятно, поэтому это
+      // запасной путь, а не основной.
+      if (!пакет?.YMapClusterer) {
+        for (const p of points) {
+          const el = сделатьМетку(p)
+          const marker = new YMapMarker({ coordinates: [p.lng, p.lat] }, el)
+          map.addChild(marker)
+          markersRef.current.set(p.id, { marker, el })
+        }
+        applySelectionStyles()
+        return
       }
+
+      const { YMapClusterer, clusterByGrid } = пакет
+
+      const точки = points.map((p) => ({
+        type: "Feature" as const,
+        id: p.id,
+        geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
+        properties: { p },
+      }))
+
+      if (кластеризаторРеф.current) {
+        try {
+          кластеризаторРеф.current.update({ features: точки })
+          applySelectionStyles()
+          return
+        } catch { }
+      }
+
+      const кластеризатор = new YMapClusterer({
+        method: clusterByGrid({ gridSize: КЛЕТКА }),
+        features: точки,
+        marker: (feature: any) => {
+          const p: ApishipPoint = feature.properties.p
+          const el = сделатьМетку(p)
+          const marker = new YMapMarker(
+            { coordinates: feature.geometry.coordinates, source: ИСТОЧНИК },
+            el
+          )
+          markersRef.current.set(p.id, { marker, el })
+          return marker
+        },
+        cluster: (coordinates: [number, number], features: any[]) =>
+          new YMapMarker(
+            { coordinates, source: ИСТОЧНИК },
+            сделатьГроздь(features.length, coordinates)
+          ),
+      })
+
+      map.addChild(кластеризатор)
+      кластеризаторРеф.current = кластеризатор
       applySelectionStyles()
     })()
 
     return () => {
       cancelled = true
     }
-  }, [points, clearMarkers, onSelectPointRef])
+  }, [points, clearMarkers, сделатьМетку, сделатьГроздь, applySelectionStyles])
 
   useEffect(() => {
     applySelectionStyles()
@@ -301,7 +453,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
               level="h2"
               className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
             >
-              {`${providersMap?.[activePoint.providerKey ?? ""] ?? ""} pickup point`.trimStart()}
+              {`Пункт выдачи ${providersMap?.[activePoint.providerKey ?? ""] ?? ""}`.trimEnd()}
             </Heading>
             <IconButton
               aria-label="Закрыть"
@@ -332,15 +484,12 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
               <RadioGroup className="flex flex-col gap-[10px]">
                 {activeTariffs.map((t) => {
                   const active = t.key === selectedTariffKey
-                  const cost =
-                    typeof t.deliveryCostOriginal === "number"
-                      ? t.deliveryCostOriginal
-                      : t.deliveryCost
+                  const срок = срокТарифа(t)
 
                   return (
                     <Radio
-                      key={t.tariffId}
-                      value={t.tariffId}
+                      key={t.key}
+                      value={t.key}
                       data-testid="delivery-option-radio"
                       onClick={() => {
                         onSelectTariff(t.key)
@@ -355,14 +504,16 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                         <div className="flex flex-row w-full items-center justify-between">
                           <div className="flex flex-col">
                             <span className="txt-compact-small-plus">
-                              {t.tariffName}
+                              {имяТарифа(t)}
                             </span>
-                            <span className="txt-small text-ui-fg-subtle">
-                              Delivery time: {days(t)}
-                            </span>
+                            {срок && (
+                              <span className="txt-small text-ui-fg-subtle">
+                                Срок {срок}
+                              </span>
+                            )}
                           </div>
                           <span className="txt-small-plus text-ui-fg-subtle">
-                            {`RUB ${cost}`}
+                            {ценаСтрокой(ценаТарифа(t))}
                           </span>
                         </div>
                       </div>
@@ -380,12 +531,12 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
               disabled={!selectedTariff || isSameAsChosen}
               className="w-full mb-[16px] !overflow-visible"
             >
-              Choose
+              Выбрать
             </Button>
             {activePoint.worktime && (
               <div className="flex flex-col">
                 <Text className="font-medium txt-medium text-ui-fg-base">
-                  Schedule
+                  Часы работы
                 </Text>
                 <Schedule worktime={activePoint.worktime} />
               </div>
@@ -400,7 +551,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                     <img
                       key={index}
                       src={src}
-                      alt={`Photo ${index + 1} of pickup point`}
+                      alt={`Фотография пункта выдачи ${index + 1}`}
                       className="w-auto h-[120px] rounded-md border object-cover"
                     />
                   ))}
@@ -411,7 +562,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
             {activePoint.description && (
               <div className="flex flex-col">
                 <Text className="font-medium txt-medium text-ui-fg-base">
-                  Description
+                  Как найти
                 </Text>
                 <Text className="text-ui-fg-muted txt-medium">
                   {activePoint.description}

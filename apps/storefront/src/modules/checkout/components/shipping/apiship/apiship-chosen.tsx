@@ -2,7 +2,7 @@
 
 import { Heading, Text } from "@modules/common/components/ui"
 import { Chosen } from "./types"
-import { days } from "./utils"
+import { имяТарифа, срокТарифа, ценаСтрокой, ценаТарифа } from "./utils"
 
 type ApishipChosenProps = {
   chosen: Chosen
@@ -15,18 +15,13 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
   onRemove,
   onEdit
 }) => {
-  const cost =
-    typeof chosen.tariff.deliveryCostOriginal === "number"
-      ? chosen.tariff.deliveryCostOriginal
-      : chosen.tariff.deliveryCost
-
   const isToPoint = chosen.deliveryType === 2
 
   return (
     <div className="flex flex-col gap-4 mt-[32px]">
       <div className="flex flex-row justify-between">
         <Heading level="h2" className="txt-xlarge">
-          {isToPoint ? "To the Pickup Point" : "By Courier"}
+          {isToPoint ? "В пункт выдачи" : "Курьером"}
         </Heading>
         <div className="flex flex-row gap-[16px]">
           <Text>
@@ -38,7 +33,7 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
               }}
               className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
             >
-              Remove
+              Убрать
             </button>
           </Text>
           <Text>
@@ -50,7 +45,7 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
               }}
               className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
             >
-              Edit
+              Изменить
             </button>
           </Text>
         </div>
@@ -73,15 +68,22 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
             )}
           </div>
           <Text>
-            {chosen.tariff.tariffName} · {`RUB ${cost ?? "—"}`}{days(chosen.tariff) ? ` · ${days(chosen.tariff)}` : ""}
+            {[
+              имяТарифа(chosen.tariff),
+              ценаСтрокой(ценаТарифа(chosen.tariff)),
+              срокТарифа(chosen.tariff),
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </Text>
         </div>
       ) : (
         <Text>
           {
-            [chosen?.tariff?.tariffName,
-            typeof cost === "number" ? `RUB ${cost}` : "RUB —",
-            days?.(chosen?.tariff) || null,
+            [
+              имяТарифа(chosen.tariff),
+              ценаСтрокой(ценаТарифа(chosen.tariff)),
+              срокТарифа(chosen.tariff),
             ].filter(Boolean).join(" · ")
           }
         </Text>

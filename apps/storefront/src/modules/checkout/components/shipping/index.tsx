@@ -17,7 +17,10 @@ import {
   ApishipPickupPointModal,
   ApishipCourierModal,
   ApishipChosen,
-  days,
+  имяТарифа,
+  срокТарифа,
+  ценаСтрокой,
+  ценаТарифа,
 } from "./apiship"
 import { useОтметка } from "../steps/context"
 
@@ -562,19 +565,9 @@ const Shipping: React.FC<ShippingProps> = ({
                   {apishipChosen && (
                     <Text className="txt-medium text-ui-fg-subtle">
                       {[
-                        apishipChosen?.tariff?.tariffName,
-                        typeof (typeof apishipChosen.tariff
-                          .deliveryCostOriginal === "number"
-                          ? apishipChosen.tariff.deliveryCostOriginal
-                          : apishipChosen.tariff.deliveryCost) === "number"
-                          ? `RUB ${
-                              typeof apishipChosen.tariff
-                                .deliveryCostOriginal === "number"
-                                ? apishipChosen.tariff.deliveryCostOriginal
-                                : apishipChosen.tariff.deliveryCost
-                            }`
-                          : "RUB —",
-                        days?.(apishipChosen?.tariff) || null,
+                        имяТарифа(apishipChosen.tariff),
+                        ценаСтрокой(ценаТарифа(apishipChosen.tariff)),
+                        срокТарифа(apishipChosen.tariff),
                       ]
                         .filter(Boolean)
                         .join(" · ")}

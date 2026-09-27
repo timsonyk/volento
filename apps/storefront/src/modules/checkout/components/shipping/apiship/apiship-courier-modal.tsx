@@ -15,7 +15,10 @@ import {
 } from "./types"
 import {
   buildTariffKey,
-  days,
+  имяТарифа,
+  срокТарифа,
+  ценаСтрокой,
+  ценаТарифа,
   useLatestRef,
   useLockBodyScroll
 } from "./utils"
@@ -213,10 +216,7 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
                             const k = buildTariffKey(g.providerKey, t, idx)
                             const checked = k === selectedTariffKey
 
-                            const cost =
-                              typeof t.deliveryCostOriginal === "number"
-                                ? t.deliveryCostOriginal
-                                : t.deliveryCost
+                            const срок = срокТарифа(t as ApishipTariff)
 
                             return (
                               <Radio
@@ -232,14 +232,16 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
                                   <div className="flex flex-row w-full items-center justify-between">
                                     <div className="flex flex-col">
                                       <span className="txt-compact-small-plus">
-                                        {t.tariffName}
+                                        {имяТарифа(t as ApishipTariff)}
                                       </span>
-                                      <span className="txt-small text-ui-fg-subtle">
-                                        Delivery time: {days(t as ApishipTariff)}
-                                      </span>
+                                      {срок && (
+                                        <span className="txt-small text-ui-fg-subtle">
+                                          Срок {срок}
+                                        </span>
+                                      )}
                                     </div>
                                     <span className="txt-small-plus text-ui-fg-subtle">
-                                      {typeof cost === "number" ? `RUB ${cost}` : "—"}
+                                      {ценаСтрокой(ценаТарифа(t as ApishipTariff))}
                                     </span>
                                   </div>
                                 </div>
@@ -260,7 +262,7 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
                 disabled={!selectedTariffKey || isLoadingCalc || selectedTariff?.key === initialChosen?.tariff.key}
                 className="w-full"
               >
-                Choose
+                Выбрать
               </Button>
             </div>
           </div>

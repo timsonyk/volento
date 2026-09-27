@@ -182,11 +182,6 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
                   : null
               }
               onChoose={async ({ point, tariff }) => {
-                const cost =
-                  typeof tariff.deliveryCostOriginal === "number"
-                    ? tariff.deliveryCostOriginal
-                    : tariff.deliveryCost
-
                 const chosen: Chosen = {
                   deliveryType: 2,
                   tariff,
