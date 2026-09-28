@@ -99,7 +99,13 @@ export default async function LatestProducts({
           {products.map((product) => (
             <li
               key={product.id}
-              className="w-[84vw] shrink-0 snap-start xsmall:w-[35vw] small:w-[26vw]"
+              // Ширину считаем долей самой ленты, а не экрана: на широком
+              // экране лента уже экрана на ширину текстовой колонки, и от
+              // vw получалось то три карточки впритык, то две с половиной.
+              // Делим на «целое с хвостиком»: хвостик в одну пятую — это
+              // краешек следующей карточки, по нему и видно, что ленту
+              // можно листать дальше.
+              className="w-[calc(100%/1.2-6px)] shrink-0 snap-start xsmall:w-[calc(100%/2.2-6px)] small:w-[calc(100%/3.2-6px)]"
             >
               <ProductPreview
                 product={product}
