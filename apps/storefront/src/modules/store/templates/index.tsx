@@ -1,7 +1,12 @@
 import { Suspense } from "react"
 
 import { OptionValueIds } from "@lib/util/product-option-filters"
-import { ВыбранныеФильтры, найтиТовары, собратьПризнаки } from "@lib/data/facets"
+import {
+  ВыбранныеФильтры,
+  идыПоиска,
+  найтиТовары,
+  собратьПризнаки,
+} from "@lib/data/facets"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import FilterBar from "@modules/store/components/filter-bar"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -19,19 +24,29 @@ const StoreTemplate = async ({
   countryCode,
   optionValueIds,
   фильтры,
+  запрос,
+  заголовок = "Все товары",
 }: {
   sortBy?: SortOptions
   page?: string
   countryCode: string
   optionValueIds?: OptionValueIds
   фильтры?: ВыбранныеФильтры
+  /** слово из поиска: сужает и сетку, и фильтр */
+  запрос?: string
+  заголовок?: string
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
+  // Когда пришли из поиска, каталог для этой страницы — только находки.
+  // Их id считаем один раз и передаём и в фильтр, и в отбор: иначе рядом
+  // с галочками стояли бы числа всего магазина.
+  const находки = запрос ? await идыПоиска(запрос) : undefined
+
   const [признаки, отобранные] = await Promise.all([
-    собратьПризнаки(),
-    найтиТовары(фильтры ?? {}),
+    собратьПризнаки(undefined, находки),
+    найтиТовары(фильтры ?? {}, undefined, находки),
   ])
 
   return (
@@ -40,7 +55,7 @@ const StoreTemplate = async ({
         className="mb-4 text-center text-base text-ink"
         data-testid="store-page-title"
       >
-        Все товары
+        {заголовок}
       </h1>
 
       <FilterBar признаки={признаки} />

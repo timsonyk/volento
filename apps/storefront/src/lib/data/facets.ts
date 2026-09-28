@@ -88,18 +88,71 @@ const выписка = async (): Promise<Лёгкий[]> => {
   }
 }
 
+/**
+ * Сужает выписку до того, что вообще показывается на странице: товары
+ * раздела, находки поиска — или и то и другое. Признаки и отбор считаем
+ * только по ним, иначе в фильтре стояли бы числа всего магазина.
+ */
+const своиТовары = (
+  все: Лёгкий[],
+  идыРаздела?: string[],
+  толькоИды?: string[]
+): Лёгкий[] => {
+  let свои = все
+
+  if (идыРаздела?.length) {
+    свои = свои.filter((p) =>
+      (p.categories ?? []).some((c) => c.id && идыРаздела.includes(c.id))
+    )
+  }
+
+  if (толькоИды) {
+    const можно = new Set(толькоИды)
+    свои = свои.filter((p) => можно.has(p.id))
+  }
+
+  return свои
+}
+
+/**
+ * id товаров, которые нашлись по слову. Нужны, чтобы посчитать фильтр
+ * по находкам, а не по всему каталогу: ищем один раз и налегке, без цен.
+ */
+export const идыПоиска = async (запрос: string): Promise<string[]> => {
+  const чистый = запрос.trim()
+
+  if (чистый.length < 2) {
+    return []
+  }
+
+  const headers = { ...(await getAuthHeaders()) }
+  const next = { ...(await getCacheOptions("products")) }
+
+  try {
+    const { products } = await sdk.client.fetch<{ products: { id: string }[] }>(
+      "/store/products",
+      {
+        method: "GET",
+        query: { limit: 1000, fields: "id", q: чистый },
+        headers,
+        next,
+        cache: "force-cache",
+      }
+    )
+    return (products ?? []).map((p) => p.id)
+  } catch (e) {
+    console.error("Поиск по каталогу не отработал", e)
+    return []
+  }
+}
+
 /** Что вообще можно выбрать в фильтре и сколько за каждым товаров. */
 export const собратьПризнаки = async (
-  идыРаздела?: string[]
+  идыРаздела?: string[],
+  толькоИды?: string[]
 ): Promise<Признаки> => {
   const все = await выписка()
-  // в разделе считаем только его товары, иначе числа рядом с галочками
-  // показывали бы весь магазин
-  const свои = идыРаздела?.length
-    ? все.filter((p) =>
-        (p.categories ?? []).some((c) => c.id && идыРаздела.includes(c.id))
-      )
-    : все
+  const свои = своиТовары(все, идыРаздела, толькоИды)
 
   const сезоны = new Map<string, number>()
   const покрои = new Map<string, number>()
@@ -150,7 +203,8 @@ export const собратьПризнаки = async (
  */
 export const найтиТовары = async (
   фильтры: ВыбранныеФильтры,
-  идыРаздела?: string[]
+  идыРаздела?: string[],
+  толькоИды?: string[]
 ): Promise<string[] | null> => {
   const естьЧто =
     фильтры.сезон?.length ||
@@ -158,16 +212,14 @@ export const найтиТовары = async (
     фильтры.цвет?.length ||
     фильтры.новинки
 
-  if (!естьЧто) {
+  // Поиск сам по себе уже сузил каталог: даже без единой галочки нужно
+  // вернуть его находки, а не null (он означает «показывай всё»).
+  if (!естьЧто && !толькоИды) {
     return null
   }
 
   const всеТовары = await выписка()
-  const все = идыРаздела?.length
-    ? всеТовары.filter((p) =>
-        (p.categories ?? []).some((c) => c.id && идыРаздела.includes(c.id))
-      )
-    : всеТовары
+  const все = своиТовары(всеТовары, идыРаздела, толькоИды)
 
   const подходит = (p: Лёгкий) => {
     const m = p.metadata ?? {}

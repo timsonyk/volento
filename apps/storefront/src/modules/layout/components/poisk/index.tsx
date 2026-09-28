@@ -106,7 +106,7 @@ export default function Поиск({
       </button>
 
       {открыт && (
-        <div className="fixed inset-0 z-50" data-testid="poisk-shtorka">
+        <div className="fixed inset-0 z-[70]" data-testid="poisk-shtorka">
           {/* затемнение: нажатие мимо шторки закрывает её */}
           <div
             className="absolute inset-0 bg-ink/30"

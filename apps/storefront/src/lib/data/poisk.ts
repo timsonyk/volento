@@ -10,7 +10,33 @@ import { listModelColors, listProductsWithSort } from "./products"
  * Отдаёт немного и сразу: шторка показывает первые находки, пока человек
  * печатает, а за полным списком он уходит на страницу поиска по Enter.
  */
-const СКОЛЬКО = 8
+const СКОЛЬКО = 4
+
+// Цвет у нас — отдельный товар, поэтому «палаццо» возвращает одни и те же
+// брюки восемь раз подряд. В шторке мест мало: берём с запасом и
+// оставляем по одному товару на модель, остальные цвета и так видны
+// кружками на карточке.
+const ЗАПАС = 24
+
+function поОднойМодели(
+  товары: HttpTypes.StoreProduct[]
+): HttpTypes.StoreProduct[] {
+  const видели = new Set<string>()
+  const отобранные: HttpTypes.StoreProduct[] = []
+
+  for (const т of товары) {
+    const модель = т.metadata?.model as string | undefined
+    // Товар без модели — сам себе модель, его не с чем схлопывать.
+    const ключ = модель || т.id
+    if (видели.has(ключ)) {
+      continue
+    }
+    видели.add(ключ)
+    отобранные.push(т)
+  }
+
+  return отобранные
+}
 
 export type НайденныйТовар = {
   товар: HttpTypes.StoreProduct
@@ -41,10 +67,10 @@ export async function искатьТовары(
     const { response } = await listProductsWithSort({
       page: 1,
       countryCode,
-      queryParams: { limit: СКОЛЬКО, q: чистый } as any,
+      queryParams: { limit: ЗАПАС, q: чистый } as any,
     })
 
-    const товары = response?.products ?? []
+    const товары = поОднойМодели(response?.products ?? []).slice(0, СКОЛЬКО)
     const цветаПоМодели = товары.length
       ? await listModelColors({ products: товары, countryCode })
       : {}
