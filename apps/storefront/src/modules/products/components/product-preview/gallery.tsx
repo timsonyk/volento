@@ -55,8 +55,12 @@ export default function PreviewGallery({
   // Группа названа (group/gallery), поэтому и условие показа должно быть
   // именованным: group-hover:… к ней не относится, и стрелки оставались
   // прозрачными — доехать до них можно было только клавиатурой.
+  //
+  // Без белой плашки: шеврон лежит прямо на снимке. Чтобы он не пропал
+  // на тёмной фотографии, под ним мягкое белое свечение — оно держит
+  // контур, но плашкой не выглядит.
   const стрелка =
-    "absolute top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center bg-paper/90 text-ink opacity-0 transition-opacity duration-200 xsmall:flex group-hover/gallery:opacity-100 focus-visible:opacity-100"
+    "absolute top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center text-ink opacity-0 transition-opacity duration-200 [filter:drop-shadow(0_0_3px_rgba(255,255,255,0.95))] xsmall:flex group-hover/gallery:opacity-100 focus-visible:opacity-100"
 
   const слой = "absolute inset-0 object-cover object-center"
   const общие = {
@@ -103,9 +107,9 @@ export default function PreviewGallery({
             type="button"
             aria-label="Предыдущее фото"
             onClick={(e) => шаг(e, -1)}
-            className={`${стрелка} left-0`}
+            className={`${стрелка} left-1`}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="h-4 w-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
               <path d="M15 5 8 12l7 7" />
             </svg>
           </button>
@@ -113,9 +117,9 @@ export default function PreviewGallery({
             type="button"
             aria-label="Следующее фото"
             onClick={(e) => шаг(e, 1)}
-            className={`${стрелка} right-0`}
+            className={`${стрелка} right-1`}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" className="h-4 w-4">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
               <path d="m9 5 7 7-7 7" />
             </svg>
           </button>
