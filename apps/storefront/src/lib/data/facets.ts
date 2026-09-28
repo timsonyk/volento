@@ -27,9 +27,13 @@ export type Признак = {
   сколько: number
   /** только у цвета: код для кружка */
   код?: string
+  /** если значение техническое (адрес раздела) — что показать человеку */
+  подпись?: string
 }
 
 export type Признаки = {
+  /** пусто, когда человек уже внутри раздела: выбирать там нечего */
+  разделы: Признак[]
   сезоны: Признак[]
   покрои: Признак[]
   цвета: Признак[]
@@ -37,6 +41,7 @@ export type Признаки = {
 }
 
 export type ВыбранныеФильтры = {
+  раздел?: string[]
   сезон?: string[]
   покрой?: string[]
   цвет?: string[]
@@ -48,7 +53,7 @@ type Лёгкий = {
   created_at?: string
   metadata?: Record<string, unknown> | null
   tags?: { value?: string }[] | null
-  categories?: { id?: string }[] | null
+  categories?: { id?: string; name?: string; handle?: string }[] | null
 }
 
 const строка = (v: unknown) =>
@@ -74,7 +79,8 @@ const выписка = async (): Promise<Лёгкий[]> => {
         method: "GET",
         query: {
           limit: 1000,
-          fields: "id,created_at,metadata,+tags,+categories.id",
+          fields:
+            "id,created_at,metadata,+tags,+categories.id,+categories.name,+categories.handle",
         },
         headers,
         next,
@@ -154,6 +160,10 @@ export const собратьПризнаки = async (
   const все = await выписка()
   const свои = своиТовары(все, идыРаздела, толькоИды)
 
+  // Раздел предлагаем выбрать, только когда человек смотрит весь каталог
+  // или находки поиска. Внутри «Брюк» такая галочка бессмысленна: он уже
+  // в разделе, и выбирать там нечего.
+  const разделы = new Map<string, { сколько: number; подпись: string }>()
   const сезоны = new Map<string, number>()
   const покрои = new Map<string, number>()
   const цвета = new Map<string, { сколько: number; код?: string }>()
@@ -175,6 +185,17 @@ export const собратьПризнаки = async (
       })
     }
     if (новинка(p)) новинок++
+
+    if (!идыРаздела?.length) {
+      for (const к of p.categories ?? []) {
+        if (!к.handle) continue
+        const было = разделы.get(к.handle)
+        разделы.set(к.handle, {
+          сколько: (было?.сколько ?? 0) + 1,
+          подпись: было?.подпись ?? к.name ?? к.handle,
+        })
+      }
+    }
   }
 
   const вСписок = (m: Map<string, number>): Признак[] =>
@@ -183,6 +204,13 @@ export const собратьПризнаки = async (
       .sort((a, b) => b.сколько - a.сколько || a.значение.localeCompare(b.значение))
 
   return {
+    разделы: [...разделы.entries()]
+      .map(([значение, v]) => ({
+        значение,
+        сколько: v.сколько,
+        подпись: v.подпись,
+      }))
+      .sort((a, b) => b.сколько - a.сколько || a.подпись.localeCompare(b.подпись)),
     сезоны: вСписок(сезоны),
     покрои: вСписок(покрои),
     цвета: [...цвета.entries()]
@@ -207,6 +235,7 @@ export const найтиТовары = async (
   толькоИды?: string[]
 ): Promise<string[] | null> => {
   const естьЧто =
+    фильтры.раздел?.length ||
     фильтры.сезон?.length ||
     фильтры.покрой?.length ||
     фильтры.цвет?.length ||
@@ -223,6 +252,14 @@ export const найтиТовары = async (
 
   const подходит = (p: Лёгкий) => {
     const m = p.metadata ?? {}
+    if (
+      фильтры.раздел?.length &&
+      !(p.categories ?? []).some(
+        (к) => к.handle && фильтры.раздел!.includes(к.handle)
+      )
+    ) {
+      return false
+    }
     if (фильтры.сезон?.length && !фильтры.сезон.includes(строка(m.season) ?? "")) {
       return false
     }
@@ -253,6 +290,7 @@ export const прочитатьФильтры = async (
     typeof v === "string" ? v.split("~").filter(Boolean) : v
 
   return {
+    раздел: список(params["раздел"]),
     сезон: список(params["сезон"]),
     покрой: список(params["покрой"]),
     цвет: список(params["цвет"]),

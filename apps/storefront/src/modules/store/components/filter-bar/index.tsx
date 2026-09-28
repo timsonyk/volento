@@ -35,6 +35,7 @@ const FilterBar = ({ признаки }: { признаки: Признаки })
   const новинкиВключены = searchParams.get("новинки") === "да"
 
   const сколькоВыбрано =
+    выбранные("раздел").length +
     выбранные("сезон").length +
     выбранные("покрой").length +
     выбранные("цвет").length +
@@ -63,7 +64,7 @@ const FilterBar = ({ признаки }: { признаки: Признаки })
 
   const сбросить = () =>
     применить((p) => {
-      for (const имя of ["сезон", "покрой", "цвет", "новинки"]) {
+      for (const имя of ["раздел", "сезон", "покрой", "цвет", "новинки"]) {
         p.delete(имя)
       }
     })
@@ -77,7 +78,12 @@ const FilterBar = ({ признаки }: { признаки: Признаки })
   }: {
     имя: string
     заголовок: string
-    значения: { значение: string; сколько: number; код?: string }[]
+    значения: {
+      значение: string
+      сколько: number
+      код?: string
+      подпись?: string
+    }[]
   }) => {
     if (!значения.length) {
       return null
@@ -116,7 +122,7 @@ const FilterBar = ({ признаки }: { признаки: Признаки })
                     отмечен ? "text-ink" : "text-muted"
                   )}
                 >
-                  {з.значение}
+                  {з.подпись ?? з.значение}
                 </span>
                 <span className="text-xs text-muted">{з.сколько}</span>
               </label>
@@ -175,7 +181,7 @@ const FilterBar = ({ признаки }: { признаки: Признаки })
           className="mt-5 border-t border-rule pt-6"
           data-testid="filter-panel"
         >
-          <div className="grid grid-cols-1 gap-8 small:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 small:grid-cols-5">
             {признаки.новинок > 0 && (
               <div className="flex flex-col gap-y-3">
                 <p className="text-xs uppercase tracking-[0.16em] text-muted">
@@ -209,6 +215,11 @@ const FilterBar = ({ признаки }: { признаки: Признаки })
               </div>
             )}
 
+            <Группа
+              имя="раздел"
+              заголовок="Раздел"
+              значения={признаки.разделы}
+            />
             <Группа имя="сезон" заголовок="Сезон" значения={признаки.сезоны} />
             <Группа имя="покрой" заголовок="Покрой" значения={признаки.покрои} />
             <Группа
