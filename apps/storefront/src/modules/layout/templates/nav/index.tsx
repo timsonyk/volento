@@ -5,27 +5,27 @@ import { listCategories } from "@lib/data/categories"
 import { getHomeContent } from "@lib/data/home-banner"
 import { getLocale } from "@lib/data/locale-actions"
 import { listLocales } from "@lib/data/locales"
-import { listRegions } from "@lib/data/regions"
+import { getRegion, listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
-import {
-  AccountIcon,
-  BagIcon,
-  SearchIcon,
-} from "@modules/common/icons/ui"
+import { AccountIcon, BagIcon } from "@modules/common/icons/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
+import Поиск from "@modules/layout/components/poisk"
 import DesktopMenu from "@modules/layout/components/desktop-menu"
 import PromoBar from "@modules/layout/components/promo-bar"
 import SideMenu from "@modules/layout/components/side-menu"
 
 export default async function Nav({ countryCode }: { countryCode: string }) {
-  const [regions, locales, currentLocale, оформление, categories] =
+  const [regions, locales, currentLocale, оформление, categories, регион] =
     await Promise.all([
       listRegions().then((regions: StoreRegion[]) => regions),
       listLocales(),
       getLocale(),
       getHomeContent(countryCode),
       listCategories(),
+      // Регион нужен шторке поиска: без него у найденных товаров не
+      // посчитать цену.
+      getRegion(countryCode),
     ])
 
   const акция = оформление.акцияПоказывать ? оформление.акцияТекст : undefined
@@ -81,16 +81,6 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
           : [],
     },
   ].filter((г) => г.разделы.length > 0)
-
-  const справка = {
-    заголовок: "Покупателю",
-    ссылки: [
-      { имя: "О бренде", адрес: "/o-brende" },
-      { имя: "Доставка", адрес: "/dostavka" },
-      { имя: "Оплата", адрес: "/oplata" },
-      { имя: "Возврат и обмен", адрес: "/vozvrat" },
-    ],
-  }
 
   const вколонку = (c: {
     name: string
@@ -150,21 +140,18 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 юридические={!!оформление.реквизиты}
               />
             </div>
-            <LocalizedClientLink
-              href="/search"
-              aria-label="Поиск по каталогу"
-              className="transition-opacity hover:opacity-60 small:hidden"
+            <Поиск
+              countryCode={countryCode}
+              region={регион}
+              className="small:hidden"
               data-testid="nav-search-link-mobile"
-            >
-              <SearchIcon />
-            </LocalizedClientLink>
+            />
             <DesktopMenu
               пункты={[
                 { имя: "Новинки", адрес: "/store?sortBy=created_at" },
                 { имя: "Скидки", адрес: "/collections/skidki" },
               ]}
               группы={группыКолонок}
-              справка={справка}
               снимок={оформление.картинка("середина")}
             />
           </div>
@@ -188,14 +175,12 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
 
           {/* справа: кабинет и корзина */}
           <div className="flex flex-1 basis-0 items-center justify-end gap-x-5 text-ink">
-            <LocalizedClientLink
-              href="/search"
-              aria-label="Поиск по каталогу"
-              className="hidden transition-opacity hover:opacity-60 small:block"
+            <Поиск
+              countryCode={countryCode}
+              region={регион}
+              className="hidden small:block"
               data-testid="nav-search-link"
-            >
-              <SearchIcon />
-            </LocalizedClientLink>
+            />
             <LocalizedClientLink
               href="/account"
               aria-label="Личный кабинет"

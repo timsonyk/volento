@@ -112,6 +112,11 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
     сохранить(имя)
   }
 
+  // Галочка появляется, как только город узнан: без неё непонятно,
+  // приняла форма введённое или нет — человек дописывал название и не
+  // понимал, почему следующий пункт всё ещё закрыт.
+  const узнан = подходит && !сбой
+
   return (
     <div className="relative max-w-sm">
       <Input
@@ -135,6 +140,27 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
         ошибка={ошибка}
         data-testid="delivery-city-input"
       />
+
+      {узнан && (
+        <span
+          // Поле высотой 44 px, значок прижат к правому краю внутри него
+          className="pointer-events-none absolute right-3 top-[14px] text-ink"
+          data-testid="gorod-prinyat"
+          aria-hidden
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <path d="m5 12.5 4.5 4.5L19 7" />
+          </svg>
+        </span>
+      )}
 
       {открыт && подсказки.length > 0 && (
         <ul
