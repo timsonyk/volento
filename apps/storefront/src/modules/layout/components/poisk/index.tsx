@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
-import { Находки, искатьТовары } from "@lib/data/poisk"
+import type { Находки } from "@lib/data/poisk"
+import { искатьТовары } from "@lib/data/poisk"
 import { SearchIcon } from "@modules/common/icons/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductPreview from "@modules/products/components/product-preview"

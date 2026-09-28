@@ -5,7 +5,7 @@ import { VariantPrice } from "types/global"
  * Цена в карточке. Размер шрифта задаёт родитель — здесь только цвет:
  * серый #4d4d4d по замерам референса, у скидки — обычная цена зачёркнута.
  */
-export default async function PreviewPrice({ price }: { price: VariantPrice }) {
+export default function PreviewPrice({ price }: { price: VariantPrice }) {
   if (!price) {
     return null
   }
