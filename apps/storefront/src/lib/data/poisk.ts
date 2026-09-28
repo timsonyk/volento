@@ -16,7 +16,7 @@ const СКОЛЬКО = 4
 // брюки восемь раз подряд. В шторке мест мало: берём с запасом и
 // оставляем по одному товару на модель, остальные цвета и так видны
 // кружками на карточке.
-const ЗАПАС = 24
+const ЗАПАС = 16
 
 function поОднойМодели(
   товары: HttpTypes.StoreProduct[]
@@ -67,7 +67,15 @@ export async function искатьТовары(
     const { response } = await listProductsWithSort({
       page: 1,
       countryCode,
-      queryParams: { limit: ЗАПАС, q: чистый } as any,
+      queryParams: {
+        limit: ЗАПАС,
+        q: чистый,
+        // Без картинок вариантов: в шторке видна только обложка и вторая
+        // фотография товара, а вариантов у брюк по три десятка — с ними
+        // ответ весит мегабайты и человек ждёт находки дольше, чем печатал.
+        fields:
+          "*variants.calculated_price,+variants.inventory_quantity,*variants.options,+metadata,+tags,",
+      } as any,
     })
 
     const товары = поОднойМодели(response?.products ?? []).slice(0, СКОЛЬКО)
