@@ -3,6 +3,7 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 
+import { listCategories } from "./categories"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 
 /**
@@ -152,12 +153,47 @@ export const идыПоиска = async (запрос: string): Promise<string[]
   }
 }
 
+/**
+ * Подписи разделов для фильтра. Разделов с одинаковым названием у нас
+ * два: «Брюки» женские и «Брюки» внутри «Мужского». Одинаковые названия
+ * в списке различаем родителем — «Мужское / Брюки», остальные оставляем
+ * как есть, чтобы не загромождать.
+ */
+const подписиРазделов = async (): Promise<Record<string, string>> => {
+  try {
+    const все = await listCategories()
+    const сколькоРаз = new Map<string, number>()
+
+    for (const к of все) {
+      сколькоРаз.set(к.name, (сколькоРаз.get(к.name) ?? 0) + 1)
+    }
+
+    const подписи: Record<string, string> = {}
+
+    for (const к of все) {
+      const родитель = к.parent_category?.name
+      подписи[к.handle] =
+        (сколькоРаз.get(к.name) ?? 0) > 1 && родитель
+          ? `${родитель} / ${к.name}`
+          : к.name
+    }
+
+    return подписи
+  } catch (e) {
+    console.error("Не удалось прочитать разделы для фильтра", e)
+    return {}
+  }
+}
+
 /** Что вообще можно выбрать в фильтре и сколько за каждым товаров. */
 export const собратьПризнаки = async (
   идыРаздела?: string[],
   толькоИды?: string[]
 ): Promise<Признаки> => {
-  const все = await выписка()
+  const [все, подписи] = await Promise.all([
+    выписка(),
+    идыРаздела?.length ? Promise.resolve({}) : подписиРазделов(),
+  ])
   const свои = своиТовары(все, идыРаздела, толькоИды)
 
   // Раздел предлагаем выбрать, только когда человек смотрит весь каталог
@@ -192,7 +228,7 @@ export const собратьПризнаки = async (
         const было = разделы.get(к.handle)
         разделы.set(к.handle, {
           сколько: (было?.сколько ?? 0) + 1,
-          подпись: было?.подпись ?? к.name ?? к.handle,
+          подпись: было?.подпись ?? подписи[к.handle] ?? к.name ?? к.handle,
         })
       }
     }
