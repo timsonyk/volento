@@ -15,10 +15,20 @@ import { useCallback, useEffect, useRef, useState } from "react"
 const ScrollRow = ({
   children,
   className = "",
+  обёртка = "",
   ariaLabel,
 }: {
   children: React.ReactNode
   className?: string
+  /**
+   * Классы для внешней рамки, а не для самого списка.
+   *
+   * Нужны, когда лента стоит в гибкой раскладке: растягиваться должна
+   * рамка, к ней же привязаны стрелки. Если отдать flex-1 списку, рамка
+   * раздувается по содержимому, уезжает за экран вместе со стрелками, а
+   * прокручивать становится нечего — «видно» и «всего» совпадают.
+   */
+  обёртка?: string
   ariaLabel: string
 }) => {
   const лента = useRef<HTMLUListElement>(null)
@@ -58,7 +68,7 @@ const ScrollRow = ({
     "absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 items-center justify-center bg-paper/95 text-ink shadow-[0_2px_10px_rgba(0,0,0,0.12)] transition-opacity duration-200 xsmall:flex disabled:pointer-events-none disabled:opacity-0"
 
   return (
-    <div className="relative">
+    <div className={`relative ${обёртка}`}>
       <button
         type="button"
         aria-label="Листать влево"

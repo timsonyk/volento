@@ -91,7 +91,10 @@ export default async function LatestProducts({
             колонки, на узком — от общего отступа страницы. */}
         <ScrollRow
           ariaLabel={title}
-          className="no-scrollbar flex snap-x snap-mandatory gap-x-1.5 overflow-x-auto scroll-pl-4 px-4 pb-1 xsmall:scroll-pl-[30px] xsmall:px-[30px] small:min-w-0 small:flex-1 small:scroll-pl-0 small:px-0"
+          // Растягивается рамка, а не список: к рамке привязаны стрелки,
+          // и от её ширины зависит, есть ли что прокручивать.
+          обёртка="small:min-w-0 small:flex-1"
+          className="no-scrollbar flex snap-x snap-mandatory gap-x-1.5 overflow-x-auto scroll-pl-4 px-4 pb-1 xsmall:scroll-pl-[30px] xsmall:px-[30px] small:scroll-pl-0 small:px-0"
         >
           {products.map((product) => (
             <li
