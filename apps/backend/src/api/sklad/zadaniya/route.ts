@@ -17,6 +17,37 @@ import { наЧасти } from "../../../lib/sklad-pozicii"
  */
 const ЗА_РАЗ = 100
 
+/**
+ * Куда везти. У доставки до пункта выдачи адреса в карточке заказа нет —
+ * покупатель выбрал точку на карте, и она лежит в способе доставки.
+ * Складу нужен именно этот адрес, иначе везти некуда.
+ */
+const доставка = (з: any) => {
+  const способ = (з.shipping_methods ?? [])[0]
+  const пункт = способ?.data?.apishipData?.point
+
+  if (пункт) {
+    return {
+      sposob: "pvz",
+      perevozchik: способ?.data?.apishipData?.tariff?.providerKey ?? null,
+      punkt: {
+        id: String(пункт.id),
+        nazvanie: пункт.name,
+        adres: пункт.address,
+        rezhim: пункт.timetable ?? null,
+      },
+      gorod: з.shipping_address?.city ?? null,
+    }
+  }
+
+  return {
+    sposob: "kurier",
+    gorod: з.shipping_address?.city ?? null,
+    adres: з.shipping_address?.address_1 ?? null,
+    indeks: з.shipping_address?.postal_code ?? null,
+  }
+}
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
@@ -38,9 +69,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "items.id",
         "items.variant_sku",
         "items.title",
-        "items.quantity",
-        "items.detail.fulfilled_quantity",
+        // Количество лежит не в строке заказа, а в её «подробностях»:
+        // в самой строке такого поля нет, и оно приходило пустым.
+        "items.detail.quantity",
         "shipping_address.*",
+        "shipping_methods.name",
+        "shipping_methods.data",
         "fulfillments.id",
         "fulfillments.canceled_at",
       ],
@@ -69,18 +103,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
               ? { model: части.model, razmer: части.razmer, rost: части.rost }
               : {}),
             nazvanie: т.title,
-            kolichestvo: т.quantity,
+            kolichestvo: Number(т.detail?.quantity ?? 0),
             // Нужен, когда склад будет подтверждать сборку построчно
             id_stroki: т.id,
           }
         }),
-        dostavka: з.shipping_address
-          ? {
-              gorod: з.shipping_address.city,
-              adres: з.shipping_address.address_1,
-              indeks: з.shipping_address.postal_code,
-            }
-          : null,
+        dostavka: доставка(з),
         poluchatel: з.shipping_address
           ? {
               imya: [з.shipping_address.first_name, з.shipping_address.last_name]

@@ -32,7 +32,8 @@ export async function найтиЗаказ(
     "display_id",
     "status",
     "items.id",
-    "items.quantity",
+    // Количество живёт в «подробностях» строки, а не в ней самой.
+    "items.detail.quantity",
     "items.variant_sku",
     "fulfillments.id",
     "fulfillments.canceled_at",
@@ -65,7 +66,7 @@ export async function найтиЗаказ(
       .filter(Boolean)
       .map((т: any) => ({
         id: String(т.id),
-        quantity: Number(т.quantity),
+        quantity: Number(т.detail?.quantity ?? 0),
         variant_sku: т.variant_sku ?? undefined,
       })),
     живыеСборки: (заказ.fulfillments ?? []).filter((с: any) => !с.canceled_at)
