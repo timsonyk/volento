@@ -270,8 +270,13 @@ export default function ProductActions({
           >
             {/* options это объект, поэтому !options всегда false: без этой правки
                 до выбора размера кнопка показывала "Нет в наличии" */}
+            {/* Просим выбрать ровно то, что у товара есть: у блуз,
+                юбок и рубашек роста нет, и звать его незачем. */}
             {!selectedVariant || !isValidVariant
-              ? "Выберите размер и рост"
+              ? `Выберите ${(product.options ?? [])
+                  .map((о) => (о.title ?? "").toLowerCase())
+                  .filter(Boolean)
+                  .join(" и ") || "вариант"}`
               : !inStock
               ? "Нет в наличии"
               : "В корзину"}

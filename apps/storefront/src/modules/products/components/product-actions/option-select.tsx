@@ -88,7 +88,18 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   disabled,
   нет,
 }) => {
-  const values = (option.values ?? []).map((v) => v.value)
+  // По возрастанию, а не в том порядке, в каком их вернула база: там
+  // порядок зависит от того, когда значение последний раз правили, и
+  // «42, 44» оказывалось после «50, 52». Сравниваем по первому числу —
+  // размеры у нас бывают и составные, «38, 40».
+  const первоеЧисло = (v: string) => {
+    const м = /\d+/.exec(v)
+    return м ? Number(м[0]) : Number.POSITIVE_INFINITY
+  }
+
+  const values = (option.values ?? [])
+    .map((v) => v.value)
+    .sort((a, b) => первоеЧисло(a) - первоеЧисло(b) || a.localeCompare(b))
   const isHeight = title.toLowerCase() === "рост"
 
   return (
