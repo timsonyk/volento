@@ -1,0 +1,10 @@
+[Unit]
+Description=Остатки с Ozon раз в 15 минут
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
