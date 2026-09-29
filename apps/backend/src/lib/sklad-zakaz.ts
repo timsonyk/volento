@@ -55,11 +55,19 @@ export async function найтиЗаказ(
     return null
   }
 
+  // Приводим сами: query.graph отдаёт поля как «может быть пусто»,
+  // хотя у существующего заказа номер и строки есть всегда.
   return {
-    id: заказ.id,
-    display_id: заказ.display_id,
-    status: заказ.status,
-    items: заказ.items ?? [],
+    id: String(заказ.id),
+    display_id: Number(заказ.display_id),
+    status: String(заказ.status),
+    items: ((заказ.items ?? []) as any[])
+      .filter(Boolean)
+      .map((т: any) => ({
+        id: String(т.id),
+        quantity: Number(т.quantity),
+        variant_sku: т.variant_sku ?? undefined,
+      })),
     живыеСборки: (заказ.fulfillments ?? []).filter((с: any) => !с.canceled_at)
       .length,
   }
