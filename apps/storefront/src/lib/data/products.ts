@@ -137,11 +137,43 @@ export const listProductsWithSort = async ({
     ...(optionFilters.length ? { option_value_id: optionFilters } : {}),
   }
 
+  // Отобранные фильтром товары уезжают на сервер списком id прямо в
+  // адресе запроса. Список длинный: «Осень-зима» — это 226 товаров, а
+  // находки по слову «палаццо» — 153, и адрес перестаёт помещаться —
+  // сервер отвечает «Request-URI Too Large», страница падает.
+  //
+  // Поэтому отправляем не весь список, а только ту его часть, которая
+  // нужна: список у нас уже в правильном порядке, так что страницу из
+  // него можно отрезать самим.
+  const ПРЕДЕЛ_ID = 100
+  const всеИды = Array.isArray(общие.id) ? (общие.id as string[]) : undefined
+
   // «Новинки» — сортировка по дате, её умеет сам сервер. Тогда просим
   // ровно страницу: на боевом каталоге сотня товаров со всеми вариантами
   // весила 17,9 МБ и считалась 4,4 секунды, страница из двенадцати —
   // 1,8 МБ и полсекунды.
   if (sortBy === "created_at") {
+    if (всеИды && всеИды.length > ПРЕДЕЛ_ID) {
+      const начало = Math.max(page - 1, 0) * limit
+      const страница = всеИды.slice(начало, начало + limit)
+
+      const {
+        response: { products },
+      } = await listProducts({
+        pageParam: 1,
+        queryParams: { ...общие, id: страница, order: "-created_at", limit },
+        countryCode,
+      })
+
+      const дальше = начало + limit < всеИды.length ? page + 1 : null
+
+      return {
+        response: { products, count: всеИды.length },
+        nextPage: дальше,
+        queryParams,
+      }
+    }
+
     const { response, nextPage } = await listProducts({
       pageParam: page,
       queryParams: { ...общие, order: "-created_at", limit },
@@ -161,6 +193,11 @@ export const listProductsWithSort = async ({
     pageParam: 0,
     queryParams: {
       ...общие,
+      // Цену надо сравнить у всех сразу, страницу отрезать нельзя —
+      // поэтому здесь список id просто укорачиваем до предела.
+      ...(всеИды && всеИды.length > ПРЕДЕЛ_ID
+        ? { id: всеИды.slice(0, ПРЕДЕЛ_ID) }
+        : {}),
       fields: "*variants.calculated_price,+metadata,+tags,",
       limit: 100,
     },

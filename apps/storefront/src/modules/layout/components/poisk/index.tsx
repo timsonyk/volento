@@ -127,13 +127,15 @@ export default function Поиск({
                   className="min-w-0 flex-1 bg-transparent text-lg text-ink outline-none placeholder:text-muted"
                   data-testid="poisk-pole"
                 />
-                {запрос && (
+                {/* Кнопка, а не подсказка «нажмите Enter»: на телефоне
+                    клавиши Enter под рукой нет, а нажать надо куда-то. */}
+                {запрос.trim().length >= 2 && (
                   <button
-                    type="button"
-                    onClick={() => setЗапрос("")}
-                    className="text-sm uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink"
+                    type="submit"
+                    className="shrink-0 text-sm uppercase tracking-[0.12em] text-ink underline underline-offset-[5px] decoration-rule transition-colors hover:decoration-ink"
+                    data-testid="poisk-nayti"
                   >
-                    Очистить
+                    Найти
                   </button>
                 )}
                 <button
