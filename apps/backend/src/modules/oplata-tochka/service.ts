@@ -42,7 +42,32 @@ class OplataTochkaService extends TochkaService {
     return super.initiatePayment({
       ...input,
       amount: String(new BigNumber(input.amount).numeric),
+      // Торговая точка в Точке. Банк требует её, если точек у клиента
+      // несколько (в песочнице их две) — задаём явно всегда.
+      data: { ...input.data, merchantId: input.data?.merchantId ?? process.env.TOCHKA_MERCHANT_ID },
     })
+  }
+
+  /**
+   * Код клиента в Точке. Плагин каждый раз спрашивает список клиентов и
+   * ищет среди них юрлицо — лишний запрос на каждую оплату, а в
+   * песочнице юрлица нет вовсе (там одно физлицо «Тестов Т.Т.»), и
+   * оплата падала бы с «Customer code is undefined». Код можно задать
+   * переменной TOCHKA_CUSTOMER_CODE; в песочнице берём первого клиента.
+   */
+  async getCustomerCodeForPayment(): Promise<string | undefined> {
+    if (process.env.TOCHKA_CUSTOMER_CODE) {
+      return process.env.TOCHKA_CUSTOMER_CODE
+    }
+
+    const код = await super.getCustomerCodeForPayment()
+    if (код || !this.options.developerMode) {
+      return код
+    }
+
+    const sdk: any = (this as any).tochkaSDK_
+    const { data } = await sdk.OpenBanking.getCustomersList(sdk.getApiVersion())
+    return data?.Data?.Customer?.[0]?.customerCode
   }
 
   async getWebhookActionAndData(
