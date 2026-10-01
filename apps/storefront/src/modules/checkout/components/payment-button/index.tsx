@@ -1,13 +1,17 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
+import { isManual, isStripeLike, isTochka } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { проверитьНаличие, словамиОНехватке } from "@lib/data/nalichie"
+import { convertToLocale } from "@lib/util/money"
+import { ссылкаНаОплату } from "@lib/data/oplata"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
+import { useParams } from "next/navigation"
 import React, { useState } from "react"
 import ErrorMessage from "../error-message"
+import { useСпособОплаты } from "../steps/context"
 
 /**
  * Последняя проверка перед тем, как брать деньги.
@@ -52,8 +56,18 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     (cart.shipping_methods?.length ?? 0) < 1
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
+  const [выбранный] = useСпособОплаты()
 
   switch (true) {
+    // У Точки платёжной записи до нажатия нет — смотрим на выбор
+    case isTochka(выбранный || paymentSession?.provider_id):
+      return (
+        <TochkaPaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
+      )
     case isStripeLike(paymentSession?.provider_id):
       return (
         <StripePaymentButton
@@ -189,6 +203,70 @@ const StripePaymentButton = ({
     </>
   )
 }
+
+/**
+ * Оплата в Точке: проверяем наличие, получаем ссылку и уводим на
+ * страницу банка. Заказ появится, когда человек вернётся к нам
+ * (страница /checkout/oplata) или когда банк пришлёт уведомление.
+ */
+const TochkaPaymentButton = ({
+  notReady,
+  cart,
+  "data-testid": dataTestId,
+}: {
+  notReady: boolean
+  cart: HttpTypes.StoreCart
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const { countryCode } = useParams() as { countryCode?: string }
+
+  const handlePayment = async () => {
+    setSubmitting(true)
+    setErrorMessage(null)
+
+    const мешает = await мешаетЛиНаличие(cart)
+    if (мешает) {
+      setErrorMessage(мешает)
+      setSubmitting(false)
+      return
+    }
+
+    const ответ = await ссылкаНаОплату(countryCode || "ru")
+
+    if ("ошибка" in ответ) {
+      setErrorMessage(ответ.ошибка)
+      setSubmitting(false)
+      return
+    }
+
+    // Кнопку не отпускаем: страница сейчас сменится на банковскую,
+    // а повторное нажатие только создало бы путаницу.
+    window.location.href = ответ.ссылка
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        data-testid={dataTestId}
+      >
+        Оплатить {сумма(cart)}
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="tochka-payment-error-message"
+      />
+    </>
+  )
+}
+
+const сумма = (cart: HttpTypes.StoreCart) =>
+  convertToLocale({ amount: cart.total ?? 0, currency_code: cart.currency_code })
 
 const ManualTestPaymentButton = ({
   notReady,

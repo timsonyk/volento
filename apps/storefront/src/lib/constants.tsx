@@ -29,6 +29,10 @@ export const paymentInfoMap: Record<
     title: "PayPal",
     icon: <PayPal />,
   },
+  pp_tochka_tochka: {
+    title: "Картой или по СБП",
+    icon: <CreditCard />,
+  },
   pp_system_default: {
     title: "Оплата вручную",
     icon: <CreditCard />,
@@ -46,6 +50,11 @@ export const isStripeLike = (providerId?: string) => {
 export const isPaypal = (providerId?: string) => {
   return providerId?.startsWith("pp_paypal")
 }
+/** Точка: покупатель платит на странице банка и возвращается к нам. */
+export const isTochka = (providerId?: string) => {
+  return providerId?.startsWith("pp_tochka")
+}
+
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }

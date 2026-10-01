@@ -1,6 +1,6 @@
 "use client"
 import { RadioGroup } from "@headlessui/react"
-import { isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isStripeLike, isTochka, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { CreditCard } from "@medusajs/icons"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -10,7 +10,7 @@ import PaymentContainer, {
 import { Button, Container, Text } from "@modules/common/components/ui"
 import { HttpTypes } from "@medusajs/types"
 import { useEffect, useState } from "react"
-import { useОтметка } from "../steps/context"
+import { useОтметка, useСпособОплаты } from "../steps/context"
 
 const Payment = ({
   cart,
@@ -28,9 +28,14 @@ const Payment = ({
   const [cardBrand, setCardBrand] = useState<string | null>(null)
   const [cardComplete, setCardComplete] = useState(false)
   const отметить = useОтметка()
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.provider_id ?? "",
-  )
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useСпособОплаты()
+
+  // Способ один — выбирать нечего, отмечаем его сами.
+  useEffect(() => {
+    if (!selectedPaymentMethod && availablePaymentMethods?.length === 1) {
+      setSelectedPaymentMethod(availablePaymentMethods[0].id)
+    }
+  }, [selectedPaymentMethod, availablePaymentMethods, setSelectedPaymentMethod])
 
   // Раздел всегда открыт: оформление одностраничное.
   const isOpen = true
@@ -82,6 +87,11 @@ const Payment = ({
     }
     // карту вводят в отдельной форме — там сессия заводится своим чередом
     if (isStripeLike(selectedPaymentMethod)) {
+      return
+    }
+    // У Точки ссылку на банк создаём в момент нажатия «Оплатить»: сумма
+    // к тому времени может поменяться, а ссылка живёт с той, что была.
+    if (isTochka(selectedPaymentMethod)) {
       return
     }
 

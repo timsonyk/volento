@@ -35,14 +35,20 @@ const Шаги = ({
 }) => {
   const [свои, setСвои] = useState<Partial<Record<КлючШага, boolean>>>({})
 
+  const [способОплаты, выбратьСпособ] = useState(
+    cart.payment_collection?.payment_sessions?.[0]?.provider_id ?? ""
+  )
+
   const значение = useMemo(
     () => ({
       отметить: (ключ: КлючШага, готов: boolean) =>
         setСвои((было) =>
           было[ключ] === готов ? было : { ...было, [ключ]: готов }
         ),
+      способОплаты,
+      выбратьСпособ,
     }),
-    []
+    [способОплаты]
   )
 
   const адрес = cart.shipping_address

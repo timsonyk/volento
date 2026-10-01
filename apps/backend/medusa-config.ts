@@ -18,13 +18,15 @@ const оплатаТочки = process.env.TOCHKA_JWT_TOKEN
         options: {
           providers: [
             {
-              resolve: "medusa-payment-tochka/providers/payment-tochka",
+              // Плагин medusa-payment-tochka с нашими поправками:
+              // СБП, сумма, разбор вебхука (src/modules/oplata-tochka)
+              resolve: "./src/modules/oplata-tochka",
               id: "tochka",
               options: {
                 tochkaJwtToken: process.env.TOCHKA_JWT_TOKEN,
                 clientId: process.env.TOCHKA_CLIENT_ID,
                 webhookPublicKeyJson: process.env.TOCHKA_WEBHOOK_PUBLIC_KEY,
-                // песочница включается сама, пока NODE_ENV не production
+                // true — песочница Точки
                 developerMode: process.env.TOCHKA_DEVELOPER_MODE === "true",
                 // Пока обычная оплата: деньги списываются сразу.
                 // Двухстадийную (заморозить при заказе, списать после
@@ -34,14 +36,11 @@ const оплатаТочки = process.env.TOCHKA_JWT_TOKEN
                 // списания и звонит с вопросами.
                 preAuthorization: process.env.TOCHKA_PREAUTH === "true",
                 paymentPurpose: "Оплата заказа в Volento",
-                // облачная касса Точки: чек по 54-ФЗ формирует сам банк
-                withReceipt: true,
-                // УСН «доходы» (6 %) и НДС 5 % — по словам Тимофея.
-                // Ставку в чеке банк ставит ту, что придёт отсюда, поэтому
-                // менять её можно переменными, не трогая код.
-                taxSystemCode: process.env.TOCHKA_TAX_SYSTEM || "usn_income",
-                taxItemDefault: process.env.TOCHKA_VAT_ITEM || "vat5",
-                taxShippingDefault: process.env.TOCHKA_VAT_SHIPPING || "vat5",
+                // Чек Точка не формирует (withReceipt не задаём вовсе:
+                // плагин требует налоговых настроек, даже если там false).
+                // Все товары с маркировкой «Честного знака», код пары
+                // знает только склад при сборке — чеки шлём сами через
+                // кассу Атол.
               },
             },
           ],
