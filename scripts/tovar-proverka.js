@@ -2,8 +2,9 @@
  * Скрытый товар «Проверка оплаты» за 10 ₽ — для живых платежей до
  * открытия магазина.
  *
- * Метка system прячет его из каталога, поиска и главной (как баннер
- * главной), но страница по прямой ссылке открывается:
+ * Метка skryt прячет его из каталога, поиска и главной, но страница по
+ * прямой ссылке открывается (у метки system, как у баннера главной,
+ * страница тоже закрыта):
  *   https://slytn.ru/ru/products/proverka-oplaty
  * Остатков не ведёт (manage_inventory: false) — склад о нём не знает.
  *
@@ -14,7 +15,7 @@
  */
 const BASE = "http://127.0.0.1:9000"
 const HANDLE = "proverka-oplaty"
-const СЛУЖЕБНАЯ = "system"
+const СКРЫТ = "skryt"
 const удалить = process.argv.includes("--udalit")
 
 let token = ""
@@ -46,12 +47,13 @@ async function main() {
 
   if (есть) {
     console.log("товар уже есть: https://slytn.ru/ru/products/" + HANDLE)
+    console.log("чтобы завести заново: --udalit, затем без флагов")
     return
   }
 
   const { product_tags } = await api("GET", "/admin/product-tags?limit=100")
-  let tag = product_tags.find((t) => t.value === СЛУЖЕБНАЯ)
-  if (!tag) tag = (await api("POST", "/admin/product-tags", { value: СЛУЖЕБНАЯ })).product_tag
+  let tag = product_tags.find((t) => t.value === СКРЫТ)
+  if (!tag) tag = (await api("POST", "/admin/product-tags", { value: СКРЫТ })).product_tag
 
   const { sales_channels } = await api("GET", "/admin/sales-channels?limit=5")
   const { shipping_profiles } = await api("GET", "/admin/shipping-profiles?limit=5")

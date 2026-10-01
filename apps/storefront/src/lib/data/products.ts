@@ -13,6 +13,11 @@ import { getRegion, retrieveRegion } from "./regions"
 // "use server", там разрешены только асинхронные функции.
 const SYSTEM_TAG = "system"
 
+// Метка скрытых товаров: в каталоге, поиске и на главной их нет, но
+// страница по прямой ссылке открывается (у system — нет). Так живёт
+// «Проверка оплаты» за 10 ₽ до открытия магазина.
+const HIDDEN_TAG = "skryt"
+
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {
   options?: string[]
@@ -90,7 +95,10 @@ export const listProducts = async ({
       const visible = queryParams?.handle
         ? products
         : products.filter(
-            (p) => !p.tags?.some((t) => t.value === SYSTEM_TAG)
+            (p) =>
+              !p.tags?.some(
+                (t) => t.value === SYSTEM_TAG || t.value === HIDDEN_TAG
+              )
           )
       const hidden = products.length - visible.length
 
