@@ -195,22 +195,33 @@ export const listProductsWithSort = async ({
   // вариантам, сервер по ней упорядочить не может. Приходится забирать
   // список целиком, но без картинок и опций вариантов — в сетке каталога
   // они не нужны, а вес ответа это режет вдвое.
-  const {
-    response: { products },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...общие,
-      // Цену надо сравнить у всех сразу, страницу отрезать нельзя —
-      // поэтому здесь список id просто укорачиваем до предела.
-      ...(всеИды && всеИды.length > ПРЕДЕЛ_ID
-        ? { id: всеИды.slice(0, ПРЕДЕЛ_ID) }
-        : {}),
-      fields: "*variants.calculated_price,+metadata,+tags,",
-      limit: 100,
-    },
-    countryCode,
-  })
+  // Цену надо сравнить у всех сразу, страницу отрезать нельзя. Длинный
+  // список id (а с отсевом распроданного он длинный почти всегда)
+  // режем на куски, которые помещаются в адрес, и просим их разом.
+  const куски: (string[] | undefined)[] = []
+  if (всеИды && всеИды.length > ПРЕДЕЛ_ID) {
+    for (let i = 0; i < всеИды.length; i += ПРЕДЕЛ_ID) {
+      куски.push(всеИды.slice(i, i + ПРЕДЕЛ_ID))
+    }
+  } else {
+    куски.push(undefined)
+  }
+
+  const ответы = await Promise.all(
+    куски.map((кусок) =>
+      listProducts({
+        pageParam: 0,
+        queryParams: {
+          ...общие,
+          ...(кусок ? { id: кусок } : {}),
+          fields: "*variants.calculated_price,+metadata,+tags,",
+          limit: кусок ? кусок.length : 100,
+        },
+        countryCode,
+      })
+    )
+  )
+  const products = ответы.flatMap((о) => о.response.products)
 
   const sortedProducts = sortProducts(products, sortBy)
 

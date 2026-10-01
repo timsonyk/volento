@@ -2,7 +2,9 @@
 
 import { HttpTypes } from "@medusajs/types"
 
+import { идыПоиска } from "./facets"
 import { listModelColors, listProductsWithSort } from "./products"
+import { идыВНаличии } from "./v-nalichii"
 
 /**
  * Поиск по каталогу для всплывающей шторки.
@@ -64,12 +66,22 @@ export async function искатьТовары(
   }
 
   try {
+    // Распроданные модели в поиске не показываем — так же, как в
+    // каталоге. Находки по слову берём налегке, оставляем те, что в
+    // наличии, и карточки просим уже по их id.
+    const [найдено, вНаличии] = await Promise.all([идыПоиска(чистый), идыВНаличии()])
+    const можно = вНаличии ? найдено.filter((id) => вНаличии.has(id)) : null
+
+    if (можно && !можно.length) {
+      return пусто
+    }
+
     const { response } = await listProductsWithSort({
       page: 1,
       countryCode,
       queryParams: {
         limit: ЗАПАС,
-        q: чистый,
+        ...(можно ? { id: можно } : { q: чистый }),
         // Без картинок вариантов: в шторке видна только обложка и вторая
         // фотография товара, а вариантов у брюк по три десятка — с ними
         // ответ весит мегабайты и человек ждёт находки дольше, чем печатал.
@@ -87,7 +99,7 @@ export async function искатьТовары(
       запрос: чистый,
       товары,
       цветаПоМодели,
-      всего: response?.count ?? товары.length,
+      всего: можно?.length ?? response?.count ?? товары.length,
     }
   } catch (ошибка) {
     console.error("Поиск не отработал:", (ошибка as Error)?.message)
