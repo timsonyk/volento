@@ -30,11 +30,17 @@ export const listProducts = async ({
   queryParams,
   countryCode,
   regionId,
+  сСкрытыми = false,
 }: {
   pageParam?: number
   queryParams?: ProductListQueryParams
   countryCode?: string
   regionId?: string
+  /**
+   * Не отсеивать товары с меткой skryt. Только для страницы самого
+   * товара: в списки скрытые попадать не должны.
+   */
+  сСкрытыми?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -98,7 +104,9 @@ export const listProducts = async ({
         : products.filter(
             (p) =>
               !p.tags?.some(
-                (t) => t.value === SYSTEM_TAG || t.value === HIDDEN_TAG
+                (t) =>
+                  t.value === SYSTEM_TAG ||
+                  (!сСкрытыми && t.value === HIDDEN_TAG)
               )
           )
       const hidden = products.length - visible.length

@@ -15,6 +15,9 @@ export default async function ProductActionsWrapper({
   const product = await listProducts({
     queryParams: { id: [id] },
     regionId: region.id,
+    // страница товара открылась по ссылке — значит, и скрытый (метка
+    // skryt, например «Проверка оплаты») должен продаваться
+    сСкрытыми: true,
   }).then(({ response }) => response.products[0])
 
   if (!product) {
