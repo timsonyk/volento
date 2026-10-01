@@ -1,4 +1,5 @@
 import { listModelColors, listProducts } from "@lib/data/products"
+import { естьВНаличии } from "@lib/util/product"
 import SectionHeading from "@modules/home/components/section-heading"
 import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
@@ -44,18 +45,22 @@ export default async function LatestProducts({
   ссылка?: string
 }) {
   const {
-    response: { products },
+    response: { products: всеТовары },
   } = await listProducts({
     regionId: region.id,
     queryParams: {
-      limit: 12,
+      // Берём с запасом: распроданные модели в ленту не попадают, а
+      // после отсева должно остаться 12 карточек.
+      limit: 48,
       order,
       // Размеры и остатки нужны строке размеров, которая показывается
-      // при наведении на карточку.
+      // при наведении на карточку, и отсеву распроданного.
       fields:
-        "*variants.calculated_price,*variants.options,+variants.inventory_quantity,+metadata,+tags",
+        "*variants.calculated_price,*variants.options,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,+metadata,+tags",
     },
   })
+
+  const products = всеТовары.filter(естьВНаличии).slice(0, 12)
 
   if (!products?.length) {
     return null
