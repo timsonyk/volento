@@ -116,6 +116,27 @@ export const listProducts = async ({
 }
 
 /**
+ * Минимальная цена каждого товара в регионе страны (бэкенд,
+ * /store/ceny-sortirovka). null — бэкенд не ответил.
+ */
+const ценыДляСортировки = async (
+  countryCode: string
+): Promise<Record<string, number> | null> => {
+  try {
+    const region = await getRegion(countryCode)
+    if (!region) return null
+    const { ceny } = await sdk.client.fetch<{ ceny: Record<string, number> }>(
+      "/store/ceny-sortirovka",
+      { method: "GET", query: { region_id: region.id }, next: { revalidate: 300 } }
+    )
+    return ceny
+  } catch (e) {
+    console.error("Цены для сортировки не получены", e)
+    return null
+  }
+}
+
+/**
  * This will fetch 100 products to the Next.js cache and sort them based on the sortBy parameter.
  * It will then return the paginated products based on the page and limit parameters.
  */
@@ -195,7 +216,41 @@ export const listProductsWithSort = async ({
   // вариантам, сервер по ней упорядочить не может. Приходится забирать
   // список целиком, но без картинок и опций вариантов — в сетке каталога
   // они не нужны, а вес ответа это режет вдвое.
-  // Цену надо сравнить у всех сразу, страницу отрезать нельзя. Длинный
+  // Отбор по id есть почти всегда (распроданное прячем). Тогда цены
+  // берём готовыми у бэкенда — «товар → цена», — сортируем id сами и
+  // просим только карточки нужной страницы.
+  if (всеИды && (sortBy === "price_asc" || sortBy === "price_desc")) {
+    const ceny = await ценыДляСортировки(countryCode)
+
+    if (ceny) {
+      const цена = (id: string) => ceny[id] ?? Infinity
+      const порядок = [...всеИды].sort((a, b) =>
+        sortBy === "price_asc" ? цена(a) - цена(b) : цена(b) - цена(a)
+      )
+      const начало = Math.max(page - 1, 0) * limit
+      const страница = порядок.slice(начало, начало + limit)
+
+      const {
+        response: { products },
+      } = await listProducts({
+        pageParam: 1,
+        queryParams: { ...общие, id: страница, limit },
+        countryCode,
+      })
+
+      const место = new Map(страница.map((id, i) => [id, i]))
+      products.sort((a, b) => (место.get(a.id) ?? 0) - (место.get(b.id) ?? 0))
+
+      return {
+        response: { products, count: порядок.length },
+        nextPage: начало + limit < порядок.length ? page + 1 : null,
+        queryParams,
+      }
+    }
+  }
+
+  // Запасной путь, если бэкенд цен не дал: сравниваем у всех сразу,
+  // страницу отрезать нельзя. Длинный
   // список id (а с отсевом распроданного он длинный почти всегда)
   // режем на куски, которые помещаются в адрес, и просим их разом.
   const куски: (string[] | undefined)[] = []
