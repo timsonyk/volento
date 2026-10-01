@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import { идыПоиска } from "./facets"
 import { listModelColors, listProductsWithSort } from "./products"
 import { идыВНаличии } from "./v-nalichii"
+import { дляКарточки } from "@lib/util/dlya-kartochki"
 
 /**
  * Поиск по каталогу для всплывающей шторки.
@@ -97,7 +98,7 @@ export async function искатьТовары(
 
     return {
       запрос: чистый,
-      товары,
+      товары: товары.map(дляКарточки),
       цветаПоМодели,
       всего: можно?.length ?? response?.count ?? товары.length,
     }

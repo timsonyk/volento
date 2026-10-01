@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import { дляКарточки } from "@lib/util/dlya-kartochki"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -399,5 +400,9 @@ export const следующаяСтраницаТоваров = async ({
   const colorsByModel = await listModelColors({ products, countryCode })
   const показано = page * (queryParams?.limit || 12)
 
-  return { products, colorsByModel, естьЕщё: показано < count }
+  return {
+    products: products.map(дляКарточки),
+    colorsByModel,
+    естьЕщё: показано < count,
+  }
 }

@@ -1,5 +1,5 @@
 import { listModelColors, listProducts } from "@lib/data/products"
-import { естьВНаличии } from "@lib/util/product"
+import { новыеВНаличии } from "@lib/data/facets"
 import SectionHeading from "@modules/home/components/section-heading"
 import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "@modules/products/components/product-preview"
@@ -44,23 +44,27 @@ export default async function LatestProducts({
   надпись?: string
   ссылка?: string
 }) {
-  const {
-    response: { products: всеТовары },
-  } = await listProducts({
-    regionId: region.id,
-    queryParams: {
-      // Берём с запасом: распроданные модели в ленту не попадают, а
-      // после отсева должно остаться 12 карточек.
-      limit: 48,
-      order,
-      // Размеры и остатки нужны строке размеров, которая показывается
-      // при наведении на карточку, и отсеву распроданного.
-      fields:
-        "*variants.calculated_price,*variants.options,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,+metadata,+tags",
-    },
-  })
+  // Распроданные модели в ленту не попадают: двенадцать самых новых из
+  // тех, что в наличии, берём из лёгкой выписки, а полные карточки
+  // просим только по ним
+  const иды = await новыеВНаличии(12)
 
-  const products = всеТовары.filter(естьВНаличии).slice(0, 12)
+  const {
+    response: { products },
+  } = иды.length
+    ? await listProducts({
+        regionId: region.id,
+        queryParams: {
+          id: иды,
+          limit: иды.length,
+          order,
+          // Размеры и остатки нужны строке размеров, которая показывается
+          // при наведении на карточку.
+          fields:
+            "*variants.calculated_price,*variants.options,+variants.inventory_quantity,+metadata,+tags",
+        },
+      })
+    : { response: { products: [] } }
 
   if (!products?.length) {
     return null

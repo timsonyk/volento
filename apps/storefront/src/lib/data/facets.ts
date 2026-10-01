@@ -359,6 +359,24 @@ export const найтиТовары = async (
     .map((p) => p.id)
 }
 
+/**
+ * id самых новых товаров в наличии — для лент главной.
+ *
+ * Берём из той же лёгкой выписки, что и фильтр: она уже без
+ * распроданного и лежит в кэше. Так главной не нужно тянуть десятки
+ * товаров со всеми размерами и ценами, чтобы потом отсеять лишнее.
+ */
+export const новыеВНаличии = async (сколько: number): Promise<string[]> => {
+  const { товары } = await выписка()
+  return товары
+    .filter(
+      (p) => !(p.tags ?? []).some((t) => t.value === "system" || t.value === "skryt")
+    )
+    .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+    .slice(0, сколько)
+    .map((p) => p.id)
+}
+
 /** Разбирает фильтры из адреса страницы. */
 export const прочитатьФильтры = async (
   params: Record<string, string | string[] | undefined>

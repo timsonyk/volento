@@ -2,7 +2,7 @@ import Image from "next/image"
 
 import { getHomeContent } from "@lib/data/home-banner"
 import { listModelColors, listProducts } from "@lib/data/products"
-import { естьВНаличии } from "@lib/util/product"
+import { новыеВНаличии } from "@lib/data/facets"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductPreview from "@modules/products/components/product-preview"
@@ -28,23 +28,26 @@ export default async function FeatureBlock({
   region: HttpTypes.StoreRegion
   countryCode: string
 }) {
-  const [{ картинка }, { response }] = await Promise.all([
+  // Две самые новые модели в наличии — из лёгкой выписки, без служебных
+  // записей: раньше «Оформление сайта» съедала половину блока
+  const [{ картинка }, иды] = await Promise.all([
     getHomeContent(countryCode),
-    listProducts({
-      regionId: region.id,
-      queryParams: {
-        // просим с запасом: служебная запись «Оформление сайта» приходит
-        // наравне с товарами и отсеивается уже после ответа, а за ней и
-        // распроданные модели. При limit: 2 служебная запись съедала
-        // половину блока, и справа зияла пустота
-        limit: 24,
-        fields:
-          "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,+metadata,+tags",
-      },
-    }),
+    новыеВНаличии(2),
   ])
 
-  const products = (response.products ?? []).filter(естьВНаличии).slice(0, 2)
+  const { response } =
+    иды.length === 2
+      ? await listProducts({
+          regionId: region.id,
+          queryParams: {
+            id: иды,
+            limit: 2,
+            fields: "*variants.calculated_price,+metadata,+tags",
+          },
+        })
+      : { response: { products: [] } }
+
+  const products = response.products ?? []
 
   // вторая карточка обязательна: одна оставляла половину блока пустой
   if (products.length < 2) {

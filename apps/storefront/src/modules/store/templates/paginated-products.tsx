@@ -1,4 +1,5 @@
 import { listModelColors, listProductsWithSort } from "@lib/data/products"
+import { дляКарточки } from "@lib/util/dlya-kartochki"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductGrid from "@modules/store/components/product-grid"
@@ -92,7 +93,7 @@ export default async function PaginatedProducts({
 
   return (
     <ProductGrid
-      начальные={products}
+      начальные={products.map(дляКарточки)}
       начальныеЦвета={colorsByModel}
       region={region}
       страница={page}
