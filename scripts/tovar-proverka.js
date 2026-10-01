@@ -58,7 +58,7 @@ async function main() {
 
   // Фото берём у любого опубликованного товара: без картинки карточка
   // выглядит сломанной, а загружать отдельную ради проверки незачем.
-  const { products: образцы } = await api("GET", "/admin/products?status=published&limit=5&fields=thumbnail")
+  const { products: образцы } = await api("GET", "/admin/products?status[]=published&limit=5&fields=thumbnail")
   const фото = образцы.find((п) => п.thumbnail)?.thumbnail
 
   const { product } = await api("POST", "/admin/products", {
