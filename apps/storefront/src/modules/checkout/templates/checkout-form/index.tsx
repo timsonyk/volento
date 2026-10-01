@@ -49,6 +49,7 @@ export default async function CheckoutForm({
         <Payment cart={cart} availablePaymentMethods={paymentMethods} />
       }
       проверка={<Review cart={cart} />}
+      оплатаСама={paymentMethods.length === 1}
     />
   )
 }

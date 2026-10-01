@@ -30,15 +30,19 @@ const Шаг = ({
   готов,
   почему,
   первый,
+  мелкий,
   children,
 }: {
-  номер: number
+  /** без номера — пункт-итог, не шаг по порядку */
+  номер?: number
   заголовок: string
   подпись?: string
   открыт: boolean
   готов: boolean
   почему: string
   первый?: boolean
+  /** заголовок поменьше: для итогового пункта, чтобы не спорил с шагами */
+  мелкий?: boolean
   children: React.ReactNode
 }) => {
   const [плашка, setПлашка] = useState<{ x: number; y: number } | null>(null)
@@ -63,7 +67,7 @@ const Шаг = ({
   return (
     <section
       aria-label={заголовок}
-      data-testid={`шаг-${номер}`}
+      data-testid={`шаг-${номер ?? "итог"}`}
       className={clx(
         // Разделитель ставим сверху у всех, кроме первого: так пункты
         // отделены друг от друга, но страница не начинается с линии.
@@ -73,19 +77,22 @@ const Шаг = ({
       <div className="mb-4 flex items-baseline gap-x-3">
         {/* Цифра того же кегля, что и заголовок: мелкий номер сбоку
             выглядел случайной пометкой, а не нумерацией пунктов. */}
-        <span
-          className={clx(
-            "text-3xl-regular tabular-nums transition-colors",
-            открыт ? "text-ink" : "text-muted"
-          )}
-          aria-hidden
-        >
-          {номер}
-        </span>
+        {номер !== undefined && (
+          <span
+            className={clx(
+              "text-3xl-regular tabular-nums transition-colors",
+              открыт ? "text-ink" : "text-muted"
+            )}
+            aria-hidden
+          >
+            {номер}
+          </span>
+        )}
 
         <h2
           className={clx(
-            "text-3xl-regular transition-colors",
+            мелкий ? "text-lg leading-snug" : "text-3xl-regular",
+            "transition-colors",
             открыт ? "text-ink" : "text-muted"
           )}
         >
@@ -129,7 +136,7 @@ const Шаг = ({
           <div
             onClick={показать}
             className="absolute inset-0 z-20 cursor-not-allowed"
-            data-testid={`замок-${номер}`}
+            data-testid={`замок-${номер ?? "итог"}`}
           />
         )}
 
