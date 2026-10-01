@@ -435,7 +435,7 @@ curl -s -X POST "http://localhost:9000/admin/shipping-options/<ID вариант
 1. В `apps/backend/.env` дописать `ZAKAZY_OTKRYTY=true` и перезапустить `medusa-server` и `medusa-worker`. Пересборка не нужна, переменная читается при каждом запросе.
 2. Убрать из `/etc/nginx/sites-available/volento` строки `auth_basic` и `auth_basic_user_file`, затем выполнить `nginx -t && systemctl reload nginx`. То же сделать в `deploy/nginx/volento.conf`.
 3. `ALLOW_INDEXING=true` в `.env.local` витрины, затем пересобрать и перезапустить её.
-4. Удалить скрытый товар для проверки оплаты.
+4. Удалить скрытый товар для проверки оплаты: `node scripts/tovar-proverka.js --udalit` (логин админки — из `/root/.volento-secrets`).
 
 ## Оплата: эквайринг Точки
 
@@ -467,7 +467,11 @@ curl -s -X POST "http://localhost:9000/admin/shipping-options/<ID вариант
 | `TOCHKA_PREAUTH` | `true` включает двухстадийную оплату; по умолчанию выключена |
 | `VITRINA_URL` | куда банк возвращает покупателя, по умолчанию `https://slytn.ru` |
 
-**Сейчас на сервере стоит песочница** (с 1 октября 2026). Её доступы общие для всех, денег там нет. Код клиента и номер торговой точки для неё: `1234567ab` и `200000000001097`. Боевые значения подставляются вместо этих, затем перезапускаются `medusa-server` и `medusa-worker`.
+**Сейчас на сервере боевой режим** (с 1 октября 2026). Деньги настоящие, но магазин закрыт паролем и замком заказов. Боевые токен и client_id лежат также в `/root/.tochka-boevye`.
+
+Чтобы вернуться в песочницу, задайте `TOCHKA_JWT_TOKEN=sandbox.jwt.token`, `TOCHKA_DEVELOPER_MODE=true`, `TOCHKA_CUSTOMER_CODE=1234567ab`, `TOCHKA_MERCHANT_ID=200000000001097` и перезапустите `medusa-server` и `medusa-worker`. Песочница всегда отвечает «оплачено 100 ₽» по чужой операции, а вместо страницы оплаты отдаёт несуществующий `merch.example.com`.
+
+**Адрес для уведомлений** зарегистрирован в Точке через API: `PUT /uapi/webhook/v1.0/{client_id}`, событие `acquiringInternetPayment`, адрес `https://api.slytn.ru/hooks/payment/tochka_tochka`. Пробное уведомление отправляется через `POST …/{client_id}/test_send`. Его подпись проверяется, но операция в нём выдуманная, поэтому в журнале будут ошибки `retrievePayment` и три повтора. Это нормально.
 
 **Способ оплаты в регионе.** `scripts/oplata-region.js` оставляет в рублёвом регионе только Точку и убирает «Оплату вручную». С флагом `--proverka` скрипт только показывает текущее состояние. Запуск: `set -a; . /root/.volento-secrets; set +a; node scripts/oplata-region.js`.
 
