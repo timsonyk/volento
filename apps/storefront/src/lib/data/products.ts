@@ -223,10 +223,16 @@ export const listProductsWithSort = async ({
     const ceny = await ценыДляСортировки(countryCode)
 
     if (ceny) {
-      const цена = (id: string) => ceny[id] ?? Infinity
-      const порядок = [...всеИды].sort((a, b) =>
-        sortBy === "price_asc" ? цена(a) - цена(b) : цена(b) - цена(a)
-      )
+      // Товары без цены — в конец при любом направлении: «дороже всех»
+      // их ставить так же неверно, как «дешевле всех»
+      const порядок = [...всеИды].sort((a, b) => {
+        const ца = ceny[a]
+        const цб = ceny[b]
+        if (ца === undefined || цб === undefined) {
+          return (ца === undefined ? 1 : 0) - (цб === undefined ? 1 : 0)
+        }
+        return sortBy === "price_asc" ? ца - цб : цб - ца
+      })
       const начало = Math.max(page - 1, 0) * limit
       const страница = порядок.slice(начало, начало + limit)
 
