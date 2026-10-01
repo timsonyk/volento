@@ -14,6 +14,16 @@ export const sdk = new Medusa({
   publishableKey: process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY,
 })
 
+/**
+ * Пропуск к оформлению заказа, пока магазин не открыт (на бэкенде —
+ * lib/zamok-zakazov.ts). Ключ серверный, без NEXT_PUBLIC_: в браузер он
+ * не попадает, поэтому и подставляем его только на сервере.
+ */
+const ключВитрины = (): Record<string, string> =>
+  typeof window === "undefined" && process.env.VITRINA_KLYUCH
+    ? { "x-vitrina-klyuch": process.env.VITRINA_KLYUCH }
+    : {}
+
 const originalFetch = sdk.client.fetch.bind(sdk.client)
 
 sdk.client.fetch = async <T>(
@@ -30,6 +40,7 @@ sdk.client.fetch = async <T>(
   const newHeaders = {
     ...localeHeader,
     ...headers,
+    ...ключВитрины(),
   }
   init = {
     ...init,

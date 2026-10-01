@@ -1,6 +1,8 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
+import { пробный } from "../lib/zamok-zakazov"
+
 /**
  * Сторож: заказ оплачен, а склад за него не взялся.
  *
@@ -51,6 +53,10 @@ export default async function складМолчит(container: MedusaContainer)
         return false
       }
       if ((з.metadata ?? {})[ОТМЕТКА]) {
+        return false
+      }
+      // пробные заказы складу не отдаются — и молчит он о них законно
+      if (пробный(з)) {
         return false
       }
       return (з.fulfillments ?? []).filter((с: any) => !с.canceled_at).length === 0

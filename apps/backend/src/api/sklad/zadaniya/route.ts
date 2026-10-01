@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { наЧасти } from "../../../lib/sklad-pozicii"
+import { пробный } from "../../../lib/zamok-zakazov"
 
 /**
  * Новые сборочные задания — то же, что «новые заказы» у Вайлдберриза.
@@ -66,6 +67,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "display_id",
         "created_at",
         "email",
+        "metadata",
         "items.id",
         "items.variant_sku",
         "items.title",
@@ -83,6 +85,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     const задания = (заказы ?? [])
       .filter((з: any) => {
+        // Пробные заказы, сделанные до открытия магазина, складу не
+        // отдаём: собирать их не нужно.
+        if (пробный(з)) {
+          return false
+        }
         // Отменённую сборку в счёт не берём: после неё заказ снова
         // ждёт склада, и задание должно вернуться в список.
         const живыеСборки = (з.fulfillments ?? []).filter(
