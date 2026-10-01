@@ -1,5 +1,7 @@
 import { BigNumber } from "@medusajs/framework/utils"
 import type {
+  AuthorizePaymentInput,
+  AuthorizePaymentOutput,
   InitiatePaymentInput,
   InitiatePaymentOutput,
   ProviderWebhookPayload,
@@ -46,6 +48,51 @@ class OplataTochkaService extends TochkaService {
       // несколько (в песочнице их две) — задаём явно всегда.
       data: { ...input.data, merchantId: input.data?.merchantId ?? process.env.TOCHKA_MERCHANT_ID },
     })
+  }
+
+  /**
+   * Сверка перед тем, как считать заказ оплаченным.
+   *
+   * Плагин верит любому «APPROVED» и не смотрит, на какую операцию и на
+   * какую сумму пришёл ответ. Мы проверяем оба: номер операции должен
+   * совпасть с нашим, а оплачено — не меньше, чем мы просили (сумму банк
+   * вернул нам при создании ссылки, она лежит в данных сессии). Иначе
+   * оставляем «ожидает» — заказ не оформится, а в журнале будет запись.
+   *
+   * Песочница на любой вопрос отвечает «APPROVED, 100 ₽» по чужой
+   * операции, поэтому там сверку только записываем, а не применяем.
+   */
+  async authorizePayment(input: AuthorizePaymentInput): Promise<AuthorizePaymentOutput> {
+    const итог = await super.authorizePayment(input)
+
+    if (итог.status !== "authorized" && итог.status !== "captured") {
+      return итог
+    }
+
+    const наша: any = input.data ?? {}
+    const ответ: any = итог.data ?? {}
+    const нашаОперация = наша.operationId ?? наша.id
+    const просили = Number(наша.amount)
+    const оплачено = Number(ответ.amount)
+
+    const расхождение =
+      ответ.operationId !== нашаОперация
+        ? `операция ${ответ.operationId} вместо ${нашаОперация}`
+        : !(оплачено >= просили)
+          ? `оплачено ${оплачено} при сумме ${просили}`
+          : null
+
+    if (!расхождение) {
+      return итог
+    }
+
+    if (this.options.developerMode) {
+      this.logger_.warn(`Точка (песочница): ${расхождение} — в бою заказ бы не оформился`)
+      return итог
+    }
+
+    this.logger_.error(`Точка: оплата не засчитана — ${расхождение}`)
+    return { status: "pending", data: input.data ?? {} }
   }
 
   /**
