@@ -5,9 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { updateCheckoutFields } from "@lib/data/cart"
 import города from "@lib/data/cities.json"
 import {
-  найтиНаселённыйПункт,
-  type НаселённыйПункт,
-} from "@lib/data/naselennye-punkty"
+  найтиПосёлки,
+  выбратьПосёлок,
+  type Посёлок,
+} from "@lib/data/poselki"
 import { HttpTypes } from "@medusajs/types"
 import Input from "@modules/common/components/input"
 
@@ -31,9 +32,9 @@ import { useОтметка } from "../steps/context"
  * узнают, и следующий пункт оказался бы пустым — с непонятной причиной.
  * Лучше сказать об этом сразу и своими словами.
  *
- * Посёлки и деревни ищем отдельно, на сервере (naselennye-punkty): при
- * выборе посёлка в поле встаёт ближайший к нему город с пунктами выдачи,
- * а под полем — пояснение, почему город другой.
+ * Посёлки и деревни ищем отдельно, в DaData (lib/data/poselki): в поле
+ * остаётся посёлок, а в заказ уходит город ближайшего к нему пункта
+ * выдачи — под полем пояснение, какой.
  */
 type Город = [string] | [string, string]
 
@@ -47,21 +48,32 @@ const обычный = (с: string) => с.trim().toLowerCase().replace(/ё/g, "�
 
 const ПО_ИМЕНИ = new Map(СПИСОК.map(([имя]) => [обычный(имя), имя]))
 
+// Выбранный посёлок и город, куда по нему считаем доставку
+type ВПоле = { имя: string; город: string; км: number | null }
+
 const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
-  const [город, setГород] = useState(cart?.shipping_address?.city ?? "")
+  const прежнийПосёлок = (cart?.metadata?.poselok as string) || ""
+  const прежнийГород = cart?.shipping_address?.city ?? ""
+  const [город, setГород] = useState(прежнийПосёлок || прежнийГород)
   const [открыт, setОткрыт] = useState(false)
   const [трогали, setТрогали] = useState(false)
   const [сбой, setСбой] = useState<string | null>(null)
   // Ищем ли по тексту в поле. Нет — когда поле пустое или в нём уже
   // выбранный город: тогда показываем крупные города.
   const [ищем, setИщем] = useState(false)
-  const [посёлки, setПосёлки] = useState<НаселённыйПункт[]>([])
-  const [посёлок, setПосёлок] = useState<НаселённыйПункт | null>(null)
-  const прошлый = useRef(cart?.shipping_address?.city ?? "")
+  const [посёлки, setПосёлки] = useState<Посёлок[]>([])
+  const [посёлок, setПосёлок] = useState<ВПоле | null>(
+    прежнийПосёлок && прежнийГород
+      ? { имя: прежнийПосёлок, город: прежнийГород, км: null }
+      : null
+  )
+  const [нетРядом, setНетРядом] = useState<string | null>(null)
+  const прошлый = useRef(прежнийПосёлок ? "" : прежнийГород)
   const отметить = useОтметка()
 
   const чистый = город.trim()
-  const подходит = ПО_ИМЕНИ.has(обычный(чистый))
+  const подходит =
+    ПО_ИМЕНИ.has(обычный(чистый)) || (!!посёлок && чистый === посёлок.имя)
 
   // Пока не подходит — следующий пункт остаётся закрытым.
   useEffect(() => {
@@ -70,11 +82,13 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
 
   const ошибка = сбой
     ? `Не удалось сохранить город: ${сбой}`
-    : !трогали || подходит
+    : нетРядом
+      ? нетРядом
+      : !трогали || подходит
       ? null
       : !чистый
-        ? "Укажите город — без него не посчитать доставку"
-        : "Выберите город из подсказок: в другие мы пока не возим"
+        ? "Укажите город или посёлок — без него не посчитать доставку"
+        : "Выберите город или посёлок из подсказок"
 
   const запрос = ищем ? обычный(город) : ""
 
@@ -112,10 +126,10 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
     }
     let актуален = true
     const таймер = window.setTimeout(() => {
-      найтиНаселённыйПункт(запрос)
+      найтиПосёлки(запрос)
         .then((найдено) => актуален && setПосёлки(найдено))
         .catch(() => актуален && setПосёлки([]))
-    }, 200)
+    }, 250)
     return () => {
       актуален = false
       window.clearTimeout(таймер)
@@ -134,20 +148,48 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
 
     try {
       setСбой(null)
-      await updateCheckoutFields({ адрес: { city: чистое, country_code: "ru" } })
+      // Выбран город — прежний посёлок из заметок корзины стираем
+      await updateCheckoutFields({
+        адрес: { city: чистое, country_code: "ru" },
+        заметки: { poselok: "", poselok_adres: "" },
+      })
     } catch (e) {
       прошлый.current = ""
       setСбой((e as Error).message)
     }
   }
 
-  const выбрать = (имя: string, откуда: НаселённыйПункт | null = null) => {
+  const выбрать = (имя: string) => {
     setГород(имя)
-    setПосёлок(откуда)
+    setПосёлок(null)
+    setНетРядом(null)
     setИщем(false)
     setОткрыт(false)
     setТрогали(true)
     сохранить(имя)
+  }
+
+  // Город посёлку подбирает сервер — по ближайшему пункту выдачи — и сам
+  // пишет его в корзину. Пока ждём ответа, в поле уже стоит посёлок.
+  const выбратьИзДаДаты = async (п: Посёлок) => {
+    setГород(п.имя)
+    setПосёлок(null)
+    setНетРядом(null)
+    setИщем(false)
+    setОткрыт(false)
+    setТрогали(true)
+    try {
+      setСбой(null)
+      const итог = await выбратьПосёлок(п.id)
+      if ("ошибка" in итог) {
+        setНетРядом(итог.ошибка)
+      } else {
+        прошлый.current = ""
+        setПосёлок({ имя: п.имя, город: итог.город, км: итог.км })
+      }
+    } catch (e) {
+      setСбой((e as Error).message)
+    }
   }
 
   // Галочка появляется, как только город узнан: без неё непонятно,
@@ -165,6 +207,7 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
         onChange={(e) => {
           setГород(e.target.value)
           setПосёлок(null)
+          setНетРядом(null)
           setИщем(true)
           setОткрыт(true)
         }}
@@ -175,7 +218,7 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           if (подходит) {
             e.target.select()
           }
-          setИщем(!подходит && !!чистый)
+          setИщем(!подходит && !!чистый && !нетРядом)
           setОткрыт(true)
         }}
         // Закрываем с задержкой: без неё список исчезает раньше, чем
@@ -183,6 +226,9 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
         onBlur={() => {
           window.setTimeout(() => setОткрыт(false), 150)
           setТрогали(true)
+          if (посёлок || нетРядом) {
+            return
+          }
           const точный = ПО_ИМЕНИ.get(обычный(город))
           if (точный && точный !== город) {
             setГород(точный)
@@ -217,7 +263,8 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
 
       {посёлок && !открыт && (
         <p className="mt-2 text-sm text-muted" data-testid="gorod-poselka">
-          {посёлок.имя}: ближайший город с пунктами выдачи — {посёлок.город}
+          Пункты выдачи — в городе {посёлок.город}
+          {посёлок.км !== null && `, ближайший примерно в ${посёлок.км} км`}
         </p>
       )}
 
@@ -241,21 +288,16 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           ))}
 
           {посёлки.map((п) => (
-            <li key={`${п.имя}|${п.регион}|${п.город}`}>
+            <li key={п.id}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => выбрать(п.город, п)}
-                className="block w-full px-4 py-3 text-left text-sm hover:bg-mist"
+                onClick={() => выбратьИзДаДаты(п)}
+                className="flex w-full flex-wrap items-baseline gap-x-2 px-4 py-3 text-left text-sm hover:bg-mist"
                 data-testid="poselok-podskazka"
               >
-                <span className="flex items-baseline gap-x-2">
-                  <span className="text-ink">{п.имя}</span>
-                  <span className="text-muted">{п.регион}</span>
-                </span>
-                <span className="mt-0.5 block text-xs text-muted">
-                  Доставим в ближайший город — {п.город}
-                </span>
+                <span className="text-ink">{п.имя}</span>
+                {п.где && <span className="text-muted">{п.где}</span>}
               </button>
             </li>
           ))}
