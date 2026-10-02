@@ -12,7 +12,7 @@ import { HttpTypes } from "@medusajs/types"
 import { Button, clx, Text } from "@modules/common/components/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import MedusaRadio from "@modules/common/components/radio"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ApishipPickupPointModal,
   ApishipCourierModal,
@@ -124,6 +124,19 @@ const Shipping: React.FC<ShippingProps> = ({
   useEffect(() => {
     setApishipChosen(cart.shipping_methods?.at(-1)?.data?.apishipData ?? null)
   }, [cart.shipping_methods])
+
+  // Город сменился — выбор доставки сброшен и в корзине, снимаем и
+  // отметку на экране, иначе остался бы выбранным пустой «Пункт выдачи»
+  const город = cart.shipping_address?.city ?? ""
+  const прежнийГород = useRef(город)
+  useEffect(() => {
+    if (прежнийГород.current !== город) {
+      прежнийГород.current = город
+      setShippingMethodId(null)
+      setApishipChosen(null)
+      setError(null)
+    }
+  }, [город])
 
   useEffect(() => {
     if (!isOpen) return

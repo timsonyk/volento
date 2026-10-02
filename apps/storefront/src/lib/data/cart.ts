@@ -561,5 +561,18 @@ export async function updateCheckoutFields(поля: {
     }
   }
 
+  // Город сменился — прежний пункт выдачи и тариф уже не годятся: пункт
+  // остался бы в другом городе, а цена — от старого города. Убираем,
+  // человек выберет заново.
+  const сменилсяГород =
+    !!поля.адрес?.city &&
+    (поля.адрес.city as string).trim().toLowerCase() !==
+      String(прежний.city ?? "").trim().toLowerCase()
+  if (сменилсяГород) {
+    for (const способ of корзина?.shipping_methods ?? []) {
+      await removeShippingMethodFromCart(способ.id)
+    }
+  }
+
   await updateCart(данные as HttpTypes.StoreUpdateCart)
 }
