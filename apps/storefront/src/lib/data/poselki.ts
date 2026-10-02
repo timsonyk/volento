@@ -100,7 +100,9 @@ export const найтиПосёлки = async (запрос: string): Promise<П
       .map(({ data: д }) => ({
         id: д.fias_id!,
         имя: имяИз(д),
+        // Тип нужен: под Мытищами есть и деревня Вешки, и посёлок Вешки
         где: [
+          д.settlement ? д.settlement_type_full : д.city_type_full,
           д.settlement ? д.area_with_type ?? д.city_with_type : д.area_with_type,
           д.region_with_type,
         ]
