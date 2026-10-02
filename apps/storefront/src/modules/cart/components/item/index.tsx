@@ -103,7 +103,6 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
       {type === "full" && (
         <Table.Cell>
           <div className="flex gap-2 items-center w-28">
-            <DeleteButton id={item.id} data-testid="product-delete-button" />
             <CartItemSelect
               value={item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
@@ -135,7 +134,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         </Table.Cell>
       )}
 
-      <Table.Cell className="!pr-0">
+      <Table.Cell className={clx({ "!pr-0": type === "preview" })}>
         <span
           className={clx("!pr-0", {
             "flex flex-col items-end h-full justify-center": type === "preview",
@@ -158,6 +157,17 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
           />
         </span>
       </Table.Cell>
+
+      {/* Удалить — с самого края строки, чтобы не задеть рядом с количеством */}
+      {type === "full" && (
+        <Table.Cell className="!pr-0 w-8">
+          <DeleteButton
+            id={item.id}
+            className="justify-end"
+            data-testid="product-delete-button"
+          />
+        </Table.Cell>
+      )}
     </Table.Row>
   )
 }

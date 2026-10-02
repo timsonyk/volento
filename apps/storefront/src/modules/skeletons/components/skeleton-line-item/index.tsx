@@ -28,6 +28,7 @@ const SkeletonLineItem = () => {
           <div className="w-12 h-6 bg-gray-200 animate-pulse" />
         </div>
       </Table.Cell>
+      <Table.Cell />
     </Table.Row>
   )
 }

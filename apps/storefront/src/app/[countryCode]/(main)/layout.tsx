@@ -43,7 +43,9 @@ export default async function PageLayout(props: {
           shippingOptions={shippingOptions}
         />
       )}
-      {props.children}
+      {/* Короткая страница (корзина, вход) не поднимает подвал к середине
+          экрана: он всегда ниже первого экрана, как на главной */}
+      <div className="min-h-screen">{props.children}</div>
       <Footer countryCode={countryCode} />
       <CookieNotice />
     </>

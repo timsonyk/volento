@@ -29,9 +29,8 @@ const ItemsTemplate = async ({ cart }: ItemsTemplateProps) => {
             <Table.HeaderCell className="hidden small:table-cell">
               Цена
             </Table.HeaderCell>
-            <Table.HeaderCell className="!pr-0 text-right">
-              Итого
-            </Table.HeaderCell>
+            <Table.HeaderCell className="text-right">Итого</Table.HeaderCell>
+            <Table.HeaderCell className="!pr-0"></Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>

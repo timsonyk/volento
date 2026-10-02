@@ -42,7 +42,8 @@ const CartItemSelect = forwardRef<HTMLSelectElement, NativeSelectProps>(
           onFocus={() => innerRef.current?.focus()}
           onBlur={() => innerRef.current?.blur()}
           className={clx(
-            "relative flex items-center txt-compact-small border text-ui-fg-base group",
+            // Без плашки и обводки: только число и стрелка на белом
+            "relative flex items-center txt-compact-small text-ui-fg-base group !bg-transparent !rounded-none",
             className,
             {
               "text-ui-fg-subtle": isPlaceholder,
