@@ -12,6 +12,10 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
  * сравнить со своим.
  *
  * Весь каталог — 13 тысяч позиций, за один раз отдаём страницу.
+ *
+ * Заодно — что это за позиция у нас: название, цвет, размер, рост. Склад
+ * просил «список товаров»; отдельный адрес для этого не нужен, это тот
+ * же список.
  */
 const СТРАНИЦА = 2000
 
@@ -19,6 +23,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const inventory = req.scope.resolve(Modules.INVENTORY)
   const stockLocation = req.scope.resolve(Modules.STOCK_LOCATION)
+  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
   const артикул = String(req.query.artikul ?? "").trim()
   const сдвиг = Math.max(0, Math.trunc(Number(req.query.offset ?? 0)) || 0)
@@ -56,6 +61,52 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     const поПозиции = new Map(уровни.map((у: any) => [у.inventory_item_id, у]))
 
+    const { data: связи } = позиции.length
+      ? await query.graph({
+          entity: "inventory_item",
+          fields: [
+            "id",
+            "variants.options.value",
+            "variants.options.option.title",
+            "variants.product.title",
+            "variants.product.metadata",
+          ],
+          filters: { id: позиции.map((п: any) => п.id) },
+        })
+      : { data: [] as any[] }
+
+    type Описание = {
+      nazvanie: string | null
+      cvet: string | null
+      razmer: string | null
+      rost: string | null
+    }
+    const описание = new Map<string, Описание>(
+      связи.map((с: any): [string, Описание] => {
+        const вариант = с.variants?.[0]
+        const товар = вариант?.product
+        const цвет = String(товар?.metadata?.color ?? "").trim() || null
+        const опция = (слово: RegExp) =>
+          вариант?.options?.find((о: any) => слово.test(о.option?.title ?? ""))
+            ?.value ?? null
+        // В названии цвет — хвостом: «Брюки палаццо, бежевый». Цвет
+        // отдаём отдельным полем, из названия его убираем.
+        let название = String(товар?.title ?? "").trim() || null
+        if (название && цвет && название.toLowerCase().endsWith(`, ${цвет.toLowerCase()}`)) {
+          название = название.slice(0, -(цвет.length + 2))
+        }
+        return [
+          с.id,
+          {
+            nazvanie: название,
+            cvet: цвет,
+            razmer: опция(/размер/i),
+            rost: опция(/рост/i),
+          },
+        ]
+      })
+    )
+
     const ostatki = позиции
       .filter((п: any) => п.sku)
       .map((п: any) => {
@@ -64,6 +115,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         const резерв = Number(у?.reserved_quantity ?? 0)
         return {
           artikul: п.sku,
+          ...(описание.get(п.id) ?? { nazvanie: null, cvet: null, razmer: null, rost: null }),
           kolichestvo: Math.max(0, физически - резерв),
           // заказы, которые мы уже продали, а склад ещё не взял в сборку
           v_rezerve: резерв,
