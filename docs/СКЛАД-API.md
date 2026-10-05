@@ -194,12 +194,12 @@ GET /sklad/ostatki-proverka?offset=0                весь каталог, п�
 ```json
 {
   "ostatki": [
-    { "artikul": "3149-46/170", "nazvanie": "Брюки классические прямые",
-      "cvet": "чёрный", "razmer": "46", "rost": "170",
+    { "artikul": "3149-46/170", "nazvanie": "Брюки мужские теплые классические",
+      "cvet": "синий", "razmer": "46", "rost": "170",
       "kolichestvo": 5, "v_rezerve": 1 },
-    { "artikul": "5110-38", "nazvanie": "Юбка карандаш",
-      "cvet": "бежевый", "razmer": "38", "rost": null,
-      "kolichestvo": 0, "v_rezerve": 0 }
+    { "artikul": "5390-38/40", "nazvanie": "Блуза на запах с завязками",
+      "cvet": "черный", "razmer": "38, 40", "rost": null,
+      "kolichestvo": 12, "v_rezerve": 0 }
   ],
   "vsego": 13104, "offset": 0, "limit": 2000
 }
