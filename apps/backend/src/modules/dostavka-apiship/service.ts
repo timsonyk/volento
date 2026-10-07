@@ -1,6 +1,5 @@
 // Плагин отдаёт класс провайдера только внутри описания модуля, отдельным
 // путём его не достать — берём оттуда же, откуда его берёт Medusa.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const плагин = require("@gorgo/medusa-fulfillment-apiship/providers/fulfillment-apiship")
 const ApishipService: any = (плагин.default ?? плагин).services[0]
 

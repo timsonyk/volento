@@ -9,7 +9,6 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
  * забирает её сам раз в пять минут; если склад спрашивает раньше —
  * дёргаем ту же синхронизацию сразу, чтобы не ждать.
  */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { syncApishipShipmentDocumentsWorkflow } = require(
   "@gorgo/medusa-fulfillment-apiship/workflows/sync-apiship-shipment-documents"
 )
