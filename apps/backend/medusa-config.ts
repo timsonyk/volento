@@ -91,8 +91,9 @@ module.exports = defineConfig({
       options: {
         providers: [
           {
-            resolve:
-              "@gorgo/medusa-fulfillment-apiship/providers/fulfillment-apiship",
+            // Плагин ApiShip с поправкой: в посылку уходит только
+            // собранное (src/modules/dostavka-apiship)
+            resolve: "./src/modules/dostavka-apiship",
             id: "apiship",
             options: { id: APISHIP_ID },
           },

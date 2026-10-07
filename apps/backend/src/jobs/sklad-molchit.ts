@@ -1,6 +1,7 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
+import { ВЗЯТ, НЕХВАТКА } from "../lib/sklad-sborka"
 import { пробный } from "../lib/zamok-zakazov"
 
 /**
@@ -53,6 +54,11 @@ export default async function складМолчит(container: MedusaContainer)
         return false
       }
       if ((з.metadata ?? {})[ОТМЕТКА]) {
+        return false
+      }
+      // Склад ответил «собираю» или собрал не всё и ждёт нашего звонка
+      // покупателю — он не молчит.
+      if ((з.metadata ?? {})[ВЗЯТ] || (з.metadata ?? {})[НЕХВАТКА]) {
         return false
       }
       // пробные заказы складу не отдаются — и молчит он о них законно

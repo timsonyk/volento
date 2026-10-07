@@ -12,7 +12,8 @@ export type ЗаказДляСклада = {
   id: string
   display_id: number
   status: string
-  items: { id: string; quantity: number; variant_sku?: string }[]
+  metadata: Record<string, any> | null
+  items: { id: string; quantity: number; variant_sku?: string; title?: string }[]
   живыеСборки: number
 }
 
@@ -31,7 +32,9 @@ export async function найтиЗаказ(
     "id",
     "display_id",
     "status",
+    "metadata",
     "items.id",
+    "items.title",
     // Количество живёт в «подробностях» строки, а не в ней самой.
     "items.detail.quantity",
     "items.variant_sku",
@@ -62,12 +65,14 @@ export async function найтиЗаказ(
     id: String(заказ.id),
     display_id: Number(заказ.display_id),
     status: String(заказ.status),
+    metadata: (заказ.metadata as Record<string, any> | null) ?? null,
     items: ((заказ.items ?? []) as any[])
       .filter(Boolean)
       .map((т: any) => ({
         id: String(т.id),
         quantity: Number(т.detail?.quantity ?? 0),
         variant_sku: т.variant_sku ?? undefined,
+        title: т.title ?? undefined,
       })),
     живыеСборки: (заказ.fulfillments ?? []).filter((с: any) => !с.canceled_at)
       .length,
