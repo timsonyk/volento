@@ -1,9 +1,8 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
-import { ContainerRegistrationKeys, ProductStatus } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import {
   createOrderPaymentCollectionWorkflow,
   createOrderWorkflow,
-  createProductsWorkflow,
   markPaymentCollectionAsPaid,
 } from "@medusajs/medusa/core-flows"
 
@@ -15,8 +14,8 @@ import { ТЕСТ } from "./sklad-test-metka"
  *
  * Тестовый заказ:
  * - оплачен «системной» оплатой Medusa, без банка — возврат тоже без банка;
- * - из скрытого товара «Тест склада» без учёта остатков — настоящие
- *   остатки не трогает;
+ * - позиции без товара из каталога — только название, артикул и цена
+ *   10 ₽: на витрине их нет, настоящие остатки не трогаются;
  * - отправление по нему в службу не уходит: провайдер доставки видит
  *   отметку в способе доставки и выдаёт поддельный трек и наклейку
  *   (modules/dostavka-apiship);
@@ -27,59 +26,7 @@ import { ТЕСТ } from "./sklad-test-metka"
  * с кодами, «к упаковке», наклейка, «упаковано», отказ, нехватка.
  */
 
-const ТОВАР = "sklad-test"
-const РАЗМЕРЫ = [
-  ["46", "170"],
-  ["48", "176"],
-  ["50", "182"],
-]
-
-async function тестовыйТовар(scope: MedusaContainer, профиль: string, канал: string) {
-  const query = scope.resolve(ContainerRegistrationKeys.QUERY)
-
-  const найти = async () =>
-    (
-      await query.graph({
-        entity: "product",
-        fields: ["id", "variants.id", "variants.sku"],
-        filters: { handle: ТОВАР },
-      })
-    ).data?.[0]
-
-  const есть = await найти()
-  if (есть) {
-    return есть.variants as { id: string; sku: string }[]
-  }
-
-  // Черновик: на витрине его не видно, а заказ из него собрать можно
-  await createProductsWorkflow(scope).run({
-    input: {
-      products: [
-        {
-          title: "Тест склада",
-          handle: ТОВАР,
-          status: ProductStatus.DRAFT,
-          shipping_profile_id: профиль,
-          sales_channels: [{ id: канал }],
-          options: [{ title: "Размер", values: РАЗМЕРЫ.map(([р, рост]) => `${р}/${рост}`) }],
-          variants: РАЗМЕРЫ.map(([р, рост]) => ({
-            title: `${р}/${рост}`,
-            sku: `TEST-${р}/${рост}`,
-            manage_inventory: false,
-            weight: 400,
-            length: 33,
-            width: 30,
-            height: 3,
-            options: { Размер: `${р}/${рост}` },
-            prices: [{ amount: 10, currency_code: "rub" }],
-          })),
-        },
-      ],
-    },
-  })
-
-  return ((await найти())?.variants ?? []) as { id: string; sku: string }[]
-}
+const РАЗМЕРЫ = ["46/170", "48/176", "50/182"]
 
 /** kolichestva — по строке на число: [3] — одна строка, 3 шт.; [2, 1] — две. */
 export async function создатьТестовыйЗаказ(scope: MedusaContainer, количества: number[]) {
@@ -87,7 +34,7 @@ export async function создатьТестовыйЗаказ(scope: MedusaCont
 
   const { data: способы } = await query.graph({
     entity: "shipping_option",
-    fields: ["id", "name", "shipping_profile_id"],
+    fields: ["id", "name"],
     filters: { provider_id: "apiship_apiship" } as any,
   })
   const способ: any = способы?.[0]
@@ -98,8 +45,6 @@ export async function создатьТестовыйЗаказ(scope: MedusaCont
   const { data: регионы } = await query.graph({ entity: "region", fields: ["id"] })
   const { data: каналы } = await query.graph({ entity: "sales_channel", fields: ["id"] })
 
-  const варианты = await тестовыйТовар(scope, способ.shipping_profile_id, каналы[0].id)
-
   const { result: заказ } = await createOrderWorkflow(scope).run({
     input: {
       region_id: регионы[0].id,
@@ -108,8 +53,12 @@ export async function создатьТестовыйЗаказ(scope: MedusaCont
       email: "sklad-test@slytn.ru",
       status: "pending",
       items: количества.map((сколько, и) => ({
-        variant_id: варианты[и % варианты.length].id,
+        title: `Тест склада ${РАЗМЕРЫ[и % РАЗМЕРЫ.length]}`,
+        variant_sku: `TEST-${РАЗМЕРЫ[и % РАЗМЕРЫ.length]}`,
         quantity: сколько,
+        unit_price: 10,
+        requires_shipping: true,
+        is_tax_inclusive: true,
       })),
       shipping_address: {
         first_name: "Тест",
