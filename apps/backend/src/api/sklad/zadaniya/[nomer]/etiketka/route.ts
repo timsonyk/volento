@@ -1,14 +1,18 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
-import { собранныеНеУпакованные } from "../../../../../lib/sklad-upakovka"
+import {
+  обновитьНаклейку,
+  собранныеНеУпакованные,
+} from "../../../../../lib/sklad-upakovka"
 
 /**
  * Наклейка службы на посылку — PDF, как его отдаёт служба через ApiShip.
  *
  * Отдаём сами, а не ссылкой на ApiShip: склад ходит к нам с одним
- * ключом, а ссылка ApiShip может устареть. Размер листа задаётся в
- * кабинете ApiShip, в настройках подключения службы.
+ * ключом, а ссылка может устареть — тогда берём у ApiShip свежую.
+ * Размер листа задаётся в кабинете ApiShip, в настройках подключения
+ * службы.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
@@ -28,11 +32,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     })
   }
 
-  try {
-    const ответ = await fetch(отправление.наклейка)
-
+  const скачать = async (ссылка: string) => {
+    const ответ = await fetch(ссылка)
     if (!ответ.ok) {
       throw new Error(`ApiShip ответил ${ответ.status}`)
+    }
+    return ответ
+  }
+
+  try {
+    let ответ: Response
+    try {
+      ответ = await скачать(отправление.наклейка)
+    } catch (ошибка: any) {
+      // Ссылка устарела — берём у ApiShip свежую
+      logger.warn(`Наклейка заказа ${номер}: ${ошибка?.message}, запрашиваем заново`)
+      const свежая = await обновитьНаклейку(req.scope, отправление.idСборки)
+      if (!свежая) {
+        throw ошибка
+      }
+      ответ = await скачать(свежая)
     }
 
     const pdf = Buffer.from(await ответ.arrayBuffer())
