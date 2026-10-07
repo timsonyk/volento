@@ -86,9 +86,15 @@ export async function создатьТестовыйЗаказ(scope: MedusaCont
     } as any,
   })
 
-  // Оплата без банка, как у черновиков заказов в админке
+  // Оплата без банка, как у черновиков заказов в админке. Сумму берём из
+  // заказа: в ответе на создание итогов ещё нет.
+  const { data: созданные } = await query.graph({
+    entity: "order",
+    fields: ["id", "total"],
+    filters: { id: заказ.id },
+  })
   const { result: сборы } = await createOrderPaymentCollectionWorkflow(scope).run({
-    input: { order_id: заказ.id, amount: Number((заказ as any).total ?? 0) || 10 },
+    input: { order_id: заказ.id, amount: Number((созданные?.[0] as any)?.total) },
   })
   await markPaymentCollectionAsPaid(scope).run({
     input: { order_id: заказ.id, payment_collection_id: (сборы as any)[0].id },
