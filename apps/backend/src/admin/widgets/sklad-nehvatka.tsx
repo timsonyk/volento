@@ -87,7 +87,9 @@ const SkladNehvatka = ({ data: заказ }: DetailWidgetProps<AdminOrder>) => {
 }
 
 export const config = defineWidgetConfig({
-  zone: "order.details.before",
+  // Правая колонка, сверху: «order.details.before» Medusa ставит в самый
+  // низ, под метаданные, — блок не видно без прокрутки
+  zone: "order.details.side.before",
 })
 
 export default SkladNehvatka
