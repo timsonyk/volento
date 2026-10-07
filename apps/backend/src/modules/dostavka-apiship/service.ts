@@ -1,5 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 
+import { ТЕСТ, тестоваяНаклейка } from "../../lib/sklad-test-metka"
+
 // Плагин отдаёт класс провайдера только внутри описания модуля, отдельным
 // путём его не достать — берём оттуда же, откуда его берёт Medusa.
 const плагин = require("@gorgo/medusa-fulfillment-apiship/providers/fulfillment-apiship")
@@ -21,6 +23,9 @@ const ApishipService: any = (плагин.default ?? плагин).services[0]
  *    оценкой посылка не застрахована — потеряют, служба возместит ноль.
  *    Ставим настоящую цену вещей; страховка у Яндекса — 0,5% от неё.
  *    Сумма к оплате при получении (cost, codCost) остаётся нулём.
+ *
+ * И тестовые заказы склада (lib/sklad-test): в службу не ходим вовсе —
+ * поддельный трек и наклейка, отмена тоже без ApiShip.
  */
 const цены = new AsyncLocalStorage<Map<string, number>>()
 
@@ -28,6 +33,20 @@ class DostavkaApishipService extends ApishipService {
   static identifier = ApishipService.identifier
 
   async createFulfillment(data: any, items: any[], order: any, fulfillment: any) {
+    if (data?.[ТЕСТ]) {
+      const номер = String(order?.display_id ?? order?.id ?? "")
+      return {
+        data: { test: true },
+        labels: [
+          {
+            tracking_number: `TEST-${номер}`,
+            tracking_url: "",
+            label_url: тестоваяНаклейка(номер),
+          },
+        ],
+      }
+    }
+
     const собрано = new Map<string, number>()
     for (const п of items ?? []) {
       if (!п?.line_item_id) {
@@ -60,6 +79,13 @@ class DostavkaApishipService extends ApishipService {
     return цены.run(поАртикулу, () =>
       super.createFulfillment(data, items, заказ, fulfillment)
     )
+  }
+
+  async cancelFulfillment(data: any) {
+    if (data?.test) {
+      return {}
+    }
+    return super.cancelFulfillment(data)
   }
 
   async callApishipApi_(имя: string, запрос: any, вызов: () => Promise<any>) {

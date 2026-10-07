@@ -1,6 +1,8 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
+import { этоТест } from "./sklad-test-metka"
+
 /**
  * Собранные, но ещё не упакованные заказы — и наклейки к ним.
  *
@@ -17,6 +19,7 @@ export type Отправление = {
   idСборки: string
   idЗаказа: string
   номер: string
+  тест: boolean
   служба: string | null
   трек: string | null
   наклейка: string | null
@@ -38,6 +41,7 @@ const ПОЛЯ = [
   "order.id",
   "order.display_id",
   "order.status",
+  "order.metadata",
 ]
 
 const вОтправление = (с: any): Отправление => {
@@ -47,8 +51,9 @@ const вОтправление = (с: any): Отправление => {
     idСборки: с.id,
     idЗаказа: с.order?.id,
     номер: String(с.order?.display_id ?? ""),
+    тест: этоТест(с.order),
     // Плагин хранит в сборке весь запрос, ушедший в ApiShip
-    служба: с.data?.order?.order?.providerKey ?? null,
+    служба: с.data?.test ? "test" : с.data?.order?.order?.providerKey ?? null,
     трек: ярлык?.tracking_number || null,
     наклейка: ярлык?.label_url || null,
     позиции: (с.items ?? []).map((п: any) => ({

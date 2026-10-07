@@ -17,7 +17,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
 
   try {
-    const отправления = await собранныеНеУпакованные(req.scope)
+    // ?test=1 — только тестовые заказы, без него — только настоящие
+    const тест = req.query.test === "1"
+    const отправления = (await собранныеНеУпакованные(req.scope)).filter(
+      (о) => о.тест === тест
+    )
 
     return res.json({
       k_upakovke: отправления

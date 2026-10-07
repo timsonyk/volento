@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ВЗЯТ, НЕХВАТКА } from "../../../lib/sklad-sborka"
 import { наЧасти } from "../../../lib/sklad-pozicii"
+import { этоТест } from "../../../lib/sklad-test-metka"
 import { пробный } from "../../../lib/zamok-zakazov"
 
 /**
@@ -55,6 +56,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
+  // ?test=1 — только тестовые заказы (lib/sklad-test), без него — только настоящие
+  const тест = req.query.test === "1"
+
   const сколько = Math.min(
     Number(req.query.limit) || ЗА_РАЗ,
     ЗА_РАЗ
@@ -90,6 +94,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         // Пробные заказы, сделанные до открытия магазина, складу не
         // отдаём: собирать их не нужно.
         if (пробный(з)) {
+          return false
+        }
+        if (этоТест(з) !== тест) {
           return false
         }
         // Собрали не всё и ждём, что скажет покупатель: решение примем
