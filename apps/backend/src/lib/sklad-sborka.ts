@@ -2,6 +2,8 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createOrderFulfillmentWorkflow } from "@medusajs/medusa/core-flows"
 
+import { чекРасчёта } from "./kassa"
+
 /**
  * Сборка заказа складом: коды «Честного знака» и сама сборка.
  *
@@ -96,5 +98,15 @@ export async function завестиСборку(
     },
   ])
 
-  return (result as any)?.id as string | undefined
+  const idСборки = (result as any)?.id as string | undefined
+
+  // Чек «полный расчёт» с кодами. Сборку он не держит: не ушёл сейчас —
+  // уйдёт со сторожем чеков (jobs/kassa-cheki.ts).
+  try {
+    await чекРасчёта(scope, заказ.id, idСборки, строки)
+  } catch (ошибка: any) {
+    logger.error(`Заказ ${заказ.display_id}: чек расчёта не записан — ${ошибка?.message}`)
+  }
+
+  return idСборки
 }

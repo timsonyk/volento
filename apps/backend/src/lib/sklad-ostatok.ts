@@ -10,6 +10,7 @@ import {
   requestOrderEditRequestWorkflow,
 } from "@medusajs/medusa/core-flows"
 
+import { чекВозврата } from "./kassa"
 import { НЕХВАТКА, type СтрокаСборки, завестиСборку } from "./sklad-sborka"
 
 /**
@@ -153,6 +154,19 @@ export async function отправитьОстаток(
         },
       })
       logger.info(`Заказ ${заказ.display_id}: вернули ${переплата} ₽ за недостающее`)
+    }
+
+    // Чек возврата предоплаты за убранное. Деньги уже вернули, поэтому
+    // ошибку чека не пробрасываем — сторож чеков дотправит.
+    try {
+      await чекВозврата(
+        scope,
+        заказ.id,
+        "ostatok",
+        нехватка.ne_hvataet.map((н) => ({ id: н.id_stroki, kolichestvo: н.kolichestvo }))
+      )
+    } catch (ошибка: any) {
+      logger.error(`Заказ ${заказ.display_id}: чек возврата не записан — ${ошибка?.message}`)
     }
 
     await отметить(scope, заказ, { ...заказ.metadata[НЕХВАТКА], etap: "dengi_vozvrascheny" })
