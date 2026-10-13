@@ -140,10 +140,14 @@ async function прочитатьЗаказ(scope: MedusaContainer, id: string) 
   const { data } = await query.graph({
     entity: "order",
     filters: { id },
+    // суммы просим поимённо: в «*» вычисляемых итогов нет
     fields: [
       "*",
+      "total",
       "items.*",
+      "items.total",
       "shipping_methods.*",
+      "shipping_methods.total",
       "shipping_address.phone",
       "payment_collections.payments.provider_id",
       "payment_collections.payments.captured_at",
@@ -236,6 +240,11 @@ const название = (с: any) =>
 
 async function поставить(scope: MedusaContainer, заказ: any, чек: Чек) {
   const logger = scope.resolve(ContainerRegistrationKeys.LOGGER)
+
+  const позиции: any[] = чек.telo.receipt.items
+  if (!позиции.length || позиции.some((п) => !(п.price > 0) || !(п.sum > 0))) {
+    throw new Error(`чек ${чек.id} без сумм — не отправляем`)
+  }
   let новый = false
 
   await записать(scope, заказ.id, (чеки) => {
@@ -277,7 +286,8 @@ export async function чекПредоплаты(scope: MedusaContainer, idЗа�
     if (!штук) {
       continue
     }
-    const цена = копейки(Number(с.total) / штук)
+    const всего = Number(с.total)
+    const цена = копейки(Number.isFinite(всего) ? всего / штук : Number(с.unit_price))
     строки.push({ id: с.id, kolichestvo: штук, cena: цена })
     позиции.push({
       name: название(с),
@@ -292,7 +302,7 @@ export async function чекПредоплаты(scope: MedusaContainer, idЗа�
   }
 
   const доставка = копейки(
-    (заказ.shipping_methods ?? []).reduce((s: number, м: any) => s + Number(м.total ?? м.amount ?? 0), 0)
+    (заказ.shipping_methods ?? []).reduce((s: number, м: any) => s + (Number(м.total ?? м.amount) || 0), 0)
   )
   if (доставка > 0) {
     строки.push({ id: ДОСТАВКА, kolichestvo: 1, cena: доставка })
