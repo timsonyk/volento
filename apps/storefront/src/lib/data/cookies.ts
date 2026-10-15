@@ -33,6 +33,17 @@ export const getCacheTag = async (tag: string): Promise<string> => {
   }
 }
 
+/**
+ * Общая метка всего, что витрина запоминает. Её сбрасывает бэкенд, когда
+ * в админке поменяли товар, цену, картинки главной или остатки:
+ * POST /api/obnovit (src/app/api/obnovit/route.ts).
+ *
+ * Без неё правки из админки не доходили до покупателей: стандартная
+ * метка привязана к посетителю (кука _medusa_cache_id), а у посетителя
+ * без куки метки не было вовсе, и запомненное жило до перезапуска.
+ */
+export const ВИТРИНА = "vitrina"
+
 export const getCacheOptions = async (
   tag: string
 ): Promise<{ tags: string[] } | Record<string, never>> => {
@@ -42,11 +53,7 @@ export const getCacheOptions = async (
 
   const cacheTag = await getCacheTag(tag)
 
-  if (!cacheTag) {
-    return {}
-  }
-
-  return { tags: [`${cacheTag}`] }
+  return { tags: cacheTag ? [ВИТРИНА, cacheTag] : [ВИТРИНА] }
 }
 
 export const setAuthToken = async (token: string) => {

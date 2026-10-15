@@ -1,6 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, QueryContext } from "@medusajs/framework/utils"
 
+import { привязатьПамять } from "../../../lib/pamyat-vitriny"
+
 /**
  * Цена каждого товара для сортировки каталога «дешевле / дороже».
  *
@@ -18,6 +20,9 @@ const ДЕРЖИМ_МС = 5 * 60_000
 type Запись = { когда: number; ceny: Record<string, number>; считаем?: Promise<void> }
 
 const поРегиону = new Map<string, Запись>()
+
+// цену поменяли в админке — забываем сразу (lib/pamyat-vitriny.ts)
+привязатьПамять(() => поРегиону.clear())
 
 const посчитать = async (req: MedusaRequest, regionId: string, валюта: string) => {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)

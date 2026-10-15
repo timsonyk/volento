@@ -7,7 +7,7 @@ import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { ModelColor } from "types/global"
-import { getAuthHeaders, getCacheOptions } from "./cookies"
+import { ВИТРИНА, getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
 
 // Метка служебных записей (баннер главной). Не экспортируем: файл помечен
@@ -136,7 +136,7 @@ const ценыДляСортировки = async (
     if (!region) return null
     const { ceny } = await sdk.client.fetch<{ ceny: Record<string, number> }>(
       "/store/ceny-sortirovka",
-      { method: "GET", query: { region_id: region.id }, next: { revalidate: 300 } }
+      { method: "GET", query: { region_id: region.id }, next: { revalidate: 300, tags: [ВИТРИНА] } }
     )
     return ceny
   } catch (e) {

@@ -1,6 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
+import { привязатьПамять } from "../../../lib/pamyat-vitriny"
+
 /**
  * Какие товары можно купить хоть в одном размере.
  *
@@ -16,6 +18,11 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 const ДЕРЖИМ_МС = 60_000
 
 let запомнили: { когда: number; ids: string[] } | null = null
+
+// правка в админке или остатки склада — забываем сразу (lib/pamyat-vitriny.ts)
+привязатьПамять(() => {
+  запомнили = null
+})
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   if (запомнили && Date.now() - запомнили.когда < ДЕРЖИМ_МС) {

@@ -2,6 +2,8 @@
 
 import { sdk } from "@lib/config"
 
+import { ВИТРИНА } from "./cookies"
+
 /**
  * id товаров, у которых хоть один размер можно купить (бэкенд,
  * /store/v-nalichii). Каталог, разделы и поиск показывают только их.
@@ -15,7 +17,7 @@ export const идыВНаличии = async (): Promise<Set<string> | null> => {
       method: "GET",
       // Остатки меняются, но не каждую секунду: минуты хватает,
       // бэкенд и сам держит ответ столько же
-      next: { revalidate: 60 },
+      next: { revalidate: 60, tags: [ВИТРИНА] },
     })
     return new Set(ids)
   } catch (e) {

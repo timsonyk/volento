@@ -106,8 +106,11 @@ const всяВыписка = async (): Promise<Лёгкий[]> => {
         method: "GET",
         query: {
           limit: 1000,
+          // Метки — только «tags.value»: «+tags» в коротком списке полей
+          // Medusa молча пропускает. Без меток служебная «Проверка оплаты»
+          // считалась новинкой и выбивала карточки на главной.
           fields:
-            "id,created_at,metadata,+tags,+categories.id,+categories.name,+categories.handle",
+            "id,created_at,metadata,tags.value,+categories.id,+categories.name,+categories.handle",
         },
         headers,
         next,

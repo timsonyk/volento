@@ -6,6 +6,7 @@ import {
   физическийОстаток,
   type ПозицияСклада,
 } from "../../../lib/sklad-pozicii"
+import { обновитьВитрину } from "../../../lib/pamyat-vitriny"
 
 /**
  * Склад заливает остатки.
@@ -140,6 +141,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     if (кОбновлению.length) {
       await inventory.updateInventoryLevels(кОбновлению)
+      // модуль событий не шлёт — показываем новое наличие на витрине сами
+      обновитьВитрину(req.scope.resolve(ContainerRegistrationKeys.LOGGER))
     }
 
     return res.json({
