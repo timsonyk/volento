@@ -31,7 +31,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (заказ.живыеСборки > 0) {
     return res.status(409).json({
       ошибка: "Заказ уже в сборке, отказаться нельзя",
-      podskazka: "Сначала отмените сборку",
+      podskazka: "После «собрано» отказ невозможен — напишите нам",
     })
   }
 
