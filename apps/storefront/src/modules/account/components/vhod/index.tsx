@@ -12,6 +12,7 @@ import {
   телефономСМаской,
 } from "@lib/util/polya-znakomstva"
 import Input from "@modules/common/components/input"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
  * Вход и регистрация — одной дверью, по коду из письма.
@@ -38,6 +39,7 @@ const Вход = () => {
   })
   const [идёт, начать] = useTransition()
   const [ждать, setЖдать] = useState(0)
+  const [согласие, setСогласие] = useState(false)
   const полеКода = useRef<HTMLInputElement>(null)
 
   // Отсчёт до следующего письма: без него человек жмёт «прислать ещё раз»
@@ -214,9 +216,10 @@ const Вход = () => {
               обязательно
               data-testid="vhod-imya"
             />
-            {/* Телефон и дата набираются цифрами, а разделители
-                подставляются сами: так их не приходится печатать и
-                негде ошибиться в формате. */}
+            {/* Телефон набирается цифрами, а разделители подставляются
+                сами: так их не приходится печатать и негде ошибиться
+                в формате. Даты рождения нет: для покупки она не нужна,
+                а собирать лишнее закон о персональных данных запрещает. */}
             <Input
               label="Телефон"
               name="phone"
@@ -230,18 +233,6 @@ const Вход = () => {
               обязательно
               ошибка={уПоля("телефон")}
               data-testid="vhod-telefon"
-            />
-            <Input
-              label="Дата рождения"
-              name="birthday"
-              inputMode="numeric"
-              autoComplete="bday"
-              value={поля.рождение}
-              onChange={(e) =>
-                setПоля((п) => ({ ...п, рождение: сТочками(e.target.value) }))
-              }
-              ошибка={уПоля("дата")}
-              data-testid="vhod-rozhdenie"
             />
           </div>
 
@@ -267,7 +258,29 @@ const Вход = () => {
             </p>
           )}
 
-          <button type="submit" disabled={идёт} className={`${кнопка} mt-6`}>
+          {/* Согласие — отдельной галочкой и отдельным документом
+              (ч. 1 ст. 9 152-ФЗ с 1 сентября 2025 года). */}
+          <label className="mt-6 flex cursor-pointer items-start gap-x-3">
+            <input
+              type="checkbox"
+              checked={согласие}
+              onChange={(e) => setСогласие(e.target.checked)}
+              className="mt-[3px] h-4 w-4 shrink-0 accent-ink"
+              data-testid="vhod-soglasie"
+            />
+            <span className="text-sm leading-relaxed text-ink">
+              Даю{" "}
+              <LocalizedClientLink href="/soglasie" className="underline">
+                согласие на обработку персональных данных
+              </LocalizedClientLink>
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            disabled={идёт || !согласие}
+            className={`${кнопка} mt-6`}
+          >
             {идёт ? "Сохраняю…" : "Готово"}
           </button>
         </form>

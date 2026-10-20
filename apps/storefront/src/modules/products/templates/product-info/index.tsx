@@ -14,6 +14,19 @@ export function stripColor(title: string, color?: string) {
 }
 
 /**
+ * Сведения, которые закон требует показать до покупки одежды: состав,
+ * страна производства и уход (правила продажи, постановление 2463).
+ * Данные взяты с Озона по артикулу и лежат в метаданных товара: sostav,
+ * tkan, strana, uhod — правятся в админке, в карточке товара.
+ */
+const СВЕДЕНИЯ: [string, string][] = [
+  ["sostav", "Состав"],
+  ["tkan", "Ткань"],
+  ["strana", "Страна производства"],
+  ["uhod", "Уход"],
+]
+
+/**
  * Название, цена и описание товара — в том же порядке, что на референсе.
  *
  * Цена здесь, а не в блоке с размерами: покупатель должен увидеть её сразу
@@ -24,6 +37,8 @@ const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
   const color = product.metadata?.color as string | undefined
   const article = product.metadata?.article as string | undefined
   const { cheapestPrice } = getProductPrice({ product })
+  const сведения = СВЕДЕНИЯ.map(([ключ, подпись]) => [подпись, product.metadata?.[ключ]] as const)
+    .filter((с): с is readonly [string, string] => typeof с[1] === "string" && с[1].trim() !== "")
 
   const цены = (product.variants ?? [])
     .map((v) => v.calculated_price?.calculated_amount)
@@ -48,6 +63,17 @@ const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
 
       {product.description && (
         <ProductDescription text={product.description} />
+      )}
+
+      {сведения.length > 0 && (
+        <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+          {сведения.map(([подпись, значение]) => (
+            <div key={подпись} className="contents">
+              <dt className="text-muted">{подпись}</dt>
+              <dd className="text-ink">{значение}</dd>
+            </div>
+          ))}
+        </dl>
       )}
 
       {article && (

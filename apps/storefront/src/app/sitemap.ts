@@ -31,6 +31,7 @@ const СТРАНИЦЫ = [
   "/oferta",
   "/politika",
   "/soglashenie",
+  "/soglasie",
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

@@ -30,7 +30,6 @@ type Поля = {
   имя: string
   почта: string
   телефон: string
-  рождение: string
   комментарий: string
 }
 
@@ -76,7 +75,6 @@ const Recipient = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
     имя: адрес?.first_name ?? "",
     почта: cart?.email ?? "",
     телефон: адрес?.phone ?? "",
-    рождение: заметки["дата_рождения"] ?? "",
     комментарий: заметки["комментарий"] ?? "",
   })
 
@@ -120,7 +118,6 @@ const Recipient = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           phone: поля.телефон.trim(),
         },
         заметки: {
-          дата_рождения: поля.рождение,
           комментарий: поля.комментарий,
         },
       })
@@ -193,14 +190,6 @@ const Recipient = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
           обязательно
           ошибка={виднаОшибка("телефон")}
           data-testid="recipient-phone-input"
-        />
-        <Input
-          label="Дата рождения"
-          name="recipient.birthday"
-          value={поля.рождение}
-          onChange={менять("рождение")}
-          onBlur={ушёлИз("рождение")}
-          data-testid="recipient-birthday-input"
         />
         <Input
           label="Комментарий к заказу"

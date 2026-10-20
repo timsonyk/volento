@@ -18,6 +18,28 @@ import {
   useLatestRef,
 } from "./utils"
 
+/**
+ * Кластеризатор меток Яндекс Карт — со своего сервера.
+ *
+ * Раньше он грузился с cdn.jsdelivr.net, а это иностранный сервер: туда
+ * уходил IP-адрес покупателя, и это можно было счесть передачей
+ * персональных данных за границу. Копия пакета @yandex/ymaps3-clusterer
+ * (лицензия Apache-2.0) лежит в public/ymaps. Файл сам кладёт модуль
+ * в window["@yandex/ymaps3-clusterer"], ему нужен уже загруженный ymaps3.
+ */
+const КЛАСТЕРИЗАТОР = "@yandex/ymaps3-clusterer"
+
+const загрузитьКластеризатор = () =>
+  new Promise<any>((resolve, reject) => {
+    const готовый = (window as any)[КЛАСТЕРИЗАТОР]
+    if (готовый) return resolve(готовый)
+    const скрипт = document.createElement("script")
+    скрипт.src = "/ymaps/ymaps3-clusterer-0.0.13.js"
+    скрипт.onload = () => resolve((window as any)[КЛАСТЕРИЗАТОР])
+    скрипт.onerror = () => reject(new Error("не загрузился файл кластеризатора"))
+    document.head.appendChild(скрипт)
+  })
+
 const DEFAULT_CENTER: [number, number] = [37.618423, 55.751244]
 
 /** Отдельный слой под метки пунктов — с ним работает кластеризатор. */
@@ -227,11 +249,6 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       await ymaps3.ready
       if (cancelled) return
 
-      ymaps3.import.registerCdn("https://cdn.jsdelivr.net/npm/{package}", [
-        "@yandex/ymaps3-default-ui-theme@0.0",
-        "@yandex/ymaps3-clusterer@0.0",
-      ])
-
       const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer } = ymaps3
 
       const map = new YMap(containerRef.current!, {
@@ -249,7 +266,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       // Кластеризатор подгружается отдельным пакетом. Не подгрузился —
       // рисуем метки по одной, как раньше: карта останется рабочей.
       try {
-        const пакет = await ymaps3.import("@yandex/ymaps3-clusterer")
+        const пакет = await загрузитьКластеризатор()
         if (!cancelled) {
           кластерРеф.current = пакет
         }

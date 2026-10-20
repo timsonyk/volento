@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 
+import { getHomeContent } from "@lib/data/home-banner"
 import PageLayout, { Раздел } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
@@ -8,7 +9,13 @@ export const metadata: Metadata = {
     "Как вернуть или обменять брюки Volento: сроки, условия, порядок возврата денег.",
 }
 
-export default function Page() {
+export default async function Page(props: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const { countryCode } = await props.params
+  // почта — из реквизитов продавца в админке («Главная», юр_почта)
+  const почта = (await getHomeContent(countryCode)).реквизиты?.почта
+
   return (
     <PageLayout
       заголовок="Возврат и обмен"
@@ -38,9 +45,25 @@ export default function Page() {
 
       <Раздел название="Как вернуть">
         <p>
-          Напишите нам — подскажем ближайший пункт, куда отнести посылку, и
-          пришлём бланк заявления. Обратную доставку до склада оплачивает
-          покупатель, если возврат не связан с нашей ошибкой или браком.
+          Напишите нам
+          {почта && (
+            <>
+              {" "}на{" "}
+              <a href={`mailto:${почта}`} className="underline">
+                {почта}
+              </a>
+            </>
+          )}{" "}
+          номер заказа и что возвращаете — подскажем ближайший пункт, куда
+          отнести посылку. Обратную доставку до склада оплачивает покупатель,
+          если возврат не связан с нашей ошибкой или браком.
+        </p>
+        <p>
+          Приложите{" "}
+          <a href="/zayavlenie-vozvrat.pdf" className="underline" target="_blank">
+            заявление на возврат
+          </a>{" "}
+          — распечатайте и заполните или пришлите фотографию заполненного.
         </p>
       </Раздел>
 

@@ -105,6 +105,11 @@ export default async function Footer({
                     </LocalizedClientLink>
                   </li>
                   <li>
+                    <LocalizedClientLink href="/soglasie" className={linkClass}>
+                      Согласие на обработку данных
+                    </LocalizedClientLink>
+                  </li>
+                  <li>
                     <LocalizedClientLink href="/oferta" className={linkClass}>
                       Публичная оферта
                     </LocalizedClientLink>
@@ -135,6 +140,26 @@ export default async function Footer({
             />
           </LocalizedClientLink>
         </div>
+
+        {/* Продавец и связь с ним: закон требует, чтобы покупатель видел
+            их до покупки на каждой странице, а не только внутри оферты
+            (правила продажи, постановление 2463). Берутся из админки,
+            «Главная», поля юр_*. */}
+        {реквизиты && (
+          <div className="border-t border-paper/15 py-6 text-xs leading-relaxed text-paper/60">
+            <p>
+              Продавец: {реквизиты.наименование}, ИНН {реквизиты.инн}
+              {реквизиты.огрн && <>, ОГРНИП {реквизиты.огрн}</>}
+            </p>
+            <p>Адрес: {реквизиты.адрес}</p>
+            <p>
+              Связаться с нами:{" "}
+              <a href={`mailto:${реквизиты.почта}`} className="underline hover:text-paper">
+                {реквизиты.почта}
+              </a>
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-y-3 border-t border-paper/15 py-6 small:flex-row small:items-center small:justify-between">
           <span className="label-type text-paper/50">
