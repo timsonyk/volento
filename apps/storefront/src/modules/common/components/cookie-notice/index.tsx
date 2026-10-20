@@ -19,7 +19,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 const КЛЮЧ = "volento_cookie_consent"
 
 /** Версия уведомления. Поднять при изменении состава cookie или текста. */
-const ВЕРСИЯ = 1
+const ВЕРСИЯ = 2
 
 type Выбор = {
   версия: number
@@ -85,10 +85,11 @@ const CookieNotice = () => {
       <div className="mx-auto flex max-w-[1100px] flex-col gap-4 small:flex-row small:items-center small:justify-between">
         <p className="max-w-[62ch] text-sm leading-relaxed text-ink">
           Мы используем файлы cookie, чтобы работали корзина и вход, и чтобы
-          понимать, как пользуются сайтом. Продолжая пользоваться Volento, вы
-          соглашаетесь с{" "}
+          понимать, как пользуются сайтом. Нажимая «Принять», вы соглашаетесь
+          на все cookie; «Только необходимые» — только на те, без которых
+          не работают корзина и вход. Подробнее — в{" "}
           <LocalizedClientLink href="/politika" className="underline">
-            политикой конфиденциальности
+            политике конфиденциальности
           </LocalizedClientLink>
           .
         </p>
