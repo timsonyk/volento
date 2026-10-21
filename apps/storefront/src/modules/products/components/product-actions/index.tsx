@@ -9,6 +9,7 @@ import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import ProductPrice from "../product-price"
 import { useRouter } from "next/navigation"
+import { сообщитьОКорзине } from "@lib/util/sobytie-korziny"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -214,6 +215,7 @@ export default function ProductActions({
         countryCode,
       })
       router.refresh()
+      сообщитьОКорзине()
       return true
     } catch (e) {
       setОшибка(

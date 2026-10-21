@@ -55,6 +55,12 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     .catch(() => null)
 }
 
+/** Сколько штук в корзине — для значка в шапке, мимо любого кэша. */
+export async function сколькоВКорзине(): Promise<number> {
+  const корзина = await retrieveCart(undefined, "items.quantity")
+  return (корзина?.items ?? []).reduce((сумма, с) => сумма + (с.quantity ?? 0), 0)
+}
+
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)
 
