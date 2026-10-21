@@ -3,14 +3,23 @@ import { Spinner, Trash } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
 import { useState } from "react"
 
+/**
+ * Кнопка «удалить строку» в корзине.
+ *
+ * Подпись для экранного диктора обязательна: на кнопке одна иконка, и без
+ * aria-label она читалась как просто «кнопка». data-testid раньше терялся
+ * по дороге — его передавали, а кнопка не получала.
+ */
 const DeleteButton = ({
   id,
   children,
   className,
+  "data-testid": dataTestId,
 }: {
   id: string
   children?: React.ReactNode
   className?: string
+  "data-testid"?: string
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -29,8 +38,12 @@ const DeleteButton = ({
       )}
     >
       <button
+        type="button"
         className="flex gap-x-1 text-ui-fg-subtle hover:text-ui-fg-base cursor-pointer"
         onClick={() => handleDelete(id)}
+        aria-label={children ? undefined : "Удалить из корзины"}
+        aria-busy={isDeleting || undefined}
+        data-testid={dataTestId}
       >
         {isDeleting ? <Spinner className="animate-spin" /> : <Trash />}
         <span>{children}</span>
