@@ -20,7 +20,8 @@ test.describe("оформление", () => {
     // шаги идут по порядку: город, доставка, получатель — третий под замком
     await expect(page.locator('[data-testid="recipient-email-input"]')).toBeDisabled()
     await expect(page.locator('[data-testid="cart-shipping"]')).toHaveText("после выбора доставки")
-    await expect(page.locator('[data-testid="submit-order-button"]')).toHaveCount(0)
+    // кнопка оплаты есть, но нажать её нельзя
+    await expect(page.locator('[data-testid="submit-order-button"]')).toBeDisabled()
   })
 
   test("пустая корзина не открывает оформление", async ({ page }) => {
