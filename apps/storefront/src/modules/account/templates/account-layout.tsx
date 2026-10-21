@@ -38,13 +38,17 @@ const AccountLayout: React.FC<AccountLayoutProps> = ({
           <div>
             <h3 className="text-xl-semi mb-4">Остались вопросы?</h3>
             <span className="txt-medium">
-              Ответы на частые вопросы вы найдёте на странице службы поддержки.
+              Как вернуть вещь, доставка и оплата — на страницах для
+              покупателя. Или напишите нам:{" "}
+              <a href="mailto:info@volento.com" className="underline underline-offset-4">
+                info@volento.com
+              </a>
             </span>
           </div>
           <div>
-            <UnderlineLink href="/customer-service">
-              Служба поддержки
-            </UnderlineLink>
+            {/* Страницы «служба поддержки» из шаблона Medusa у нас нет —
+                ссылка вела на 404 */}
+            <UnderlineLink href="/vozvrat">Возврат и обмен</UnderlineLink>
           </div>
         </div>
       </div>
