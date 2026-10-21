@@ -2,7 +2,8 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createOrderFulfillmentWorkflow } from "@medusajs/medusa/core-flows"
 
-import { чекРасчёта } from "./kassa"
+import { КОДЫ } from "./sklad-kody"
+import { позвать } from "./trevoga"
 
 /**
  * Сборка заказа складом: коды «Честного знака» и сама сборка.
@@ -17,7 +18,7 @@ import { чекРасчёта } from "./kassa"
  * разделитель GS (символ \u001D) — 93 и криптохвост. Слать его надо
  * целиком, как отдаёт сканер: без хвоста касса чек не пробьёт.
  */
-export const КОДЫ = "kody_markirovki"
+export { КОДЫ } from "./sklad-kody"
 export const НЕХВАТКА = "sklad_nehvatka"
 // склад взялся за заказ (POST /sklad/zadaniya/:nomer/vzyat)
 export const ВЗЯТ = "sklad_vzyat"
@@ -58,6 +59,11 @@ export function проверитьКоды(строки: СтрокаСборк�
  * Заводим сборку в Medusa — отсюда плагин ApiShip создаёт отправление в
  * службе, а наклейку подтягивает следом (сам, раз в пять минут, или
  * когда склад спросит список «к упаковке»).
+ *
+ * Коды пишем в заказ до сборки: провайдер доставки берёт их оттуда и
+ * передаёт службе по каждой паре (lib/primerka.ts). Чек «полный расчёт»
+ * здесь не пробиваем — только когда служба скажет, что покупатель забрал
+ * (lib/dostavka-itog.ts): при примерке он может забрать не всё.
  */
 export async function завестиСборку(
   scope: MedusaContainer,
@@ -75,6 +81,21 @@ export async function завестиСборку(
     throw new Error("Склад не определён")
   }
 
+  // повтор после сбоя не должен удвоить коды — складываем без повторов
+  const прежние: КодыПоСтрокам = (заказ.metadata ?? {})[КОДЫ] ?? {}
+  const коды: КодыПоСтрокам = { ...прежние }
+  for (const с of строки) {
+    коды[с.id] = [...new Set([...(коды[с.id] ?? []), ...с.kody])]
+  }
+
+  // Нехватку, если была, закрываем: заказ дальше идёт обычным путём.
+  await orderModule.updateOrders([
+    {
+      id: заказ.id,
+      metadata: { ...(заказ.metadata ?? {}), [КОДЫ]: коды, [НЕХВАТКА]: null },
+    },
+  ])
+
   const { result } = await createOrderFulfillmentWorkflow(scope).run({
     input: {
       order_id: заказ.id,
@@ -83,30 +104,15 @@ export async function завестиСборку(
     } as any,
   })
 
-  const прежние: КодыПоСтрокам = (заказ.metadata ?? {})[КОДЫ] ?? {}
-  const коды: КодыПоСтрокам = { ...прежние }
-  for (const с of строки) {
-    коды[с.id] = [...(коды[с.id] ?? []), ...с.kody]
+  const сборка: any = result
+  if (сборка?.data?.primerka === false) {
+    await позвать(scope, {
+      тема: `Заказ ${заказ.display_id} ушёл без примерки`,
+      текст:
+        `Служба не приняла заказ с частичным выкупом и примеркой, отправили без них — ` +
+        `покупатель сможет забрать посылку только целиком.\n\nОтвет службы: ${сборка.data.primerka_oshibka}`,
+    })
   }
 
-  // Коды — в сам заказ: по ним касса выбьет второй чек. Нехватку, если
-  // была, закрываем: заказ дальше идёт обычным путём.
-  await orderModule.updateOrders([
-    {
-      id: заказ.id,
-      metadata: { ...(заказ.metadata ?? {}), [КОДЫ]: коды, [НЕХВАТКА]: null },
-    },
-  ])
-
-  const idСборки = (result as any)?.id as string | undefined
-
-  // Чек «полный расчёт» с кодами. Сборку он не держит: не ушёл сейчас —
-  // уйдёт со сторожем чеков (jobs/kassa-cheki.ts).
-  try {
-    await чекРасчёта(scope, заказ.id, idСборки, строки)
-  } catch (ошибка: any) {
-    logger.error(`Заказ ${заказ.display_id}: чек расчёта не записан — ${ошибка?.message}`)
-  }
-
-  return idСборки
+  return сборка?.id as string | undefined
 }
