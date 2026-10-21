@@ -65,8 +65,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     return {
       title,
       description,
+      // Полный путь: относительный «bryuki» поисковик достраивал от корня
+      // сайта, и canonical указывал на несуществующую страницу
       alternates: {
-        canonical: `${params.category.join("/")}`,
+        canonical: `/${params.countryCode}/categories/${params.category.join("/")}`,
       },
     }
   } catch {
