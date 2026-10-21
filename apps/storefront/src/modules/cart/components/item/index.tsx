@@ -13,6 +13,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { поЧеловечески } from "@lib/util/sklad"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 type ItemProps = {
@@ -37,6 +38,7 @@ const ПОТОЛОК = 10
 
 const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
   // Уже лежащее в корзине оставляем в списке, даже если остаток успел
@@ -62,6 +64,9 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
       lineId: item.id,
       quantity,
     })
+      // ответ на изменение иногда приносит корзину со старой суммой —
+      // перерисовываем страницу заново (как после «В корзину»)
+      .then(() => router.refresh())
       .catch((err: Error) => {
         setError(поЧеловечески(err.message, остаток))
       })
@@ -72,7 +77,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
 
   return (
     <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
+      <Table.Cell className="!pl-0 p-4 w-16 small:w-24">
         <LocalizedClientLink
           href={`/products/${item.product_handle}`}
           className={clx("flex", {
@@ -98,6 +103,11 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
           {item.product_title}
         </Text>
         <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        {type === "full" && (
+          <div className="mt-1 small:hidden">
+            <LineItemPrice item={item} style="tight" currencyCode={currencyCode} />
+          </div>
+        )}
       </Table.Cell>
 
       {type === "full" && (
@@ -134,7 +144,12 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         </Table.Cell>
       )}
 
-      <Table.Cell className={clx({ "!pr-0": type === "preview" })}>
+      <Table.Cell
+        className={clx({
+          "!pr-0": type === "preview",
+          "hidden small:table-cell": type === "full",
+        })}
+      >
         <span
           className={clx("!pr-0", {
             "flex flex-col items-end h-full justify-center": type === "preview",

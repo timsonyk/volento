@@ -6,7 +6,9 @@ import {
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
+import { сколькоВКорзине } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
+import { СОБЫТИЕ_КОРЗИНЫ } from "@lib/util/sobytie-korziny"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import DeleteButton from "@modules/common/components/delete-button"
@@ -31,10 +33,28 @@ const CartDropdown = ({
   const open = () => setCartDropdownOpen(true)
   const close = () => setCartDropdownOpen(false)
 
-  const totalItems =
+  const сервер =
     cartState?.items?.reduce((acc, item) => {
       return acc + item.quantity
     }, 0) || 0
+
+  // Число, которое значок спросил сам после «В корзину» (lib/util/
+  // sobytie-korziny.ts). Как только сервер прислал новое — верим ему.
+  const [спросили, setСпросили] = useState<number | null>(null)
+  useEffect(() => {
+    setСпросили(null)
+  }, [сервер])
+  useEffect(() => {
+    const переспросить = () => {
+      сколькоВКорзине()
+        .then(setСпросили)
+        .catch(() => {})
+    }
+    window.addEventListener(СОБЫТИЕ_КОРЗИНЫ, переспросить)
+    return () => window.removeEventListener(СОБЫТИЕ_КОРЗИНЫ, переспросить)
+  }, [])
+
+  const totalItems = спросили ?? сервер
 
   const subtotal = cartState?.subtotal ?? 0
   const itemRef = useRef<number>(totalItems || 0)

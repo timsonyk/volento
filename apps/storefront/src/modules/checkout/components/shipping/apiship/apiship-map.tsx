@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, Heading, Text, clx, IconButton } from "@modules/common/components/ui"
 import { Loader, XMark } from "@medusajs/icons"
 import { Radio, RadioGroup } from "@headlessui/react"
@@ -136,6 +136,11 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   const кластерРеф = useRef<any>(null)
   const кластеризаторРеф = useRef<any>(null)
   const охватРеф = useRef<[[number, number], [number, number]] | null>(null)
+
+  // Карта не запустилась (блокировщик рекламы, выключенный WebGL, старый
+  // телефон) — показываем те же пункты списком. Раньше в этом случае окно
+  // оставалось пустым: пункт не выбрать, купить нельзя.
+  const [картаНеВышла, setКартаНеВышла] = useState(false)
 
   const isSameAsChosen =
     !!chosen?.pointId &&
@@ -275,10 +280,20 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       }
 
       mapRef.current = map
-    })().catch((e) => console.error("Яндекс.Карты не запустились", e))
+    })().catch((e) => {
+      console.error("Яндекс.Карты не запустились", e)
+      if (!cancelled) setКартаНеВышла(true)
+    })
+
+    // Бывает, что скрипт карт не падает, а просто не приходит. Ждём
+    // пятнадцать секунд, дальше — список
+    const сторож = setTimeout(() => {
+      if (!cancelled && !mapRef.current) setКартаНеВышла(true)
+    }, 15_000)
 
     return () => {
       cancelled = true
+      clearTimeout(сторож)
       destroyMap()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -453,6 +468,18 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
   const showNoPoints = !isLoading && points.length === 0
 
+  const списком = useMemo(
+    () =>
+      [...points]
+        .map((p) => {
+          const цены = годныеТарифы(tariffsByPointId[p.id] ?? []).map(ценаТарифа)
+          const от = цены.filter((ц) => typeof ц === "number").sort((а, б) => а - б)[0]
+          return { p, от }
+        })
+        .sort((а, б) => (а.p.address ?? "").localeCompare(б.p.address ?? "", "ru")),
+    [points, tariffsByPointId]
+  )
+
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
@@ -464,6 +491,44 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       {showNoPoints && (
         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
           <Text className="text-ui-fg-muted">Для этого способа доставки пунктов выдачи не нашлось.</Text>
+        </div>
+      )}
+      {картаНеВышла && !isLoading && !showNoPoints && (
+        <div
+          className="absolute inset-0 z-[65] flex flex-col bg-white"
+          data-testid="pvz-spisok"
+        >
+          <div className="p-6 pb-3 small:p-[35px] small:pb-4">
+            <Heading level="h2" className="text-2xl-regular">
+              Пункты выдачи
+            </Heading>
+            <Text className="mt-1 text-ui-fg-muted txt-medium">
+              Карта не загрузилась — выберите пункт из списка.
+            </Text>
+          </div>
+          <ul className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 small:px-[35px]">
+            {списком.map(({ p, от }) => (
+              <li key={p.id} className="border-b border-rule">
+                <button
+                  type="button"
+                  onClick={() => onSelectPointRef.current?.(p.id)}
+                  className="flex w-full items-start justify-between gap-x-4 py-3 text-left hover:bg-mist"
+                >
+                  <span className="flex flex-col">
+                    <span className="txt-medium text-ui-fg-base">{p.address}</span>
+                    <span className="txt-small text-ui-fg-subtle">
+                      {[providersMap?.[String(p.providerKey ?? "")], p.name].filter(Boolean).join(" · ")}
+                    </span>
+                  </span>
+                  {typeof от === "number" && (
+                    <span className="shrink-0 txt-small-plus text-ui-fg-subtle">
+                      от {ценаСтрокой(от)}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
       {!isLoading && activePoint && isPanelOpen && !showNoPoints && (

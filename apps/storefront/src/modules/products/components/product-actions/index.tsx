@@ -9,6 +9,7 @@ import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import ProductPrice from "../product-price"
 import { useRouter } from "next/navigation"
+import { сообщитьОКорзине } from "@lib/util/sobytie-korziny"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -35,6 +36,7 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  const [ошибка, setОшибка] = useState<string | null>(null)
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -192,33 +194,51 @@ export default function ProductActions({
   const нельзяКупить =
     !inStock || !selectedVariant || !!disabled || !isValidVariant
 
-  const handleAddToCart = async () => {
-    if (!selectedVariant?.id) return null
+  /**
+   * Кладём в корзину. Две вещи, которых раньше не было:
+   *
+   * - после успеха просим сервер перерисовать страницу заново. Ответ на
+   *   добавление иногда приносил шапку со старой корзиной: вещь уже лежала
+   *   в корзине, а значок показывал ноль, и человек нажимал второй раз;
+   * - ошибку показываем под кнопкой, а не роняем молча: раньше кнопка так
+   *   и крутилась, а покупатель не знал, что случилось.
+   */
+  const положить = async (): Promise<boolean> => {
+    if (!selectedVariant?.id) return false
 
     setIsAdding(true)
+    setОшибка(null)
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity: 1,
+        countryCode,
+      })
+      router.refresh()
+      сообщитьОКорзине()
+      return true
+    } catch (e) {
+      setОшибка(
+        e instanceof Error && e.message
+          ? `Не получилось добавить в корзину: ${e.message}`
+          : "Не получилось добавить в корзину. Попробуйте ещё раз."
+      )
+      return false
+    } finally {
+      setIsAdding(false)
+    }
+  }
 
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
-
-    setIsAdding(false)
+  const handleAddToCart = async () => {
+    await положить()
   }
 
   // «Купить сейчас» — та же покупка, только без остановки в корзине:
   // кладём вещь и сразу ведём к оформлению
   const handleBuyNow = async () => {
-    if (!selectedVariant?.id) return null
-
-    setIsAdding(true)
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
-    setIsAdding(false)
-    router.push(`/${countryCode}/checkout?step=address`)
+    if (await положить()) {
+      router.push(`/${countryCode}/checkout?step=address`)
+    }
   }
 
   return (
@@ -292,6 +312,11 @@ export default function ProductActions({
             Купить сейчас
           </Button>
         </div>
+        {ошибка && (
+          <p className="text-sm text-red-600" role="alert" data-testid="add-to-cart-error">
+            {ошибка}
+          </p>
+        )}
       </div>
     </>
   )

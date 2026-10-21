@@ -12,6 +12,7 @@ type CartTotalsProps = {
     item_subtotal?: number | null
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
+    shipping_methods?: unknown[] | null
   }
 }
 
@@ -22,7 +23,16 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     item_subtotal,
     shipping_subtotal,
     discount_subtotal,
+    shipping_methods,
   } = totals
+
+  // Пока способ доставки не выбран, «0 ₽» читается как «доставка
+  // бесплатная». Пишем, когда она появится. Если список способов не
+  // пришёл вовсе (заказ запрошен без них) — показываем сумму, как раньше.
+  const доставка =
+    Array.isArray(shipping_methods) && shipping_methods.length === 0
+      ? "после выбора доставки"
+      : convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })
 
   // Строки «Налоги» нет: цены у нас с НДС внутри — покупателю показываем
   // окончательную цену, а НДС виден в кассовом чеке.
@@ -38,7 +48,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         <div className="flex items-center justify-between">
           <span>Доставка</span>
           <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
-            {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })}
+            {доставка}
           </span>
         </div>
         {!!discount_subtotal && (

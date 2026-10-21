@@ -1,117 +1,71 @@
 "use client"
 
-import Back from "@modules/common/icons/back"
-import FastDelivery from "@modules/common/icons/fast-delivery"
-import Refresh from "@modules/common/icons/refresh"
+import { HttpTypes } from "@medusajs/types"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 import Accordion from "./accordion"
-import { HttpTypes } from "@medusajs/types"
 
 type ProductTabsProps = {
   product: HttpTypes.StoreProduct
 }
 
-const ProductTabs = ({ product }: ProductTabsProps) => {
-  const tabs = [
-    {
-      label: "Характеристики",
-      component: <ProductInfoTab product={product} />,
-    },
-    {
-      label: "Доставка и возврат",
-      component: <ShippingInfoTab />,
-    },
-  ]
-
+/**
+ * Раскрывашка под кнопкой «В корзину».
+ *
+ * Вкладку «Характеристики» из стартового шаблона убрали: она брала
+ * материал, вес и габариты из стандартных полей Medusa, а они у всех
+ * товаров пустые — покупатель видел колонку прочерков. Состав, ткань,
+ * страна и уход показаны выше, в сведениях о товаре.
+ *
+ * «Доставка и возврат» пересказывает страницы «Доставка» и «Возврат»
+ * своими словами не больше, чем там написано: раньше здесь стояли
+ * шаблонные «3–5 дней, прямо к вам домой» и «обменяем без лишних
+ * вопросов», а курьера у нас пока нет.
+ */
+const ProductTabs = (_props: ProductTabsProps) => {
   return (
     <div className="w-full">
       <Accordion type="multiple">
-        {tabs.map((tab, i) => (
-          <Accordion.Item
-            key={i}
-            title={tab.label}
-            headingSize="medium"
-            value={tab.label}
-          >
-            {tab.component}
-          </Accordion.Item>
-        ))}
+        <Accordion.Item
+          title="Доставка и возврат"
+          headingSize="medium"
+          value="dostavka"
+        >
+          <ShippingInfoTab />
+        </Accordion.Item>
       </Accordion>
-    </div>
-  )
-}
-
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-2 gap-x-8">
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Материал</span>
-            <p>{product.material ? product.material : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Страна производства</span>
-            <p>{product.origin_country ? product.origin_country : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Тип</span>
-            <p>{product.type ? product.type.value : "-"}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <span className="font-semibold">Вес</span>
-            <p>{product.weight ? `${product.weight} г` : "-"}</p>
-          </div>
-          <div>
-            <span className="font-semibold">Размеры</span>
-            <p>
-              {product.length && product.width && product.height
-                ? `${product.length}Д x ${product.width}Ш x ${product.height}В`
-                : "-"}
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
 
 const ShippingInfoTab = () => {
   return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-y-8">
-        <div className="flex items-start gap-x-2">
-          <FastDelivery />
-          <div>
-            <span className="font-semibold">Быстрая доставка</span>
-            <p className="max-w-sm">
-              Заказ приедет за 3-5 рабочих дней в пункт выдачи или прямо к вам
-              домой.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Refresh />
-          <div>
-            <span className="font-semibold">Простой обмен</span>
-            <p className="max-w-sm">
-              Не подошёл размер? Не беспокойтесь: мы обменяем товар на
-              подходящий.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-x-2">
-          <Back />
-          <div>
-            <span className="font-semibold">Лёгкий возврат</span>
-            <p className="max-w-sm">
-              Просто верните товар, и мы вернём деньги. Без лишних вопросов: мы
-              сделаем всё, чтобы возврат прошёл без хлопот.
-            </p>
-          </div>
-        </div>
+    <div className="flex flex-col gap-y-6 py-8 text-sm text-ink">
+      <div>
+        <p className="font-semibold">Доставка</p>
+        <p className="mt-1 max-w-sm">
+          В пункты выдачи СДЭК и Яндекс Доставки по всей России. Стоимость и
+          срок видны при оформлении заказа, до оплаты.
+        </p>
+        <LocalizedClientLink
+          href="/dostavka"
+          className="mt-2 inline-block underline underline-offset-4"
+        >
+          Подробнее о доставке
+        </LocalizedClientLink>
+      </div>
+      <div>
+        <p className="font-semibold">Возврат</p>
+        <p className="mt-1 max-w-sm">
+          В течение семи дней после получения, если вещь не носили и
+          сохранены ярлыки.
+        </p>
+        <LocalizedClientLink
+          href="/vozvrat"
+          className="mt-2 inline-block underline underline-offset-4"
+        >
+          Как вернуть
+        </LocalizedClientLink>
       </div>
     </div>
   )

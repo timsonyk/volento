@@ -24,6 +24,36 @@ export type ДанныеПисьма = {
   ссылка?: string | null
 }
 
+type ЗаказДляДоставки = {
+  shipping_address?: { postal_code?: string | null; city?: string | null; address_1?: string | null } | null
+  shipping_methods?: ({ name?: string | null; data?: Record<string, any> | null } | null)[] | null
+}
+
+/**
+ * Что писать о доставке: способ и куда везём.
+ *
+ * Пункт выдачи лежит не в адресе заказа, а в выборе ApiShip
+ * (shipping_methods.data.apishipData.point): в адресе только город.
+ * Раньше письмо так и говорило — «Пункт выдачи, Казань», без самого
+ * пункта, и покупатель не знал, куда идти.
+ */
+export function доставкаДляПисьма(заказ: ЗаказДляДоставки): {
+  способ: string | null
+  адрес: string | null
+} {
+  const способ = (заказ.shipping_methods ?? [])[0]
+  const пункт = способ?.data?.apishipData?.point as
+    | { name?: string; address?: string }
+    | undefined
+  const адрес = заказ.shipping_address
+  const кусочки = [адрес?.postal_code, адрес?.city, адрес?.address_1].filter(Boolean)
+
+  return {
+    способ: [способ?.name, пункт?.name].filter(Boolean).join(", ") || null,
+    адрес: пункт?.address || (кусочки.length ? кусочки.join(", ") : null),
+  }
+}
+
 const экранировать = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 

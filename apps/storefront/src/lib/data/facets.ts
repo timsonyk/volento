@@ -380,6 +380,70 @@ export const новыеВНаличии = async (сколько: number): Promis
     .map((p) => p.id)
 }
 
+const служебный = (p: Лёгкий) =>
+  (p.tags ?? []).some((t) => t.value === "system" || t.value === "skryt")
+
+/**
+ * «Похожие» для карточки товара — из той же лёгкой выписки, только то,
+ * что можно купить.
+ *
+ * Сходство считаем по тому, что покупатель видит в фильтре: раздел,
+ * модель (прямые, палаццо…), крой, сезон. Другие цвета этой же модели не
+ * берём — они и так стоят кружками в карточке. От каждой модели — один
+ * цвет, иначе ряд забивался бы одной моделью в пяти цветах.
+ *
+ * Ассортимент небольшой, и похожих бывает мало — добираем новинками в
+ * наличии, чтобы ряд не обрывался на одной карточке.
+ */
+export const похожиеВНаличии = async (
+  id: string,
+  сколько: number
+): Promise<string[]> => {
+  const [{ товары }, все] = await Promise.all([выписка(), всяВыписка()])
+  const сам = все.find((p) => p.id === id)
+  const m = сам?.metadata ?? {}
+  const модель = строка(m.model)
+  const разделы = new Set((сам?.categories ?? []).map((к) => к.id).filter(Boolean))
+
+  const очки = (p: Лёгкий) => {
+    const д = p.metadata ?? {}
+    let о = 0
+    if ((p.categories ?? []).some((к) => к.id && разделы.has(к.id))) о += 3
+    if (строка(д.model_type) && строка(д.model_type) === строка(m.model_type)) о += 2
+    if (строка(д.cut) && строка(д.cut) === строка(m.cut)) о += 1
+    if (строка(д.season) && строка(д.season) === строка(m.season)) о += 1
+    return о
+  }
+
+  const кандидаты = товары
+    .filter((p) => p.id !== id && !служебный(p))
+    .filter((p) => !модель || строка(p.metadata?.model) !== модель)
+    .map((p) => ({ p, о: очки(p) }))
+    .sort(
+      (а, б) =>
+        б.о - а.о || (б.p.created_at ?? "").localeCompare(а.p.created_at ?? "")
+    )
+
+  const взяли = new Set<string>()
+  const итог: string[] = []
+  for (const { p } of кандидаты) {
+    // по одному цвету от модели; у товара без модели — сам по себе
+    const ключ = строка(p.metadata?.model) ?? p.id
+    if (взяли.has(ключ)) continue
+    взяли.add(ключ)
+    итог.push(p.id)
+    if (итог.length >= сколько) break
+  }
+  return итог
+}
+
+/** Оставляет из списка только то, что можно купить, в том же порядке. */
+export const толькоВНаличии = async (ids: string[]): Promise<string[]> => {
+  const { товары } = await выписка()
+  const можно = new Set(товары.filter((p) => !служебный(p)).map((p) => p.id))
+  return ids.filter((id) => можно.has(id))
+}
+
 /** Разбирает фильтры из адреса страницы. */
 export const прочитатьФильтры = async (
   params: Record<string, string | string[] | undefined>
