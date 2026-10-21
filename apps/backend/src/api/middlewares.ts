@@ -62,6 +62,12 @@ export default defineMiddlewares({
       middlewares: [пускатьТолькоГотовые],
     },
     {
+      // Возврат через кабинет — только вошедшему, и только свой заказ
+      // (проверка в самой ручке)
+      matcher: "/store/vozvrat/*",
+      middlewares: [authenticate("customer", ["session", "bearer"])],
+    },
+    {
       matcher: "/store/vhod/telefon",
       method: "POST",
       middlewares: [

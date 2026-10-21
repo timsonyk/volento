@@ -19,6 +19,9 @@ import { видимаяЧасть, отраслевойРеквизит, про�
  *    пара продана; коды невыкупленных пар остаются непроданными.
  * 3. «Возврат предоплаты» — если часть заказа не собрали, заказ отменили
  *    или покупатель не забрал часть посылки.
+ * 4. «Возврат прихода» с кодами — покупатель вернул проданную вещь через
+ *    кабинет (lib/vozvrat-pokupatelya.ts). По этому чеку «Честный знак»
+ *    возвращает код в оборот, и пару можно продавать снова.
  *
  * Каждый чек сначала записываем в заказ (metadata.kassa_cheki), потом
  * отправляем. Не дошёл — сторож jobs/kassa-cheki.ts отправит ещё раз и
@@ -39,7 +42,8 @@ export const ЧЕКИ = "kassa_cheki"
 const ДОСТАВКА = "dostavka"
 const ПРОВАЙДЕР_ТОЧКИ = "pp_tochka"
 
-type Вид = "predoplata" | "raschet" | "vozvrat"
+// vozvrat — возврат предоплаты; vozvrat_tovara — возврат проданной вещи
+type Вид = "predoplata" | "raschet" | "vozvrat" | "vozvrat_tovara"
 
 type Строка = { id: string; kolichestvo: number; cena: number }
 
@@ -194,7 +198,8 @@ function незакрытое(чеки: Чек[]): Map<string, Строка> {
   const итог = new Map<string, Строка>()
 
   for (const ч of чеки) {
-    if (ч.status === "fail") {
+    // возврат проданной вещи предоплату не трогает: она закрыта расчётом
+    if (ч.status === "fail" || ч.vid === "vozvrat_tovara") {
       continue
     }
     const знак = ч.vid === "predoplata" ? 1 : -1
@@ -505,6 +510,74 @@ export async function чекВозврата(
   await поставить(scope, заказ, {
     id,
     vid: "vozvrat",
+    operaciya: "sell_refund",
+    stroki: строки,
+    telo: тело,
+    status: "novyy",
+    popytok: 0,
+    sozdan: new Date().toISOString(),
+  })
+}
+
+/**
+ * «Возврат прихода» — покупатель вернул проданные пары. По позиции на
+ * пару с её кодом (planned_status 3 — возврат маркированной вещи). Цена —
+ * та, по которой пару продали в «полном расчёте». Повод входит в номер
+ * чека: одна заявка — один чек.
+ */
+export async function чекВозвратаТовара(
+  scope: MedusaContainer,
+  idЗаказа: string,
+  повод: string,
+  пары: { id: string; kod: string }[]
+) {
+  if (!кассаВключена() || !пары.length) {
+    return
+  }
+
+  const заказ = await прочитатьЗаказ(scope, idЗаказа)
+  const чеки = чекиЗаказа(заказ)
+
+  if (!чеки.some((ч) => ч.vid === "raschet" && ч.status !== "fail")) {
+    // расчёта не было — значит, и денег через Точку не было (тестовый заказ)
+    return
+  }
+
+  const н = настройки()
+  const позицииЗаказа = new Map<string, any>((заказ.items ?? []).map((с: any) => [с.id, с]))
+  const ценаПродажи = new Map<string, number>()
+  for (const ч of чеки) {
+    if (ч.vid === "raschet" && ч.status !== "fail") {
+      for (const с of ч.stroki) ценаПродажи.set(с.id, с.cena)
+    }
+  }
+
+  const строки: Строка[] = []
+  const позиции = пары.map((п) => {
+    const цена = ценаПродажи.get(п.id) ?? копейки(Number(позицииЗаказа.get(п.id)?.unit_price ?? 0))
+    строки.push({ id: п.id, kolichestvo: 1, cena: цена })
+    return {
+      name: название(позицииЗаказа.get(п.id) ?? {}),
+      price: цена,
+      quantity: 1,
+      measure: 0,
+      sum: цена,
+      payment_method: "full_payment",
+      payment_object: 33,
+      mark_processing_mode: "0",
+      planned_status: 3,
+      mark_code: { gs1m: Buffer.from(п.kod, "utf8").toString("base64") },
+      vat: { type: н.ндс },
+    }
+  })
+
+  const id = `volento-${заказ.display_id}-vozvrat-tovara-${повод}`
+  const тело = чекДляАтола(заказ, id, позиции)
+  тело.receipt.payments = [{ type: 1, sum: тело.receipt.total }]
+
+  await поставить(scope, заказ, {
+    id,
+    vid: "vozvrat_tovara",
     operaciya: "sell_refund",
     stroki: строки,
     telo: тело,

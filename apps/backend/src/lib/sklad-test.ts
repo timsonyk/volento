@@ -28,8 +28,12 @@ import { ТЕСТ } from "./sklad-test-metka"
 
 const РАЗМЕРЫ = ["46/170", "48/176", "50/182"]
 
-/** kolichestva — по строке на число: [3] — одна строка, 3 шт.; [2, 1] — две. */
-export async function создатьТестовыйЗаказ(scope: MedusaContainer, количества: number[]) {
+/**
+ * kolichestva — по строке на число: [3] — одна строка, 3 шт.; [2, 1] — две.
+ * покупатель — id покупателя, чей кабинет увидит заказ (автотесты кнопки
+ * возврата); без него заказ ничей.
+ */
+export async function создатьТестовыйЗаказ(scope: MedusaContainer, количества: number[], покупатель?: { id: string; email: string }) {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
 
   const { data: способы } = await query.graph({
@@ -50,7 +54,8 @@ export async function создатьТестовыйЗаказ(scope: MedusaCont
       region_id: регионы[0].id,
       sales_channel_id: каналы[0].id,
       currency_code: "rub",
-      email: "sklad-test@slytn.ru",
+      email: покупатель?.email ?? "sklad-test@slytn.ru",
+      ...(покупатель ? { customer_id: покупатель.id } : {}),
       status: "pending",
       items: количества.map((сколько, и) => ({
         title: `Тест склада ${РАЗМЕРЫ[и % РАЗМЕРЫ.length]}`,

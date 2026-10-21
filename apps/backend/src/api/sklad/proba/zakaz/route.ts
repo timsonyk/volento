@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { создатьТестовыйЗаказ } from "../../../../lib/sklad-test"
 
@@ -9,6 +9,9 @@ import { создатьТестовыйЗаказ } from "../../../../lib/sklad-
  *
  * Тело: { kolichestva: [3] } — одна строка, 3 шт.; [2, 1] — две строки.
  * Без тела — одна строка, 1 шт.
+ *
+ * pochta — заказ в кабинет покупателя с этой почтой (только @example.com:
+ * для автотестов кнопки возврата).
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
@@ -25,8 +28,22 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
   }
 
+  const почта = (req.body as { pochta?: unknown })?.pochta
+  let покупатель: { id: string; email: string } | undefined
+  if (почта !== undefined) {
+    const адрес = String(почта).trim().toLowerCase()
+    if (!адрес.endsWith("@example.com")) {
+      return res.status(400).json({ ошибка: "pochta — только адреса @example.com" })
+    }
+    const [найден] = await req.scope.resolve(Modules.CUSTOMER).listCustomers({ email: адрес, has_account: true } as any)
+    if (!найден) {
+      return res.status(404).json({ ошибка: "Покупателя с такой почтой нет" })
+    }
+    покупатель = { id: найден.id, email: адрес }
+  }
+
   try {
-    const заказ = await создатьТестовыйЗаказ(req.scope, количества)
+    const заказ = await создатьТестовыйЗаказ(req.scope, количества, покупатель)
     logger.info(`Склад создал тестовый заказ ${заказ.nomer}`)
     return res.json(заказ)
   } catch (ошибка: any) {

@@ -5,8 +5,13 @@ import { принятьВозврат } from "../../../../../lib/sklad-vozvraty"
 import { найтиЗаказ } from "../../../../../lib/sklad-zakaz"
 
 /**
- * Склад принял возврат невыкупленного: { kody: [...] } — коды пар,
- * которые пришли, как отдаёт сканер.
+ * Склад принял посылку-возврат: { kody: [...] } — коды пар, которые
+ * пришли, как отдаёт сканер. И невыкуп, и возврат покупателя — разберём
+ * по кодам (lib/sklad-vozvraty.ts).
+ *
+ * otkloneno: [{ kod, prichina }] — пары из возврата покупателя, которые
+ * склад принять не может (носили, нет ярлыков). Деньги за них не
+ * возвращаем, зовём человека.
  *
  * Совпали с ожидаемыми — всё, пары можно продавать снова (остаток склад
  * пришлёт обычной заливкой). Не совпали — отвечаем, какие не ждали и
@@ -16,9 +21,18 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const номер = String((req.params as any).nomer ?? "")
   const kody = (req.body as { kody?: unknown })?.kody
+  const otkloneno = (req.body as { otkloneno?: unknown })?.otkloneno
 
   if (!Array.isArray(kody)) {
     return res.status(400).json({ ошибка: "Пришлите kody — коды пар, которые вернулись" })
+  }
+  if (
+    otkloneno !== undefined &&
+    (!Array.isArray(otkloneno) || otkloneno.some((о: any) => !о?.kod || !kody.map(String).includes(String(о.kod))))
+  ) {
+    return res.status(400).json({
+      ошибка: "otkloneno — [{ kod, prichina }], и каждый kod должен быть среди пришедших kody",
+    })
   }
 
   const заказ = await найтиЗаказ(req, номер)
@@ -27,7 +41,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   try {
-    const итог = await принятьВозврат(req.scope, заказ, kody.map(String))
+    const итог = await принятьВозврат(
+      req.scope,
+      заказ,
+      kody.map(String),
+      ((otkloneno as any[]) ?? []).map((о) => ({ kod: String(о.kod), prichina: String(о.prichina ?? "").slice(0, 300) }))
+    )
     if (!итог) {
       return res.status(409).json({ ошибка: "По этому заказу возврата не ждём" })
     }
