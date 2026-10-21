@@ -29,5 +29,19 @@ libx11-xcb1, libdrm-intel1, libxcb-dri3-0, libxcb-present0,
 libxcb-randr0, libxcb-sync1, libxcb-xfixes0, libxshmfence1,
 libpciaccess0).
 
-Флаг `--disable-dev-shm-usage` уже в конфиге: без него браузер на сервере
-падал на странице входа.
+**Шрифты обязательны.** На сервере нет ни одного системного шрифта, и
+Chromium без них падает (`Page crashed`, в dmesg `trap int3`) на любой
+странице с полем ввода — вход, корзина с товаром, оформление. Покупателей
+это не касается, только браузер на сервере. Поэтому в `/root/pw/fontsroot`
+распакованы `fonts-dejavu-core` и `fontconfig-config`, а `env.sh`
+выставляет `FONTCONFIG_FILE=/root/pw/fonts.conf`:
+
+```
+<fontconfig>
+  <dir>/root/pw/fontsroot/usr/share/fonts</dir>
+  <cachedir>/root/pw/fontcache</cachedir>
+  <include ignore_missing="yes">/root/pw/fontsroot/etc/fonts/conf.d</include>
+</fontconfig>
+```
+
+Флаг `--disable-dev-shm-usage` уже в конфиге.

@@ -10,9 +10,7 @@ test.describe("навигация", () => {
       "/ru/categories/bryuki",
       товар,
       "/ru/cart",
-      // /ru/account здесь нет: облегчённый Chromium (headless shell 131)
-      // на сервере падает на странице входа — и на боевой витрине тоже.
-      // Проверять вход руками в обычном браузере (NIGHT_REPORT.md)
+      "/ru/account",
       "/ru/search?q=брюки",
       "/ru/dostavka",
       "/ru/vozvrat",
