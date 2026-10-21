@@ -142,7 +142,7 @@ N=$(novyi '{"kolichestva":[1]}')
 c=$(r POST /sklad/proba/vydacha/$N); check "выдача до упаковки 409" 409 "$c"
 read N ID <<<"$(upakovan '{"kolichestva":[2,1]}')"
 c=$(r POST /sklad/proba/vydacha/$N); check "забрали всё" 200 "$c" '.etap=="gotovo" and (.nevykupleno|length)==0 and (.vykupleno|map(.shtuk)|add)==3'
-itog $ID; check "сборка доставлена, денег не возвращали" 200 200 '[.order.fulfillments[].delivered_at]|all(.!=null) and ([.order.payment_collections[].payments[].refunds[]?.amount]|length)==0'
+itog $ID; check "сборка доставлена, денег не возвращали" 200 200 '([.order.fulfillments[].delivered_at]|all(.!=null)) and ([.order.payment_collections[].payments[].refunds[]?.amount]|length)==0'
 c=$(r GET "/sklad/vozvraty?test=1"); check "возврата не ждём" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\")]|length==0"
 
 read N ID <<<"$(upakovan '{"kolichestva":[2,1]}')"
@@ -163,7 +163,7 @@ c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":[\"$(kod chuzhoy$N)\"]}"); chec
 
 read N ID <<<"$(upakovan '{"kolichestva":[1,1]}')"
 c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[0,0]}'); check "не забрали ничего — вернули всё" 200 "$c" '.status=="returned" and .vernuli==20 and (.vykupleno|length)==0'
-itog $ID; check "сборка не доставлена" 200 200 '[.order.fulfillments[].delivered_at]|all(.==null)'
+itog $ID; check "сборка не доставлена" 200 200 '([.order.fulfillments[].delivered_at]|all(.==null))'
 c=$(r POST /sklad/zadaniya/999999/vozvrat '{"kody":[]}'); check "возврат по несуществующему 404" 404 "$c"
 
 echo "== Итог: $OK прошло, $BAD не прошло"

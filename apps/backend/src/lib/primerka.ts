@@ -54,21 +54,54 @@ export function кодыПоАртикулу(
   return итог
 }
 
+/** Серийный номер из кода ЧЗ — он напечатан под DataMatrix на ярлыке пары. */
+export const серийный = (код: string) => (код.startsWith("01") ? код.slice(18) : код).split("\u001d")[0]
+
+// «5986-46/170#2» — вторая из одинаковых пар; номер отрезаем, читая ответ
+const НОМЕР_ПАРЫ = /#\d+$/
+export const безНомера = (артикул?: string | null) => (артикул ?? "").replace(НОМЕР_ПАРЫ, "")
+
 /**
  * Строка посылки «брюки × 3» становится тремя строками по одной паре, у
  * каждой свой код. ApiShip сам требует: с кодом маркировки количество не
  * больше одного. Кодов не хватило — пара уходит без кода, но отдельной
  * строкой: выкуп всё равно придёт по каждой.
+ *
+ * Одинаковые пары в пункте выдачи различают по артикулу в накладной (так
+ * ответил СДЭК): код ЧЗ там не сканируют. Поэтому у одинаковых пар номер
+ * в артикуле — «#1», «#2», — а в названии «пара 1 из 2» и серийный номер
+ * её кода, тот же, что напечатан на ярлыке.
  */
 export function поПарам(товары: any[], коды: Map<string, string[]>): any[] {
   const осталось = new Map([...коды].map(([а, к]) => [а, [...к]]))
 
-  return товары.flatMap((т) => {
+  const пары = товары.flatMap((т) => {
     const штук = Math.max(1, Number(т.quantity) || 1)
     return Array.from({ length: штук }, () => {
       const код = т.articul ? осталось.get(т.articul)?.shift() : undefined
       return { ...т, quantity: 1, ...(код ? { markCode: код } : {}) }
     })
+  })
+
+  const всего = new Map<string, number>()
+  for (const п of пары) {
+    if (п.articul) всего.set(п.articul, (всего.get(п.articul) ?? 0) + 1)
+  }
+  const номер = new Map<string, number>()
+
+  return пары.map((п) => {
+    const n = п.articul ? всего.get(п.articul) ?? 1 : 1
+    if (n < 2) {
+      return п
+    }
+    const i = (номер.get(п.articul) ?? 0) + 1
+    номер.set(п.articul, i)
+    const хвост = п.markCode ? `, код ${серийный(п.markCode)}` : ""
+    return {
+      ...п,
+      articul: `${п.articul}#${i}`,
+      description: `${п.description ?? ""} (пара ${i} из ${n}${хвост})`.trim(),
+    }
   })
 }
 
@@ -136,7 +169,8 @@ export function итогВыдачи(
     if (т.markCode) {
       ;(взяли >= штук ? выкупленныеКоды : невыкупленныеКоды).add(т.markCode)
     } else if (т.articul) {
-      взялиПоАртикулу.set(т.articul, (взялиПоАртикулу.get(т.articul) ?? 0) + Math.min(взяли, штук))
+      const артикул = безНомера(т.articul)
+      взялиПоАртикулу.set(артикул, (взялиПоАртикулу.get(артикул) ?? 0) + Math.min(взяли, штук))
     }
   }
 

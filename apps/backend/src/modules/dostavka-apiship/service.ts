@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 
 import { КОДЫ } from "../../lib/sklad-kody"
-import { допУслуги, кодыПоАртикулу, поПарам, type ДопУслуга } from "../../lib/primerka"
+import { безНомера, допУслуги, кодыПоАртикулу, поПарам, type ДопУслуга } from "../../lib/primerka"
 import { ТЕСТ, тестоваяНаклейка } from "../../lib/sklad-test-metka"
 
 // Плагин отдаёт класс провайдера только внутри описания модуля, отдельным
@@ -141,7 +141,7 @@ class DostavkaApishipService extends ApishipService {
         место.items = поПарам(место.items ?? [], наша.коды)
         for (const п of место.items) {
           if (наша.цены.size) {
-            п.assessedCost = наша.цены.get(п.articul) ?? 0
+            п.assessedCost = наша.цены.get(безНомера(п.articul)) ?? 0
           }
           всего += Number(п.assessedCost ?? 0) * Number(п.quantity ?? 0)
         }

@@ -1,4 +1,4 @@
-import { допУслуги, итогВыдачи, кодыПоАртикулу, поПарам, товарыОтвета } from "../primerka"
+import { безНомера, допУслуги, итогВыдачи, кодыПоАртикулу, поПарам, серийный, товарыОтвета } from "../primerka"
 
 const к = (n: number) => `0104601234567890215пара${n}\u001d93tail`
 
@@ -34,11 +34,26 @@ describe("примерка: посылка по парам", () => {
     expect(пары[0].assessedCost).toBe(8499)
   })
 
+  it("одинаковые пары — номер в артикуле и серийный номер кода в названии, одиночная без изменений", () => {
+    const пары = поПарам(
+      [
+        { articul: "5986-46/170", quantity: 2, description: "Брюки палаццо" },
+        { articul: "5110-38", quantity: 1, description: "Юбка" },
+      ],
+      new Map([["5986-46/170", [к(1), к(2)]], ["5110-38", [к(3)]]])
+    )
+    expect(пары.map((п) => п.articul)).toEqual(["5986-46/170#1", "5986-46/170#2", "5110-38"])
+    expect(пары[1].description).toBe(`Брюки палаццо (пара 2 из 2, код ${серийный(к(2))})`)
+    expect(пары[2].description).toBe("Юбка")
+    expect(безНомера("5986-46/170#2")).toBe("5986-46/170")
+    expect(серийный(к(7))).toBe("5пара7")
+  })
+
   it("кодов не хватило — пара всё равно отдельной строкой, без кода", () => {
-    const пары = поПарам([{ articul: "x", quantity: 2 }], new Map([["x", [к(1)]]]))
+    const пары = поПарам([{ articul: "x", quantity: 2, description: "Брюки" }], new Map([["x", [к(1)]]]))
     expect(пары).toEqual([
-      { articul: "x", quantity: 1, markCode: к(1) },
-      { articul: "x", quantity: 1 },
+      { articul: "x#1", quantity: 1, markCode: к(1), description: `Брюки (пара 1 из 2, код ${серийный(к(1))})` },
+      { articul: "x#2", quantity: 1, description: "Брюки (пара 2 из 2)" },
     ])
   })
 
@@ -94,7 +109,8 @@ describe("примерка: итог выдачи", () => {
 
   it("две одинаковые пары, взяли одну, кодов в ответе нет — делим наугад и помечаем", () => {
     const и = итогВыдачи("partialReturn", строки, [
-      { articul: "5986-46/170", quantity: 2, quantityDelivered: 1 },
+      { articul: "5986-46/170#1", quantity: 1, quantityDelivered: 1 },
+      { articul: "5986-46/170#2", quantity: 1, quantityDelivered: 0 },
       { articul: "5110-38", quantity: 1, quantityDelivered: 1 },
     ])!
     expect(и.vykupleno[0]).toEqual({ id: "a", kody: [к(1)], shtuk: 1 })

@@ -44,6 +44,7 @@ const ПОЛЯ = [
   "items.variant_title",
   "items.variant_sku",
   "items.total",
+  "items.unit_price",
   "items.detail.quantity",
   "shipping_address.first_name",
   "payment_collections.payments.id",
@@ -79,10 +80,15 @@ export async function записатьИтог(scope: MedusaContainer, idЗак�
   return итог
 }
 
-/** Цена одной пары строки — сколько за неё на самом деле заплатили, со скидками. */
+/**
+ * Цена одной пары строки — сколько за неё заплатили, со скидками. Итог
+ * строки Medusa отдаёт не всегда — тогда цена штуки.
+ */
 const ценаПары = (строка: any) => {
   const штук = Number(строка?.detail?.quantity ?? 0)
-  return штук ? Math.round((Number(строка.total) / штук) * 100) / 100 : 0
+  const всего = Number(строка?.total)
+  const цена = штук && Number.isFinite(всего) ? всего / штук : Number(строка?.unit_price ?? 0)
+  return Number.isFinite(цена) ? Math.round(цена * 100) / 100 : 0
 }
 
 const название = (с: any) => [с?.title, с?.variant_title].filter(Boolean).join(", ")
