@@ -5,7 +5,8 @@ export const ГЛАВНАЯ = "/ru"
 /** Первая карточка товара в каталоге — её адрес. */
 export async function первыйТовар(page: Page): Promise<string> {
   await page.goto("/ru/store")
-  const ссылка = page.locator('a[href*="/products/"]').first()
+  // :visible — в шапке есть скрытые ссылки на товары (панель меню)
+  const ссылка = page.locator('a[href*="/products/"]:visible').first()
   await expect(ссылка).toBeVisible()
   return (await ссылка.getAttribute("href"))!
 }
@@ -31,6 +32,8 @@ export async function выбратьРазмерВНаличии(page: Page): Pr
     const в = первая.nth(i)
     if ((await в.getAttribute("class"))?.includes("line-through")) continue
     await в.click()
+    // выбор размера меняет адрес (?v_id) и перерисовывает кнопку
+    await page.waitForTimeout(800)
 
     for (let г = 1; г < сколькоГрупп; г++) {
       const кнопки = группы.nth(г).locator('[data-testid="option-button"]')
@@ -42,12 +45,14 @@ export async function выбратьРазмерВНаличии(page: Page): Pr
         )
         if (!перечёркнут) {
           await к.click()
+          await page.waitForTimeout(800)
           break
         }
       }
     }
 
     if (await кнопка.isEnabled()) {
+      await expect(кнопка).toContainText("В корзину")
       return true
     }
   }
@@ -58,14 +63,18 @@ export async function выбратьРазмерВНаличии(page: Page): Pr
 export async function положитьВКорзину(page: Page) {
   await page.goto("/ru/store")
   const ссылки = await page
-    .locator('a[href*="/products/"]')
+    .locator('a[href*="/products/"]:visible')
     .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 6))
 
   for (const адрес of ссылки) {
     await page.goto(адрес)
     if (await выбратьРазмерВНаличии(page)) {
       await page.locator('[data-testid="add-product-button"]').click()
-      await expect(page.locator('[data-testid="add-product-button"]')).toBeEnabled()
+      // счётчик на значке корзины в шапке
+      await expect(page.locator('[data-testid="nav-cart-link"]')).toHaveAttribute(
+        "aria-label",
+        /товаров: [1-9]/
+      )
       return адрес
     }
   }

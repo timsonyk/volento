@@ -14,7 +14,7 @@ test.describe("корзина", () => {
     await положитьВКорзину(page)
 
     await page.goto("/ru/cart")
-    const строка = page.locator('[data-testid="product-row"]').first()
+    const строка = page.locator('[data-testid="product-row"]:visible').first()
     await expect(строка).toBeVisible()
     const итогДо = await page.locator('[data-testid="cart-subtotal"]').innerText()
 
@@ -31,7 +31,7 @@ test.describe("корзина", () => {
   test("перечёркнутый размер не даёт купить", async ({ page }) => {
     await page.goto("/ru/store")
     const адреса = await page
-      .locator('a[href*="/products/"]')
+      .locator('a[href*="/products/"]:visible')
       .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 8))
 
     for (const адрес of адреса) {
