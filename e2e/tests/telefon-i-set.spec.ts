@@ -38,7 +38,7 @@ test.describe("медленная сеть", () => {
     await page.locator('[data-testid="nav-home-link"]').click()
     // полоса загрузки (app/[countryCode]/(main)/loading.tsx) или уже главная
     await expect(
-      page.locator('[aria-busy="true"]').or(page.locator("#podborka, section").first())
+      page.locator('[aria-busy="true"]').or(page.locator("#podborka, section")).first()
     ).toBeVisible({ timeout: 2_000 })
     await expect(page).toHaveURL(/\/ru\/?$/, { timeout: 30_000 })
   })
