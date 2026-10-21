@@ -5,6 +5,7 @@ import { выбратьРазмерВНаличии, первыйТовар, п�
 test.describe("корзина", () => {
   test("до выбора размера кнопка просит выбрать, а не пишет «нет в наличии»", async ({ page }) => {
     await page.goto(await первыйТовар(page))
+    await page.waitForLoadState("networkidle")
     const кнопка = page.locator('[data-testid="add-product-button"]')
     await expect(кнопка).toBeDisabled()
     await expect(кнопка).toContainText("Выберите")
@@ -36,6 +37,7 @@ test.describe("корзина", () => {
 
     for (const адрес of адреса) {
       await page.goto(адрес)
+      await page.waitForLoadState("networkidle")
       const нет = page.locator('[data-testid="option-button"].line-through').first()
       if (!(await нет.count())) continue
       await нет.click()

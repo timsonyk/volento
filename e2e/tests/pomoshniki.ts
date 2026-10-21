@@ -17,6 +17,9 @@ export async function первыйТовар(page: Page): Promise<string> {
  * стала доступна.
  */
 export async function выбратьРазмерВНаличии(page: Page): Promise<boolean> {
+  // пока страница дотягивается с сервера, рядом с настоящей кнопкой
+  // ещё стоит заглушка из Suspense — ждём, пока она уйдёт
+  await page.waitForLoadState("networkidle")
   const группы = page.locator('[data-testid="product-options"]')
   const сколькоГрупп = await группы.count()
   const кнопка = page.locator('[data-testid="add-product-button"]')
