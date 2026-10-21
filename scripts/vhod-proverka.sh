@@ -47,7 +47,7 @@ check "гость: сессия оплаты — 401" 401 "$c"
 
 echo "== Вошедший"
 P="e2e-vhod-$RANDOM$RANDOM@example.com"
-KOD=$(curl -s -X POST "$B/store/vhod" "${H[@]}" -H "x-e2e-klyuch: $EK" -d "{\"email\":\"$P\"}" | jq -r '.код')
+KOD=$(curl -s -X POST "$B/store/vhod" "${H[@]}" -H "x-e2e-klyuch: $EK" -d "{\"email\":\"$P\"}" | jq -r '.["код"]')
 [ "$KOD" != null ] && [ -n "$KOD" ] && { OK=$((OK+1)); echo "OK   код для автотеста выдан"; } || { BAD=$((BAD+1)); echo "FAIL код не выдан"; }
 T=$(curl -s -X POST "$B/auth/customer/kod" "${H[@]}" -d "{\"email\":\"$P\",\"code\":\"$KOD\"}" | jq -r .token)
 c=$(post /store/customers "{\"email\":\"$P\",\"first_name\":\"Анна\",\"last_name\":\"Тестова\",\"phone\":\"+7 900 000-00-00\"}" -H "authorization: Bearer $T")
@@ -62,6 +62,41 @@ c=$(post /store/carts/$G/customer "" -H "authorization: Bearer $T")
 check "гостевую корзину можно забрать после входа" 200 "$c"
 c=$(post /store/carts/$G/complete "" -H "x-vitrina-klyuch: $VK")
 [ "$c" != 401 ] && { OK=$((OK+1)); echo "OK   забранная корзина проходит правило ($c)"; } || { BAD=$((BAD+1)); echo "FAIL забранной корзине отказали"; }
+
+echo "== Возврат через кабинет: только свой заказ"
+SK=$(grep '^SKLAD_KEY=' $E | cut -d= -f2-)
+S=(-H "X-Sklad-Key: $SK" -H "Content-Type: application/json")
+N=$(curl -s -X POST "$B/sklad/proba/zakaz" "${S[@]}" -d "{\"kolichestva\":[2],\"pochta\":\"$P\"}" | jq -r .nomer)
+Z=$(curl -s "$B/sklad/zadaniya?test=1" "${S[@]}" | jq -c --arg n "$N" '.zadaniya[]|select(.nomer==$n)')
+ID=$(jq -r .id <<<"$Z"); SID=$(jq -r '.pozicii[0].id_stroki' <<<"$Z")
+curl -s -X POST "$B/sklad/zadaniya/$N/sborka" "${S[@]}" -d "{\"pozicii\":[{\"id_stroki\":\"$SID\",\"kolichestvo\":2,\"kody\":[\"0104601234567890215vh1$N\u001d93x\",\"0104601234567890215vh2$N\u001d93x\"]}]}" >/dev/null
+curl -s "$B/sklad/k-upakovke?test=1" "${S[@]}" >/dev/null
+curl -s -X POST "$B/sklad/zadaniya/$N/upakovano" "${S[@]}" >/dev/null
+curl -s -X POST "$B/sklad/proba/vydacha/$N" "${S[@]}" >/dev/null
+c=$(curl -s -o /tmp/vh.out -w "%{http_code}" "$B/store/vozvrat/$ID" "${H[@]}")
+check "без входа — 401" 401 "$c"
+c=$(curl -s -o /tmp/vh.out -w "%{http_code}" "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T")
+check "свой заказ: можно вернуть 2 пары" 200 "$c"
+jq -e '(.pary|length)==2 and .do!=null and (.prichiny|length)>3' /tmp/vh.out >/dev/null && { OK=$((OK+1)); echo "OK   пары, срок и причины"; } || { BAD=$((BAD+1)); echo "FAIL ответ: $(head -c 300 /tmp/vh.out)"; }
+KOD=$(jq -r '.pary[0].kod' /tmp/vh.out)
+P2="e2e-chuzhoy-$RANDOM$RANDOM@example.com"
+K2=$(curl -s -X POST "$B/store/vhod" "${H[@]}" -H "x-e2e-klyuch: $EK" -d "{\"email\":\"$P2\"}" | jq -r '.["код"]')
+T2=$(curl -s -X POST "$B/auth/customer/kod" "${H[@]}" -d "{\"email\":\"$P2\",\"code\":\"$K2\"}" | jq -r .token)
+curl -s -X POST "$B/store/customers" "${H[@]}" -H "authorization: Bearer $T2" -d "{\"email\":\"$P2\",\"first_name\":\"Чужой\",\"last_name\":\"Тест\",\"phone\":\"+7 900 000-00-01\"}" >/dev/null
+T2=$(curl -s -X POST "$B/auth/token/refresh" "${H[@]}" -H "authorization: Bearer $T2" | jq -r .token)
+c=$(curl -s -o /tmp/vh.out -w "%{http_code}" "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T2")
+check "чужой заказ — 404" 404 "$c"
+c=$(curl -s -o /tmp/vh.out -w "%{http_code}" -X POST "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T2" -d "{\"kody\":[\"$KOD\"]}")
+check "оформить возврат чужого — 404" 404 "$c"
+c=$(post /store/vozvrat/$ID '{"kody":[]}' -H "authorization: Bearer $T")
+check "пустой выбор — 400" 400 "$c"
+c=$(post /store/vozvrat/$ID '{"kody":["nesushchestvuyushchiy"]}' -H "authorization: Bearer $T")
+check "чужой код — 400" 400 "$c"
+c=$(post /store/vozvrat/$ID "{\"kody\":[\"$KOD\"],\"prichina\":\"Не подошёл размер\",\"kommentariy\":\"велики в талии\"}" -H "authorization: Bearer $T")
+check "свой возврат оформлен" 200 "$c"
+jq -e '(.nomer|test("-В1$")) and (.pary|length)==1 and (.zayavki|length)==1 and .zayavki[0].status=="zhdem"' /tmp/vh.out >/dev/null && { OK=$((OK+1)); echo "OK   заявка видна, пара ушла из доступных"; } || { BAD=$((BAD+1)); echo "FAIL ответ: $(head -c 300 /tmp/vh.out)"; }
+c=$(post /store/vozvrat/$ID "{\"kody\":[\"$KOD\"]}" -H "authorization: Bearer $T")
+check "ту же пару второй раз — 400" 400 "$c"
 
 echo "== Итог: $OK прошло, $BAD не прошло"
 rm -f /tmp/vh.out

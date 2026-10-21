@@ -8,14 +8,19 @@ import Items from "@modules/order/components/items"
 import OrderDetails from "@modules/order/components/order-details"
 import OrderSummary from "@modules/order/components/order-summary"
 import ShippingDetails from "@modules/order/components/shipping-details"
+import Возврат from "@modules/order/components/vozvrat"
+import { type СведенияВозврата } from "@lib/data/vozvrat"
 import React from "react"
 
 type OrderDetailsTemplateProps = {
   order: HttpTypes.StoreOrder
+  // null — сведений нет (заказ гостя, сбой): блок возврата не показываем
+  возврат?: СведенияВозврата | null
 }
 
 const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   order,
+  возврат,
 }) => {
   return (
     <div className="flex flex-col justify-center gap-y-4">
@@ -37,6 +42,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
         <Items order={order} />
         <ShippingDetails order={order} />
         <OrderSummary order={order} />
+        {возврат && <Возврат idЗаказа={order.id} сведения={возврат} />}
         <Help />
       </div>
     </div>

@@ -23,6 +23,8 @@ E2E_BASE=http://127.0.0.1:8100 npx playwright test   # против другой
 #   E2E_PK      — publishable key витрины (NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY)
 #   E2E_KLYUCH  — E2E_KLYUCH из apps/backend/.env
 #   E2E_API     — адрес бэкенда, по умолчанию http://127.0.0.1:9000
+#   E2E_SKLAD   — SKLAD_KEY из apps/backend/.env: сценарии возврата проводят
+#                 тестовый заказ до выдачи через API склада
 npx playwright test --project=telefon
 ```
 

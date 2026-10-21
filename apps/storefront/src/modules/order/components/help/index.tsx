@@ -9,12 +9,12 @@ const Help = () => {
       <div className="text-base-regular my-2">
         <ul className="gap-y-2 flex flex-col">
           <li>
-            <LocalizedClientLink href="/contact">
-              Связаться с нами
-            </LocalizedClientLink>
+            <a href="mailto:info@volento.com" className="underline underline-offset-4">
+              Написать нам: info@volento.com
+            </a>
           </li>
           <li>
-            <LocalizedClientLink href="/contact">
+            <LocalizedClientLink href="/vozvrat" className="underline underline-offset-4">
               Возврат и обмен
             </LocalizedClientLink>
           </li>

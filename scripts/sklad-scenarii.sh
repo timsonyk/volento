@@ -7,7 +7,7 @@
 # тестовые (видны складу только с ?test=1), касса, банк и служба доставки
 # по ним не вызываются. Каждый прогон оставляет 5 тестовых заказов по 10 ₽
 # и шлёт 2 письма-тревоги «склад собрал не всё» на EMAIL_TREVOGA. Сценарии
-# примерки добавляют ещё 6 тестовых заказов; писем по ним нет.
+# примерки и возврата добавляют ещё 8 тестовых заказов; писем по ним нет.
 set -u
 B=${B:-http://127.0.0.1:9000}
 K=$(grep '^SKLAD_KEY=' /home/volento/volento/apps/backend/.env | cut -d= -f2-)
@@ -165,6 +165,36 @@ read N ID <<<"$(upakovan '{"kolichestva":[1,1]}')"
 c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[0,0]}'); check "не забрали ничего — вернули всё" 200 "$c" '.status=="returned" and .vernuli==20 and (.vykupleno|length)==0'
 itog $ID; check "сборка не доставлена" 200 200 '([.order.fulfillments[].delivered_at]|all(.==null))'
 c=$(r POST /sklad/zadaniya/999999/vozvrat '{"kody":[]}'); check "возврат по несуществующему 404" 404 "$c"
+
+echo "== Возврат через кабинет"
+read N ID <<<"$(upakovan '{"kolichestva":[2,1]}')"
+c=$(r POST /sklad/proba/vozvrat/$N); check "до выдачи вернуть нечего — 409" 409 "$c"
+r POST /sklad/proba/vydacha/$N >/dev/null
+c=$(r POST /sklad/proba/vozvrat/$N '{"shtuk":2}'); check "заявка на 2 пары" 200 "$c" '.status=="zhdem" and (.pary|length)==2 and (.nomer|test("-В1$"))'
+V1=$(jq -c '[.pary[].kod]' /tmp/sk.out)
+c=$(r POST /sklad/proba/vozvrat/$N); check "вторая заявка — на оставшуюся пару" 200 "$c" '(.pary|length)==1 and (.nomer|test("-В2$"))'
+V2=$(jq -c '[.pary[].kod]' /tmp/sk.out)
+c=$(r POST /sklad/proba/vozvrat/$N); check "третьей нечего вернуть — 409" 409 "$c"
+c=$(r GET "/sklad/vozvraty?test=1"); check "склад видит обе заявки" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\" and .vid==\"pokupatel\")]|length==2"
+K1=$(jq -r '.[0]' <<<"$V1")
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$V1,\"otkloneno\":[{\"kod\":\"$K1\",\"prichina\":\"носили\"}]}")
+check "приняли 1 из 2, одну отклонили" 200 "$c" '.zayavki[0].status=="chastichno" and .zayavki[0].vernuli==10 and (.zayavki[0].otkloneno|length)==1'
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":[\"$K1\"],\"otkloneno\":[{\"kod\":\"chuzhoy\"}]}"); check "отклонить можно только пришедшее — 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$V2}"); check "вторая заявка принята целиком" 200 "$c" '.zayavki[0].status=="prinyat" and .zayavki[0].vernuli==10 and .sovpalo==true'
+itog $ID; check "по заказу вернули 20 ₽" 200 200 '([.order.payment_collections[].payments[].refunds[]?.amount]|add)==20'
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$V2}"); check "повтор — uzhe_prinyat" 200 "$c" '.sostoyanie=="uzhe_prinyat"'
+c=$(r GET "/sklad/vozvraty?test=1"); check "принятые заявки ушли из списка" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\")]|length==0"
+
+echo "== Невыкуп и возврат в одной посылке"
+read N ID <<<"$(upakovan '{"kolichestva":[1,1]}')"
+c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[1,0]}'); check "забрали 1 из 2" 200 "$c" '.vernuli==10'
+NV=$(jq -c '[.nevykupleno[].kody[]]' /tmp/sk.out)
+c=$(r POST /sklad/proba/vozvrat/$N); check "заявка на забранную пару" 200 "$c" '(.pary|length)==1'
+VK=$(jq -c '[.pary[].kod]' /tmp/sk.out)
+c=$(r GET "/sklad/vozvraty?test=1"); check "склад ждёт и невыкуп, и заявку" 200 "$c" "([.vozvraty[]|select(.nomer==\"$N\")|.vid]|sort)==[\"nevykup\",\"pokupatel\"]"
+ALL=$(jq -c -n --argjson a "$NV" --argjson b "$VK" '$a+$b')
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$ALL}"); check "одна посылка закрыла оба" 200 "$c" '.sovpalo==true and .zayavki[0].status=="prinyat" and .zayavki[0].vernuli==10'
+itog $ID; check "по заказу вернули 20 ₽: невыкуп и возврат" 200 200 '([.order.payment_collections[].payments[].refunds[]?.amount]|add)==20'
 
 echo "== Итог: $OK прошло, $BAD не прошло"
 rm -f /tmp/sk.out /tmp/sk.pdf

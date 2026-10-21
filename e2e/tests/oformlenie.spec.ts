@@ -66,12 +66,13 @@ test.describe("оформление", () => {
   test("вошёл после того, как собрал корзину, — корзина та же", async ({ page }) => {
     test.skip(!входДоступен(), "нужны E2E_PK и E2E_KLYUCH")
     await положитьВКорзину(page)
-    const было = await page.locator('[data-testid="nav-cart-link"]').getAttribute("aria-label")
+    await page.goto("/ru/cart")
+    const товар = (await page.locator('[data-testid="product-title"]').first().innerText()).trim()
     await войтиПокупателем(page)
     await page.goto("/ru/checkout")
-    // корзина гостя переносится на покупателя
+    // корзина гостя переносится на покупателя — в сводке тот же товар
     await expect(page.locator('[data-testid="recipient-email-input"]')).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('[data-testid="nav-cart-link"]')).toHaveAttribute("aria-label", было!)
+    await expect(page.locator('[data-testid="items-table"]').getByText(товар).first()).toBeVisible()
   })
 
   test("пустая корзина не открывает оформление", async ({ page }) => {

@@ -65,6 +65,8 @@ export async function выбратьРазмерВНаличии(page: Page): Pr
 /** Кладёт в корзину первый товар каталога, у которого есть размер. */
 export async function положитьВКорзину(page: Page) {
   await page.goto("/ru/store")
+  // каталог дорисовывается после загрузки (у вошедшего — заметно позже)
+  await expect(page.locator('a[href*="/products/"]:visible').first()).toBeVisible()
   const ссылки = await page
     .locator('a[href*="/products/"]:visible')
     .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 6))
@@ -132,4 +134,33 @@ export async function войтиПокупателем(
     { name: "_medusa_jwt", value: token, domain: адрес.hostname, path: "/", httpOnly: true, sameSite: "Strict", secure: адрес.protocol === "https:" },
   ])
   return { почта, ...кто }
+}
+
+/** Ключ склада есть — можно провести тестовый заказ до выдачи. */
+export const складДоступен = () => входДоступен() && Boolean(process.env.E2E_SKLAD)
+
+/**
+ * Тестовый заказ в кабинет покупателя, собранный, упакованный и выданный —
+ * через API склада (тестовый режим, в службу не уходит, денег нет).
+ * Возвращает id заказа и его номер.
+ */
+export async function выданныйЗаказ(почта: string, kolichestva = [2, 1]) {
+  const с = { "X-Sklad-Key": process.env.E2E_SKLAD!, "Content-Type": "application/json" }
+  const зов = (путь: string, тело?: unknown, метод = "POST") =>
+    fetch(`${API}${путь}`, { method: метод, headers: с, body: тело ? JSON.stringify(тело) : undefined }).then((r) => r.json())
+
+  const { nomer } = await зов("/sklad/proba/zakaz", { kolichestva, pochta: почта })
+  const { zadaniya } = await зов("/sklad/zadaniya?test=1", undefined, "GET")
+  const з = zadaniya.find((x: any) => x.nomer === nomer)
+  await зов(`/sklad/zadaniya/${nomer}/sborka`, {
+    pozicii: з.pozicii.map((п: any, i: number) => ({
+      id_stroki: п.id_stroki,
+      kolichestvo: п.kolichestvo,
+      kody: Array.from({ length: п.kolichestvo }, (_, j) => `0104601234567890215e2e${nomer}${i}${j}\u001d93x`),
+    })),
+  })
+  await зов("/sklad/k-upakovke?test=1", undefined, "GET")
+  await зов(`/sklad/zadaniya/${nomer}/upakovano`)
+  await зов(`/sklad/proba/vydacha/${nomer}`)
+  return { id: з.id as string, nomer: String(nomer) }
 }
