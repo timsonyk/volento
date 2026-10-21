@@ -6,7 +6,8 @@
 # Настоящие заказы и остатки не трогает: артикулы выдуманные, заказы
 # тестовые (видны складу только с ?test=1), касса, банк и служба доставки
 # по ним не вызываются. Каждый прогон оставляет 5 тестовых заказов по 10 ₽
-# и шлёт 2 письма-тревоги «склад собрал не всё» на EMAIL_TREVOGA.
+# и шлёт 2 письма-тревоги «склад собрал не всё» на EMAIL_TREVOGA. Сценарии
+# примерки добавляют ещё 6 тестовых заказов; писем по ним нет.
 set -u
 B=${B:-http://127.0.0.1:9000}
 K=$(grep '^SKLAD_KEY=' /home/volento/volento/apps/backend/.env | cut -d= -f2-)
@@ -118,6 +119,52 @@ c=$(r POST /sklad/zadaniya/$N/sborka "{\"pozicii\":[{\"id_stroki\":\"$S1\",\"kol
 c=$(curl -s -o /tmp/sk.out -w "%{http_code}" -X POST "$B/admin/sklad/zakazy/$ID/otmena" -H "Authorization: Bearer $T"); check "админка: «Отменить заказ»" 200 "$c"
 curl -s "$B/admin/orders/$ID?fields=status,payment_collections.payments.refunds.amount" -H "Authorization: Bearer $T" | jq -c '{status: .order.status, vozvrat: [.order.payment_collections[].payments[].refunds[]?.amount]}'
 c=$(r GET "/sklad/k-upakovke?test=1"); check "отменённый не в к упаковке" 200 "$c" "[.k_upakovke[]|select(.nomer==\"$N\")]|length==0"
+
+echo "== Примерка: выдача в пункте"
+# заказ по строкам, собран с кодами и упакован; печатает номер и id
+upakovan() {
+  local n s c i j kody id0 pozicii="" sep=""
+  n=$(novyi "$1"); s=$(stroki "$n"); id0=$(idz "$n")
+  r POST /sklad/zadaniya/$n/vzyat >/dev/null
+  i=0
+  for id in $(jq -r '.[]' <<<"$s"); do
+    c=$(jq -r ".kolichestva[$i]" <<<"$1"); kody=""; for j in $(seq 1 $c); do kody="$kody${kody:+,}\"$(kod v$n$i$j)\""; done
+    pozicii="$pozicii$sep{\"id_stroki\":\"$id\",\"kolichestvo\":$c,\"kody\":[$kody]}"; sep=","; i=$((i+1))
+  done
+  r POST /sklad/zadaniya/$n/sborka "{\"pozicii\":[$pozicii]}" >/dev/null
+  r GET "/sklad/k-upakovke?test=1" >/dev/null
+  r POST /sklad/zadaniya/$n/upakovano >/dev/null
+  echo "$n $id0"
+}
+itog() { curl -s "$B/admin/orders/$1?fields=metadata,fulfillments.delivered_at,payment_collections.payments.refunds.amount" -H "Authorization: Bearer $T" > /tmp/sk.out; }
+
+N=$(novyi '{"kolichestva":[1]}')
+c=$(r POST /sklad/proba/vydacha/$N); check "выдача до упаковки 409" 409 "$c"
+read N ID <<<"$(upakovan '{"kolichestva":[2,1]}')"
+c=$(r POST /sklad/proba/vydacha/$N); check "забрали всё" 200 "$c" '.etap=="gotovo" and (.nevykupleno|length)==0 and (.vykupleno|map(.shtuk)|add)==3'
+itog $ID; check "сборка доставлена, денег не возвращали" 200 200 '[.order.fulfillments[].delivered_at]|all(.!=null) and ([.order.payment_collections[].payments[].refunds[]?.amount]|length)==0'
+c=$(r GET "/sklad/vozvraty?test=1"); check "возврата не ждём" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\")]|length==0"
+
+read N ID <<<"$(upakovan '{"kolichestva":[2,1]}')"
+c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[1,0]}'); check "забрали 1 из 3" 200 "$c" '.etap=="gotovo" and .vernuli==20 and (.vykupleno|map(.shtuk)|add)==1 and (.nevykupleno|map(.shtuk)|add)==2'
+EXP=$(jq -c '[.nevykupleno[].kody[]]' /tmp/sk.out)
+itog $ID; check "вернули 20 ₽, сборка доставлена" 200 200 '([.order.payment_collections[].payments[].refunds[]?.amount]|add)==20 and ([.order.fulfillments[].delivered_at]|all(.!=null))'
+c=$(r POST /sklad/proba/vydacha/$N); check "повтор выдачи — посылки уже нет" 409 "$c"
+c=$(r GET "/sklad/vozvraty?test=1"); check "ждём возврат 2 шт. с кодами" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\")]|length==1 and (.[0].pozicii|map(.kolichestvo)|add)==2 and (.[0].pozicii|map(.kody[])|length)==2"
+c=$(r GET "/sklad/vozvraty"); check "в обычном списке тестового нет" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\")]|length==0"
+c=$(r POST /sklad/zadaniya/$N/vozvrat '{}'); check "приём без kody 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$EXP}"); check "возврат принят, коды совпали" 200 "$c" '.sostoyanie=="vozvrat_prinyat" and .sovpalo==true'
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$EXP}"); check "повтор — uzhe_prinyat" 200 "$c" '.sostoyanie=="uzhe_prinyat"'
+c=$(r GET "/sklad/vozvraty?test=1"); check "принятый ушёл из списка" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\")]|length==0"
+
+read N ID <<<"$(upakovan '{"kolichestva":[2]}')"
+c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[1]}'); check "одинаковые пары: забрали одну" 200 "$c" '.vernuli==10'
+c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":[\"$(kod chuzhoy$N)\"]}"); check "вернулась не та пара — sovpalo false" 200 "$c" '.sovpalo==false and (.ne_zhdali|length)==1 and (.ne_prishli|length)==1'
+
+read N ID <<<"$(upakovan '{"kolichestva":[1,1]}')"
+c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[0,0]}'); check "не забрали ничего — вернули всё" 200 "$c" '.status=="returned" and .vernuli==20 and (.vykupleno|length)==0'
+itog $ID; check "сборка не доставлена" 200 200 '[.order.fulfillments[].delivered_at]|all(.==null)'
+c=$(r POST /sklad/zadaniya/999999/vozvrat '{"kody":[]}'); check "возврат по несуществующему 404" 404 "$c"
 
 echo "== Итог: $OK прошло, $BAD не прошло"
 rm -f /tmp/sk.out /tmp/sk.pdf
