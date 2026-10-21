@@ -33,6 +33,11 @@ const ApishipService: any = (плагин.default ?? плагин).services[0]
  *    неё: посылка важнее примерки. Тогда в сборке остаётся пометка
  *    primerka_oshibka, а склад зовёт человека (lib/sklad-sborka.ts).
  *
+ * 4. Без города не считаем. Оформление открывается до выбора города, и
+ *    Medusa сразу просит цену — ApiShip отвечал «ошибка валидации», а
+ *    каждый такой запрос шёл в счёт бесплатных расчётов. Ответ для
+ *    покупателя тот же: цена появится после выбора доставки.
+ *
  * И тестовые заказы склада (lib/sklad-test): в службу не ходим вовсе —
  * поддельный трек и наклейка, отмена тоже без ApiShip.
  */
@@ -120,6 +125,13 @@ class DostavkaApishipService extends ApishipService {
         data: { ...(итог?.data ?? {}), primerka: false, primerka_oshibka: String(ошибка?.message ?? ошибка).slice(0, 300) },
       }
     }
+  }
+
+  async calculatePrice(optionData: any, data: any, context: any) {
+    if (!String(context?.shipping_address?.city ?? "").trim()) {
+      throw new Error("Город не выбран — цену доставки посчитаем после выбора")
+    }
+    return super.calculatePrice(optionData, data, context)
   }
 
   async cancelFulfillment(data: any) {
