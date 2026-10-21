@@ -3,6 +3,8 @@ import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
+import { getBaseURL } from "@lib/util/env"
+import { описаниеДляПоиска, разметкаТовара } from "@lib/util/razmetka-tovara"
 import { HttpTypes } from "@medusajs/types"
 
 type Props = {
@@ -96,12 +98,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  // в выдаче описание вместо повтора названия; адрес без ?v_id —
+  // размер в адресе не делает страницу другой
+  const описание = описаниеДляПоиска(product)
   return {
     title: `${product.title} | Volento`,
-    description: `${product.title}`,
+    description: описание,
+    alternates: { canonical: `/${params.countryCode}/products/${handle}` },
     openGraph: {
       title: `${product.title} | Volento`,
-      description: `${product.title}`,
+      description: описание,
+      type: "website",
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }
@@ -134,12 +141,27 @@ export default async function ProductPage(props: Props) {
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
 
+  const разметка = разметкаТовара(
+    pricedProduct,
+    `${getBaseURL()}/${params.countryCode}/products/${params.handle}`
+  )
+
   return (
-    <ProductTemplate
-      product={pricedProduct}
-      region={region}
-      countryCode={params.countryCode}
-      images={images ?? []}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        // «<» экранируем: в названии или описании не должна закрыться
+        // сама разметка
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(разметка).replace(/</g, "\\u003c"),
+        }}
+      />
+      <ProductTemplate
+        product={pricedProduct}
+        region={region}
+        countryCode={params.countryCode}
+        images={images ?? []}
+      />
+    </>
   )
 }
