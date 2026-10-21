@@ -68,6 +68,18 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const минут = Math.round(ЖИВЁТ / 60000)
 
+  // Автотесты (e2e/): код вместо письма. Только для @example.com — чужую
+  // почту так не взять, — и только с ключом E2E_KLYUCH, который знает
+  // сервер. Ключ не задан — лазейки нет вовсе.
+  const ключТестов = process.env.E2E_KLYUCH
+  if (
+    ключТестов &&
+    почта.endsWith("@example.com") &&
+    String(req.headers["x-e2e-klyuch"] ?? "") === ключТестов
+  ) {
+    return res.json({ отправлено: true, живёт: минут, код })
+  }
+
   try {
     await notification.createNotifications({
       to: почта,

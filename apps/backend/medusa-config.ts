@@ -55,6 +55,13 @@ module.exports = defineConfig({
     redisUrl: process.env.REDIS_URL,
     workerMode: (process.env.WORKER_MODE as "shared" | "worker" | "server") || "shared",
     http: {
+      // Покупатель входит только по коду из письма — так почта всегда
+      // подтверждена. emailpass оставлен для админки; без этого списка
+      // через него можно было завести покупателя с чужой почтой.
+      authMethodsPerActor: {
+        user: ["emailpass"],
+        customer: ["kod"],
+      },
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,

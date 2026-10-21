@@ -2,6 +2,7 @@ import { authenticate, defineMiddlewares } from "@medusajs/framework/http"
 
 import { пускатьТолькоГотовые } from "../lib/pravilo-publikacii"
 import { пускатьСклад } from "../lib/sklad-dostup"
+import { корзинаВошедшего, оплатаВошедшего, сессияВошедшего } from "../lib/tolko-pokupatel"
 import { пометитьПередОформлением, пускатьТолькоВитрину } from "../lib/zamok-zakazov"
 
 /**
@@ -23,17 +24,18 @@ export default defineMiddlewares({
       // сервер витрины (см. lib/zamok-zakazov.ts).
       matcher: "/store/carts/:id/complete",
       method: "POST",
-      middlewares: [пускатьТолькоВитрину, пометитьПередОформлением],
+      middlewares: [пускатьТолькоВитрину, корзинаВошедшего, пометитьПередОформлением],
     },
     {
       matcher: "/store/payment-collections/:id/payment-sessions",
       method: "POST",
-      middlewares: [пускатьТолькоВитрину],
+      middlewares: [пускатьТолькоВитрину, сессияВошедшего],
     },
     {
+      // Заказ — только от вошедшего покупателя (lib/tolko-pokupatel.ts)
       matcher: "/store/oplata/*",
       method: "POST",
-      middlewares: [пускатьТолькоВитрину],
+      middlewares: [пускатьТолькоВитрину, оплатаВошедшего],
     },
     {
       matcher: "/store/vhod/svyazat",
