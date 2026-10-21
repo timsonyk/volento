@@ -1,6 +1,7 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
+import { несобранныеЗаказы } from "../lib/sklad-ochered"
 import { ВЗЯТ, НЕХВАТКА } from "../lib/sklad-sborka"
 import { этоТест } from "../lib/sklad-test-metka"
 import { пробный } from "../lib/zamok-zakazov"
@@ -34,21 +35,14 @@ export default async function складМолчит(container: MedusaContainer)
   const порог = new Date(Date.now() - МОЛЧИТ_МИНУТ * 60_000)
 
   try {
-    const { data: заказы } = await query.graph({
-      entity: "order",
-      filters: { status: "pending" } as any,
-      fields: [
-        "id",
-        "display_id",
-        "created_at",
-        "metadata",
-        "items.variant_sku",
-        "items.quantity",
-        "fulfillments.id",
-        "fulfillments.canceled_at",
-      ],
-      pagination: { order: { created_at: "ASC" }, take: 200 },
-    })
+    const заказы = await несобранныеЗаказы(query, [
+      "id",
+      "display_id",
+      "created_at",
+      "metadata",
+      "items.variant_sku",
+      "items.quantity",
+    ])
 
     const брошенные = (заказы ?? []).filter((з: any) => {
       if (new Date(з.created_at) > порог) {
@@ -67,7 +61,7 @@ export default async function складМолчит(container: MedusaContainer)
       if (пробный(з) || этоТест(з)) {
         return false
       }
-      return (з.fulfillments ?? []).filter((с: any) => !с.canceled_at).length === 0
+      return true
     })
 
     for (const заказ of брошенные) {

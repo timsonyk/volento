@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 
 import { ВЗЯТ, НЕХВАТКА } from "../../../lib/sklad-sborka"
 import { наЧасти } from "../../../lib/sklad-pozicii"
+import { несобранныеЗаказы } from "../../../lib/sklad-ochered"
 import { этоТест } from "../../../lib/sklad-test-metka"
 import { пробный } from "../../../lib/zamok-zakazov"
 
@@ -65,29 +66,22 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   )
 
   try {
-    const { data: заказы } = await query.graph({
-      entity: "order",
-      filters: { status: "pending" },
-      fields: [
-        "id",
-        "display_id",
-        "created_at",
-        "email",
-        "metadata",
-        "items.id",
-        "items.variant_sku",
-        "items.title",
-        // Количество лежит не в строке заказа, а в её «подробностях»:
-        // в самой строке такого поля нет, и оно приходило пустым.
-        "items.detail.quantity",
-        "shipping_address.*",
-        "shipping_methods.name",
-        "shipping_methods.data",
-        "fulfillments.id",
-        "fulfillments.canceled_at",
-      ],
-      pagination: { order: { created_at: "ASC" }, take: сколько * 3 },
-    })
+    const заказы = await несобранныеЗаказы(query, [
+      "id",
+      "display_id",
+      "created_at",
+      "email",
+      "metadata",
+      "items.id",
+      "items.variant_sku",
+      "items.title",
+      // Количество лежит не в строке заказа, а в её «подробностях»:
+      // в самой строке такого поля нет, и оно приходило пустым.
+      "items.detail.quantity",
+      "shipping_address.*",
+      "shipping_methods.name",
+      "shipping_methods.data",
+    ])
 
     const задания = (заказы ?? [])
       .filter((з: any) => {
@@ -104,12 +98,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         if ((з.metadata ?? {})[НЕХВАТКА]) {
           return false
         }
-        // Отменённую сборку в счёт не берём: после неё заказ снова
-        // ждёт склада, и задание должно вернуться в список.
-        const живыеСборки = (з.fulfillments ?? []).filter(
-          (с: any) => !с.canceled_at
-        )
-        return живыеСборки.length === 0
+        return true
       })
       .slice(0, сколько)
       .map((з: any) => ({
