@@ -1,5 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 
+import { КОДЫ } from "../../lib/sklad-kody"
+import { допУслуги, кодыПоАртикулу, поПарам, type ДопУслуга } from "../../lib/primerka"
 import { ТЕСТ, тестоваяНаклейка } from "../../lib/sklad-test-metka"
 
 // Плагин отдаёт класс провайдера только внутри описания модуля, отдельным
@@ -24,10 +26,23 @@ const ApishipService: any = (плагин.default ?? плагин).services[0]
  *    Ставим настоящую цену вещей; страховка у Яндекса — 0,5% от неё.
  *    Сумма к оплате при получении (cost, codCost) остаётся нулём.
  *
+ * 3. Примерка и частичный выкуп (lib/primerka.ts). Каждая пара — своей
+ *    строкой со своим кодом «Честного знака», и служба отвечает по каждой,
+ *    взяли её или нет. Частичный выкуп заказываем у службы дополнительной
+ *    услугой. Если служба с ней заказ не приняла, отправляем ещё раз без
+ *    неё: посылка важнее примерки. Тогда в сборке остаётся пометка
+ *    primerka_oshibka, а склад зовёт человека (lib/sklad-sborka.ts).
+ *
  * И тестовые заказы склада (lib/sklad-test): в службу не ходим вовсе —
  * поддельный трек и наклейка, отмена тоже без ApiShip.
  */
-const цены = new AsyncLocalStorage<Map<string, number>>()
+type Заявка = {
+  цены: Map<string, number>
+  коды: Map<string, string[]>
+  услуги: ДопУслуга[]
+}
+
+const заявка = new AsyncLocalStorage<Заявка>()
 
 class DostavkaApishipService extends ApishipService {
   static identifier = ApishipService.identifier
@@ -76,9 +91,35 @@ class DostavkaApishipService extends ApishipService {
       }
     }
 
-    return цены.run(поАртикулу, () =>
-      super.createFulfillment(data, items, заказ, fulfillment)
+    const коды = кодыПоАртикулу(
+      заказ?.items ?? [],
+      (order?.metadata ?? {})[КОДЫ] ?? {},
+      собрано.size ? new Set(собрано.keys()) : undefined
     )
+    const выбор = data?.apishipData
+    const услуги = допУслуги(выбор?.tariff?.providerKey, выбор?.point)
+    const отправить = (с: ДопУслуга[]) =>
+      заявка.run({ цены: поАртикулу, коды, услуги: с }, () =>
+        super.createFulfillment(data, items, заказ, fulfillment)
+      )
+
+    if (!услуги.length) {
+      return отправить([])
+    }
+
+    try {
+      const итог = await отправить(услуги)
+      return { ...итог, data: { ...(итог?.data ?? {}), primerka: true } }
+    } catch (ошибка: any) {
+      this.logger_?.warn?.(
+        `ApiShip не принял заказ ${order?.display_id} с частичным выкупом (${ошибка?.message}), отправляем без него`
+      )
+      const итог = await отправить([])
+      return {
+        ...итог,
+        data: { ...(итог?.data ?? {}), primerka: false, primerka_oshibka: String(ошибка?.message ?? ошибка).slice(0, 300) },
+      }
+    }
   }
 
   async cancelFulfillment(data: any) {
@@ -89,22 +130,28 @@ class DostavkaApishipService extends ApishipService {
   }
 
   async callApishipApi_(имя: string, запрос: any, вызов: () => Promise<any>) {
-    const поАртикулу = цены.getStore()
+    const наша = заявка.getStore()
 
     // Запрос и вызов держат один и тот же объект — правка уходит в ApiShip
-    if (имя === "ordersApi.addOrder" && поАртикулу?.size && запрос?.orderRequest) {
-      const заявка = запрос.orderRequest
+    if (имя === "ordersApi.addOrder" && наша && запрос?.orderRequest) {
+      const з = запрос.orderRequest
       let всего = 0
 
-      for (const место of заявка.places ?? []) {
-        for (const п of место.items ?? []) {
-          const цена = поАртикулу.get(п.articul) ?? 0
-          п.assessedCost = цена
-          всего += цена * Number(п.quantity ?? 0)
+      for (const место of з.places ?? []) {
+        место.items = поПарам(место.items ?? [], наша.коды)
+        for (const п of место.items) {
+          if (наша.цены.size) {
+            п.assessedCost = наша.цены.get(п.articul) ?? 0
+          }
+          всего += Number(п.assessedCost ?? 0) * Number(п.quantity ?? 0)
         }
       }
 
-      заявка.cost = { ...(заявка.cost ?? {}), assessedCost: всего }
+      if (наша.цены.size) {
+        з.cost = { ...(з.cost ?? {}), assessedCost: всего }
+      }
+      // правим на месте, без новых объектов: вызов держит этот же запрос
+      з.extraParams = наша.услуги.length ? наша.услуги : undefined
     }
 
     return super.callApishipApi_(имя, запрос, вызов)
