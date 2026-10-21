@@ -2,6 +2,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 import { позвать } from "./trevoga"
+import { видимаяЧасть, отраслевойРеквизит, проверитьКоды, режимПроверки, type ИтогПроверки } from "./chz"
 
 /**
  * Чеки через кассу Атол Онлайн (API v5, ФФД 1.2).
@@ -24,6 +25,11 @@ import { позвать } from "./trevoga"
  *
  * Чеки бьём только по деньгам, пришедшим через Точку. Тестовые заказы
  * склада оплачены «системным» способом — по ним касса молчит.
+ *
+ * Коды в «полном расчёте» перед отправкой проверяются в «Честном знаке»
+ * (разрешительный режим). Кто проверяет — мы сами или Атол через ТС ПИоТ,
+ * — решает переключатель в lib/chz.ts; применяется он в момент отправки,
+ * поэтому переключение подхватят и чеки, которые ещё ждут в очереди.
  */
 
 export const ЧЕКИ = "kassa_cheki"
@@ -47,6 +53,12 @@ export type Чек = {
   ssylka?: string
   popytok: number
   sozdan: string
+  // проверка кодов в ЧЗ: коды без криптохвоста, чтобы не хранить их дважды
+  proverka?: {
+    kogda: string
+    avariya?: boolean
+    kody?: { vidimyy: string; reqId: string; reqTimestamp: number; zapret: string | null }[]
+  }
 }
 
 const настройки = () => ({
@@ -62,10 +74,6 @@ const настройки = () => ({
   // в предоплате ставка расчётная: 5/105
   ндсПредоплаты: process.env.ATOL_VAT_PREPAYMENT || "vat105",
   почта: process.env.ATOL_EMAIL || "none",
-  // Проверка кодов в «Честном знаке» перед чеком (ТС ПИоТ). Включать,
-  // когда к кассе в кабинете Атола подключат ТС ПИоТ: без него чек с
-  // этой отметкой не пробьётся.
-  пиот: process.env.ATOL_TSPIOT === "true",
 })
 
 export const кассаВключена = () => {
@@ -222,7 +230,6 @@ function чекДляАтола(
   return {
     timestamp: сейчас(),
     external_id: id,
-    ...(н.пиот ? { use_tspiot: true, permissive_mode: true } : {}),
     receipt: {
       client: заказ.email
         ? { email: заказ.email }
@@ -525,12 +532,136 @@ async function провал(scope: MedusaContainer, заказ: { id: string; di
   })
 }
 
+// ---------- коды и «Честный знак» ----------
+
+type Позиция = Record<string, any>
+
+const позиции = (тело: Record<string, any>): Позиция[] => тело?.receipt?.items ?? []
+
+const кодПозиции = (п: Позиция): string | null =>
+  п.mark_code?.gs1m ? Buffer.from(п.mark_code.gs1m, "base64").toString("utf8") : null
+
+/** В чеке есть коды, а факта проверки при них ещё нет. */
+const нужнаПроверка = (тело: Record<string, any>) =>
+  позиции(тело).some((п) => кодПозиции(п) && !п.sectoral_item_props?.length)
+
+/** Тело с фактом и временем проверки при каждом коде (тег 1260). */
+export function телоСПроверкой(тело: Record<string, any>, итог: ИтогПроверки): Record<string, any> {
+  if (итог.вид !== "можно") {
+    return тело
+  }
+  const поКоду = new Map(итог.коды.map((к) => [к.код, к]))
+
+  return {
+    ...тело,
+    receipt: {
+      ...тело.receipt,
+      items: позиции(тело).map((п) => {
+        const к = поКоду.get(кодПозиции(п) ?? "")
+        return к ? { ...п, sectoral_item_props: [отраслевойРеквизит(к.reqId, к.reqTimestamp)] } : п
+      }),
+    },
+  }
+}
+
+const сводка = (итог: ИтогПроверки): Чек["proverka"] => ({
+  kogda: new Date().toISOString(),
+  ...(итог.вид === "авария" ? { avariya: true } : {}),
+  ...("коды" in итог
+    ? {
+        kody: итог.коды.map((к) => ({
+          vidimyy: к.видимый,
+          reqId: к.reqId,
+          reqTimestamp: к.reqTimestamp,
+          zapret: к.запрет,
+        })),
+      }
+    : {}),
+})
+
+/**
+ * Флаги ТС ПИоТ ставим по переключателю в момент отправки, а не при
+ * записи чека: так чеки из очереди уйдут уже по новой схеме.
+ */
+function дляОтправки(тело: Record<string, any>): Record<string, any> {
+  const итог = { ...тело }
+  delete итог.use_tspiot
+  delete итог.permissive_mode
+  return режимПроверки() === "tspiot" ? { ...итог, use_tspiot: true, permissive_mode: true } : итог
+}
+
+/**
+ * Проверка кодов нашими силами (режим chz). true — можно отправлять
+ * (тело в заказе уже с реквизитом), false — нельзя или пока некуда.
+ */
+async function проверитьПередОтправкой(
+  scope: MedusaContainer,
+  idЗаказа: string,
+  чек: Чек
+): Promise<Record<string, any> | null> {
+  const logger = scope.resolve(ContainerRegistrationKeys.LOGGER)
+  const коды = позиции(чек.telo).map(кодПозиции).filter((к): к is string => Boolean(к))
+  const итог = await проверитьКоды(коды)
+
+  if (итог.вид === "недоступен") {
+    // сторож чеков спросит ещё раз через пять минут, через час позовёт
+    await отметить(scope, idЗаказа, чек.id, {
+      popytok: чек.popytok + 1,
+      oshibka: `Честный знак: ${итог.причина}`,
+    })
+    const текст = `Чек ${чек.id} ждёт проверки кодов в ЧЗ: ${итог.причина}`
+    итог.токен ? logger.error(текст) : logger.warn(текст)
+    return null
+  }
+
+  if (итог.вид === "нельзя") {
+    await отметить(scope, idЗаказа, чек.id, { proverka: сводка(итог) })
+    const причины = итог.коды
+      .filter((к) => к.запрет)
+      .map((к) => `${к.видимый} — ${к.запрет}`)
+      .join("; ")
+    logger.warn(`Чек ${чек.id}: ЧЗ запретил продажу: ${причины}`)
+    await провал(scope, { id: idЗаказа }, чек, `Честный знак запретил продажу: ${причины}`)
+    return null
+  }
+
+  if (итог.вид === "авария") {
+    // в аварийном режиме ЧЗ продаём без проверки, тег 1260 не заполняем
+    // (методические рекомендации, раздел 7)
+    logger.warn(`Чек ${чек.id}: в ЧЗ аварийный режим, бьём без проверки кодов`)
+  } else {
+    logger.info(
+      `Чек ${чек.id}: коды проверены в ЧЗ (${итог.коды.map((к) => видимаяЧасть(к.код)).join(", ")})`
+    )
+  }
+
+  const тело = телоСПроверкой(чек.telo, итог)
+  // запоминаем с реквизитом: если Атол сейчас не ответит, повтор уйдёт с
+  // этой же проверкой, а не с новой — вдруг первый чек всё-таки прошёл
+  await отметить(scope, idЗаказа, чек.id, { telo: тело, proverka: сводка(итог) })
+  return тело
+}
+
 export async function отправить(scope: MedusaContainer, idЗаказа: string, чек: Чек) {
   const logger = scope.resolve(ContainerRegistrationKeys.LOGGER)
   const номер = чек.id
+  let тело = чек.telo
+
+  if (
+    чек.operaciya === "sell" &&
+    режимПроверки() === "chz" &&
+    !чек.proverka?.avariya &&
+    нужнаПроверка(тело)
+  ) {
+    const проверенное = await проверитьПередОтправкой(scope, idЗаказа, чек)
+    if (!проверенное) {
+      return
+    }
+    тело = проверенное
+  }
 
   try {
-    const { http, д } = await атол(чек.operaciya, { ...чек.telo, timestamp: сейчас() })
+    const { http, д } = await атол(чек.operaciya, { ...дляОтправки(тело), timestamp: сейчас() })
     const код = д?.error?.code
 
     if (д?.uuid && !д.error) {
