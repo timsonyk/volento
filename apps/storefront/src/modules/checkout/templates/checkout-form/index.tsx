@@ -44,7 +44,7 @@ export default async function CheckoutForm({
       доставка={
         <Shipping cart={cart} availableShippingMethods={shippingMethods} />
       }
-      получатель={<Recipient cart={cart} />}
+      получатель={<Recipient cart={cart} customer={customer} />}
       оплата={
         <Payment cart={cart} availablePaymentMethods={paymentMethods} />
       }

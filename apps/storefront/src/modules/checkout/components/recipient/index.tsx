@@ -66,16 +66,33 @@ const проверить = (поля: Поля): Partial<Record<Ключ, string
   return о
 }
 
-const Recipient = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
+const Recipient = ({
+  cart,
+  customer,
+}: {
+  cart: HttpTypes.StoreCart | null
+  customer?: HttpTypes.StoreCustomer | null
+}) => {
   const адрес = cart?.shipping_address
   const заметки = (cart?.metadata ?? {}) as Record<string, string>
 
-  const [поля, setПоля] = useState<Поля>({
+  // Что уже записано в заказ
+  const вЗаказе: Поля = {
     фамилия: адрес?.last_name ?? "",
     имя: адрес?.first_name ?? "",
     почта: cart?.email ?? "",
     телефон: адрес?.phone ?? "",
     комментарий: заметки["комментарий"] ?? "",
+  }
+
+  // Пустое в заказе берём из кабинета: при входе человек уже назвал себя,
+  // второй раз вводить то же самое незачем.
+  const [поля, setПоля] = useState<Поля>({
+    ...вЗаказе,
+    фамилия: вЗаказе.фамилия || customer?.last_name || "",
+    имя: вЗаказе.имя || customer?.first_name || "",
+    почта: вЗаказе.почта || customer?.email || "",
+    телефон: вЗаказе.телефон || customer?.phone || "",
   })
 
   const [ушли, setУшли] = useState<Partial<Record<Ключ, boolean>>>({})
@@ -87,8 +104,11 @@ const Recipient = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
   const всёЗаполнено = Object.keys(ошибки).length === 0
 
   useEffect(() => {
-    прошлое.current = JSON.stringify(поля)
-    // сравниваем только при первой отрисовке: дальше следим сами
+    // Подставленное из кабинета ещё не в заказе — записываем сразу, иначе
+    // следующий шаг откроется, а у посылки не будет получателя.
+    прошлое.current = JSON.stringify(вЗаказе)
+    сохранить()
+    // только при первой отрисовке: дальше следим сами
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

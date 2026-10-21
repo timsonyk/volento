@@ -27,7 +27,14 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
  */
 const ДЛИНА_КОДА = 6
 
-const Вход = () => {
+type Свойства = {
+  /** Заголовок первого шага; на оформлении заказа — свой */
+  заголовок?: string
+  /** Пояснение под заголовком первого шага */
+  пояснение?: string
+}
+
+const Вход = ({ заголовок = "Вход", пояснение }: Свойства = {}) => {
   const [шаг, setШаг] = useState<ШагВхода>({ шаг: "почта" })
   const [почта, setПочта] = useState("")
   const [код, setКод] = useState("")
@@ -98,9 +105,9 @@ const Вход = () => {
             начать(async () => принять(await запроситьКод(почта)))
           }}
         >
-          <h1 className="mb-2 text-3xl-regular text-ink">Вход</h1>
+          <h1 className="mb-2 text-3xl-regular text-ink">{заголовок}</h1>
           <p className="mb-7 text-sm leading-relaxed text-muted">
-            Введите почту — пришлём код из {ДЛИНА_КОДА} цифр.
+            {пояснение ?? `Введите почту — пришлём код из ${ДЛИНА_КОДА} цифр.`}
           </p>
 
           <Input

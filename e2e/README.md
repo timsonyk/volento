@@ -16,6 +16,13 @@ cd /root/nightsf/e2e               # или любая копия репозит
 npm i --no-audit --no-fund
 npx playwright test                # против витрины на 127.0.0.1:8000
 E2E_BASE=http://127.0.0.1:8100 npx playwright test   # против другой сборки
+
+# Сценарии вошедшего покупателя (оформление) входят без письма: сервер
+# отдаёт код для @example.com, если знает ключ автотестов. Без этих двух
+# переменных такие сценарии пропускаются.
+#   E2E_PK      — publishable key витрины (NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY)
+#   E2E_KLYUCH  — E2E_KLYUCH из apps/backend/.env
+#   E2E_API     — адрес бэкенда, по умолчанию http://127.0.0.1:9000
 npx playwright test --project=telefon
 ```
 

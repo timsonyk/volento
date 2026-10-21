@@ -83,3 +83,53 @@ export async function положитьВКорзину(page: Page) {
   }
   throw new Error("Ни у одного из первых товаров каталога нет размера в наличии")
 }
+
+const API = process.env.E2E_API || "http://127.0.0.1:9000"
+
+/** Можно ли войти покупателем: нужны ключ витрины и ключ автотестов сервера. */
+export const входДоступен = () => Boolean(process.env.E2E_PK && process.env.E2E_KLYUCH)
+
+/**
+ * Входит покупателем с новой почтой @example.com, без письма: сервер с
+ * ключом E2E_KLYUCH отдаёт код в ответе (backend/src/api/store/vhod).
+ * Кука ставится в браузер — дальше витрина видит вошедшего.
+ */
+export async function войтиПокупателем(
+  page: Page,
+  кто = { имя: "Анна", фамилия: "Тестова", телефон: "+7 900 000-00-00" }
+) {
+  const почта = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`
+  const pk = { "x-publishable-api-key": process.env.E2E_PK!, "Content-Type": "application/json" }
+
+  const выдан = await fetch(`${API}/store/vhod`, {
+    method: "POST",
+    headers: { ...pk, "x-e2e-klyuch": process.env.E2E_KLYUCH! },
+    body: JSON.stringify({ email: почта }),
+  }).then((r) => r.json())
+  if (!выдан.код) throw new Error(`Код не выдан: ${JSON.stringify(выдан)}`)
+
+  const { token: личность } = await fetch(`${API}/auth/customer/kod`, {
+    method: "POST",
+    headers: pk,
+    body: JSON.stringify({ email: почта, code: выдан.код }),
+  }).then((r) => r.json())
+  if (!личность) throw new Error("Вход по коду не выдал ключ")
+
+  const заведён = await fetch(`${API}/store/customers`, {
+    method: "POST",
+    headers: { ...pk, authorization: `Bearer ${личность}` },
+    body: JSON.stringify({ email: почта, first_name: кто.имя, last_name: кто.фамилия, phone: кто.телефон }),
+  })
+  if (!заведён.ok) throw new Error(`Покупатель не заведён: ${заведён.status}`)
+
+  const { token } = await fetch(`${API}/auth/token/refresh`, {
+    method: "POST",
+    headers: { ...pk, authorization: `Bearer ${личность}` },
+  }).then((r) => r.json())
+
+  const адрес = new URL(process.env.E2E_BASE || "http://127.0.0.1:8000")
+  await page.context().addCookies([
+    { name: "_medusa_jwt", value: token, domain: адрес.hostname, path: "/", httpOnly: true, sameSite: "Strict", secure: адрес.protocol === "https:" },
+  ])
+  return { почта, ...кто }
+}
