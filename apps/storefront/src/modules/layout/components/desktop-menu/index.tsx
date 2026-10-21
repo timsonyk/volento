@@ -52,6 +52,10 @@ export default function DesktopMenu({
   снимок?: string
 }) {
   const [открыт, setОткрыт] = useState(false)
+  // Снимок в панели вставляем, только когда панель хоть раз открыли.
+  // Скрытая панель лежит на странице прозрачной, и браузер считал снимок
+  // видимым: каждая страница на компьютере тянула лишний мегабайт.
+  const [былОткрыт, setБылОткрыт] = useState(false)
   const таймер = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const открыть = () => {
@@ -60,6 +64,7 @@ export default function DesktopMenu({
       таймер.current = null
     }
     setОткрыт(true)
+    setБылОткрыт(true)
   }
 
   const закрыть = () => {
@@ -136,7 +141,7 @@ export default function DesktopMenu({
             </div>
           ))}
 
-          {снимок && (
+          {снимок && былОткрыт && (
             <LocalizedClientLink
               href="/store"
               onClick={() => setОткрыт(false)}
