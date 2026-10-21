@@ -1,4 +1,4 @@
-import Image from "next/image"
+import { getImageProps } from "next/image"
 
 import { getHomeContent } from "@lib/data/home-banner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -26,30 +26,23 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
   const вертикальная = картинка("верх_телефон") ?? FALLBACK
   const широкая = картинка("верх_компьютер") ?? вертикальная
 
+  // Одна картинка с двумя источниками: браузер сам берёт нужный по ширине
+  // окна. Раньше было две <Image priority>, одна из них скрыта — и обе
+  // грузились первыми: телефон тянул широкий баннер на 1,7 МБ впустую.
+  const общие = { alt: ПОДПИСЬ, fill: true, priority: true, sizes: "100vw" }
+  const {
+    props: { srcSet: широкийНабор },
+  } = getImageProps({ ...общие, src: широкая })
+  const { props: телефон } = getImageProps({ ...общие, src: вертикальная })
+
   return (
     <section className="relative w-full">
-      {/* Телефон: одна вертикальная 4:5 */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-mist xsmall:hidden">
-        <Image
-          src={вертикальная}
-          alt={ПОДПИСЬ}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
-      </div>
-
-      {/* Планшет и компьютер: широкая 8:5 */}
-      <div className="relative hidden aspect-[8/5] w-full overflow-hidden bg-mist xsmall:block">
-        <Image
-          src={широкая}
-          alt={ПОДПИСЬ}
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+      {/* Телефон: вертикальная 4:5; планшет и компьютер: широкая 8:5 */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-mist xsmall:aspect-[8/5]">
+        <picture>
+          <source media="(min-width: 512px)" srcSet={широкийНабор} sizes="100vw" />
+          <img {...телефон} alt={ПОДПИСЬ} className="object-cover object-center" />
+        </picture>
       </div>
 
       {/* Надпись поверх — по замерам референса белая, слева внизу */}
