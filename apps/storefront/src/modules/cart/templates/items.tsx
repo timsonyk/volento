@@ -29,7 +29,12 @@ const ItemsTemplate = async ({ cart }: ItemsTemplateProps) => {
             <Table.HeaderCell className="hidden small:table-cell">
               Цена
             </Table.HeaderCell>
-            <Table.HeaderCell className="text-right">Итого</Table.HeaderCell>
+            {/* на телефоне колонки «Итого» нет: сумма строки стоит под
+                названием, иначе таблица не влезала и кнопка «удалить»
+                уезжала за край экрана */}
+            <Table.HeaderCell className="hidden text-right small:table-cell">
+              Итого
+            </Table.HeaderCell>
             <Table.HeaderCell className="!pr-0"></Table.HeaderCell>
           </Table.Row>
         </Table.Header>

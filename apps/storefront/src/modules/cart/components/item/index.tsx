@@ -77,7 +77,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
 
   return (
     <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
+      <Table.Cell className="!pl-0 p-4 w-16 small:w-24">
         <LocalizedClientLink
           href={`/products/${item.product_handle}`}
           className={clx("flex", {
@@ -103,6 +103,11 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
           {item.product_title}
         </Text>
         <LineItemOptions variant={item.variant} data-testid="product-variant" />
+        {type === "full" && (
+          <div className="mt-1 small:hidden">
+            <LineItemPrice item={item} style="tight" currencyCode={currencyCode} />
+          </div>
+        )}
       </Table.Cell>
 
       {type === "full" && (
@@ -139,7 +144,12 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         </Table.Cell>
       )}
 
-      <Table.Cell className={clx({ "!pr-0": type === "preview" })}>
+      <Table.Cell
+        className={clx({
+          "!pr-0": type === "preview",
+          "hidden small:table-cell": type === "full",
+        })}
+      >
         <span
           className={clx("!pr-0", {
             "flex flex-col items-end h-full justify-center": type === "preview",
