@@ -1,7 +1,13 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 
-import { ДанныеПисьма, письмо, текстПисьма, темаПисьма } from "../lib/order-email"
+import {
+  ДанныеПисьма,
+  доставкаДляПисьма,
+  письмо,
+  текстПисьма,
+  темаПисьма,
+} from "../lib/order-email"
 
 /**
  * Письмо покупателю сразу после оформления заказа.
@@ -25,9 +31,15 @@ export default async function orderPlacedHandler({
       // Просим поля целиком, а не по одному: при перечислении по имени
       // часть из них приходила пустой — в письме были «undefined шт.»
       // и нули вместо сумм, хотя в заказе всё посчитано верно.
+      // Суммы — поимённо: в «*» вычисляемых итогов нет, в письме были бы
+      // нули (так же просит их касса, lib/kassa.ts)
       fields: [
         "*",
+        "total",
+        "item_total",
+        "shipping_total",
         "items.*",
+        "items.total",
         "shipping_address.*",
         "shipping_methods.*",
       ],
@@ -47,11 +59,7 @@ export default async function orderPlacedHandler({
       }).format(Number(сумма ?? 0))
 
     const адрес = заказ.shipping_address
-    const кусочкиАдреса = [
-      адрес?.postal_code,
-      адрес?.city,
-      адрес?.address_1,
-    ].filter(Boolean)
+    const доставка = доставкаДляПисьма(заказ as any)
 
     const данные: ДанныеПисьма = {
       номер: `№ ${заказ.display_id}`,
@@ -65,8 +73,8 @@ export default async function orderPlacedHandler({
       товары: деньги(заказ.item_total),
       доставка: деньги(заказ.shipping_total),
       итого: деньги(заказ.total),
-      способДоставки: (заказ.shipping_methods ?? [])[0]?.name,
-      адрес: кусочкиАдреса.length ? кусочкиАдреса.join(", ") : null,
+      способДоставки: доставка.способ,
+      адрес: доставка.адрес,
       ссылка: process.env.STOREFRONT_URL
         ? `${process.env.STOREFRONT_URL}/ru/order/${заказ.id}/confirmed`
         : null,
