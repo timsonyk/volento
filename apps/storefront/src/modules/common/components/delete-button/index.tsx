@@ -1,6 +1,7 @@
 import { deleteLineItem } from "@lib/data/cart"
 import { Spinner, Trash } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 /**
@@ -22,12 +23,17 @@ const DeleteButton = ({
   "data-testid"?: string
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
-    await deleteLineItem(id).catch((_err) => {
-      setIsDeleting(false)
-    })
+    await deleteLineItem(id)
+      // как и после «В корзину»: без этого строка иногда оставалась на
+      // месте до перезагрузки страницы
+      .then(() => router.refresh())
+      .catch((_err) => {
+        setIsDeleting(false)
+      })
   }
 
   return (

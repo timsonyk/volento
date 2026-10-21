@@ -13,6 +13,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { поЧеловечески } from "@lib/util/sklad"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 type ItemProps = {
@@ -37,6 +38,7 @@ const ПОТОЛОК = 10
 
 const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) => {
   const [updating, setUpdating] = useState(false)
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
   // Уже лежащее в корзине оставляем в списке, даже если остаток успел
@@ -62,6 +64,9 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
       lineId: item.id,
       quantity,
     })
+      // ответ на изменение иногда приносит корзину со старой суммой —
+      // перерисовываем страницу заново (как после «В корзину»)
+      .then(() => router.refresh())
       .catch((err: Error) => {
         setError(поЧеловечески(err.message, остаток))
       })
