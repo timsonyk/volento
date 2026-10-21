@@ -1,0 +1,13 @@
+{
+  "name": "@dtc/e2e",
+  "private": true,
+  "description": "Сценарии покупателя для витрины Volento (Playwright). Без заказов и оплат.",
+  "scripts": {
+    "test": "playwright test",
+    "test:telefon": "playwright test --project=telefon",
+    "test:kompyuter": "playwright test --project=kompyuter"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1"
+  }
+}
