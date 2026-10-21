@@ -41,7 +41,11 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
       `/store/product-categories`,
       {
         query: {
-          fields: "*category_children, *products",
+          // Товары раздела отсюда не берём: их приносит сетка каталога
+          // своим запросом. С *products ответ по «Брюкам» весил 2,1 МБ —
+          // больше, чем Next держит в кэше, и качался на каждый заход
+          fields:
+            "id, name, handle, description, *category_children, *parent_category, *parent_category.parent_category",
           handle,
         },
         next,
