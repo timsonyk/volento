@@ -15,6 +15,7 @@ import {
   срокТарифа,
   ценаСтрокой,
   ценаТарифа,
+  примерочная,
   useLatestRef,
 } from "./utils"
 
@@ -517,7 +518,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                   <span className="flex flex-col">
                     <span className="txt-medium text-ui-fg-base">{p.address}</span>
                     <span className="txt-small text-ui-fg-subtle">
-                      {[providersMap?.[String(p.providerKey ?? "")], p.name].filter(Boolean).join(" · ")}
+                      {[providersMap?.[String(p.providerKey ?? "")], p.name, примерочная(p)].filter(Boolean).join(" · ")}
                     </span>
                   </span>
                   {typeof от === "number" && (
@@ -560,6 +561,11 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
               </Text>
               <Text className="text-ui-fg-muted txt-medium">
                 {activePoint.address}
+              </Text>
+              <Text className="mt-2 txt-small text-ui-fg-subtle" data-testid="pvz-primerochnaya">
+                {примерочная(activePoint)}
+                {Number(activePoint.fittingRoom) === 1 &&
+                  " — можно примерить и забрать только то, что подошло"}
               </Text>
             </div>
 

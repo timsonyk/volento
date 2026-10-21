@@ -160,6 +160,7 @@ const ПОЛЯ_ПУНКТА = [
   "timetable",
   "lat",
   "lng",
+  "fittingRoom",
 ].join(",")
 
 /** Оставляет только пункты, которые можно поставить на карту. */
@@ -186,6 +187,21 @@ const пригодные = (points: Array<Record<string, any>>): ApishipPoint[] 
       },
     ]
   })
+
+/**
+ * Только пункты с примерочной: в них покупатель меряет и забирает то, что
+ * подошло, остальное едет назад (backend/src/lib/primerka.ts). Если у
+ * службы в городе таких нет вовсе, показываем все её пункты — иначе
+ * оттуда не купить совсем. Отбор по каждой службе отдельно.
+ */
+const сПримерочной = (points: ApishipPoint[]): ApishipPoint[] => {
+  const есть = new Set(
+    points.filter((p) => Number(p.fittingRoom) === 1).map((p) => String(p.providerKey ?? ""))
+  )
+  return points.filter(
+    (p) => !есть.has(String(p.providerKey ?? "")) || Number(p.fittingRoom) === 1
+  )
+}
 
 export const getPointAddresses = async (
   cartId: string,
@@ -221,7 +237,7 @@ export const getPointAddresses = async (
               // ключ свой на каждую порцию, иначе порции затрут друг друга,
               // и обязательно с отпечатком самих пунктов — иначе при смене
               // города вернутся точки прошлого
-              key: `apiship:points:${cartId}:${shippingOptionId}:${n}:${отпечаток(порция)}`,
+              key: `apiship:points:v2:${cartId}:${shippingOptionId}:${n}:${отпечаток(порция)}`,
               filter: `id=[${порция.join(",")}]`,
               // Без limit ручка отдаёт только пятьдесят пунктов, сколько
               // бы идов ни спросили: из 2203 московских пунктов на карту
@@ -237,7 +253,7 @@ export const getPointAddresses = async (
       )
     )
 
-    return { points: ответы.flatMap((о) => пригодные(о.points)) }
+    return { points: сПримерочной(ответы.flatMap((о) => пригодные(о.points))) }
   } catch (e) {
     console.error("ApiShip: не удалось получить пункты выдачи", e)
     return null

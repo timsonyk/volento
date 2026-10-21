@@ -2,7 +2,7 @@
 
 import { Heading, Text } from "@modules/common/components/ui"
 import { Chosen } from "./types"
-import { имяТарифа, срокТарифа, ценаСтрокой, ценаТарифа } from "./utils"
+import { имяТарифа, примерочная, срокТарифа, ценаСтрокой, ценаТарифа } from "./utils"
 
 type ApishipChosenProps = {
   chosen: Chosen
@@ -62,6 +62,7 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
               {chosen.point?.timetable && (
                 <Text className="text-ui-fg-muted">{chosen.point.timetable}</Text>
               )}
+              <Text className="text-ui-fg-muted">{примерочная(chosen.point)}</Text>
             </div>
             {chosen.point?.description && (
               <Text className="text-ui-fg-muted leading-none">{chosen.point.description}</Text>

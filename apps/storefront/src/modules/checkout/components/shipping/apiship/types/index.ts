@@ -48,6 +48,8 @@ export type ApishipPoint = {
   description?: string
   timetable?: string
   worktime?: Record<string, string>
+  /** 1 — есть примерочная: можно примерить и забрать только то, что подошло */
+  fittingRoom?: number
 } & Прочее
 
 /** Выбор покупателя: способ, тариф и, для доставки в ПВЗ, пункт. */

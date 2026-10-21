@@ -8,6 +8,13 @@ import { useEffect, useRef } from "react"
 // чистка названий, чтобы всё про тарифы лежало в одном месте.
 export * from "./tarify"
 
+/**
+ * Пометка пункта для покупателя. В пункте с примерочной можно примерить и
+ * забрать только то, что подошло, — за остальное вернём деньги.
+ */
+export const примерочная = (point?: { fittingRoom?: number } | null) =>
+  Number(point?.fittingRoom) === 1 ? "Есть примерочная" : "Без примерочной"
+
 export function useLatestRef<T>(value: T) {
   const ref = useRef(value)
   useEffect(() => {
