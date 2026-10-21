@@ -14,15 +14,12 @@ test.describe("оформление", () => {
     await expect(page.locator('[data-testid="recipient-email-input"]')).toBeVisible()
   })
 
-  test("неверная почта и телефон не проходят", async ({ page }) => {
+  test("получатель закрыт, пока не выбрана доставка; доставка не «0 ₽»", async ({ page }) => {
     await положитьВКорзину(page)
     await page.goto("/ru/checkout")
-    await page.locator('[data-testid="recipient-email-input"]').fill("ne-pochta")
-    await page.locator('[data-testid="recipient-phone-input"]').fill("123")
-    await page.locator('[data-testid="recipient-first-name-input"]').fill("Тест")
-    await page.keyboard.press("Tab")
-    // либо браузер не пустит дальше из-за type=email, либо наша проверка
-    // покажет ошибку — главное, что на оплату с такими данными не попасть
+    // шаги идут по порядку: город, доставка, получатель — третий под замком
+    await expect(page.locator('[data-testid="recipient-email-input"]')).toBeDisabled()
+    await expect(page.locator('[data-testid="cart-shipping"]')).toHaveText("после выбора доставки")
     await expect(page.locator('[data-testid="submit-order-button"]')).toHaveCount(0)
   })
 
