@@ -37,10 +37,11 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     ...(await getAuthHeaders()),
   }
 
-  const next = {
-    ...(await getCacheOptions("carts")),
-  }
-
+  // Корзину не кэшируем. С force-cache и сбросом по метке значок в шапке
+  // иногда оставался «0» сразу после «В корзину» (и сумма — после смены
+  // количества): Next отдавал запомненный ответ. Корзина у каждого своя и
+  // маленькая, лишний запрос к бэкенду дешевле покупателя, который нажал
+  // второй раз и получил две штуки.
   return await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
@@ -48,8 +49,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
         fields,
       },
       headers,
-      next,
-      cache: "force-cache",
+      cache: "no-store",
     })
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)
