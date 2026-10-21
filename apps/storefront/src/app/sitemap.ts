@@ -60,7 +60,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       }))
 
-    const { product_categories: разделы } = await listCategories({ limit: 200 })
+    // listCategories отдаёт сразу массив. Раньше здесь ждали объект
+    // { product_categories } — разделы молча выпадали из карты
+    const разделы = await listCategories({ limit: 200 })
     const рубрики: MetadataRoute.Sitemap = (разделы ?? []).map((р) => ({
       url: `${адрес}/${СТРАНА}/categories/${р.handle}`,
       lastModified: сейчас,
