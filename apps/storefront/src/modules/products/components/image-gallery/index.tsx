@@ -39,7 +39,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               priority={index <= 1}
               alt={`Фото товара ${index + 1}`}
               fill
-              sizes="(max-width: 1024px) 92vw, 55vw"
+              sizes="(max-width: 1024px) 92vw, 38vw"
               className="object-cover object-center"
             />
           </div>
