@@ -47,7 +47,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
             key={image.id}
             onClick={() => setОткрыт(index)}
             aria-label={`Увеличить фото ${index + 1}`}
-            className="relative block aspect-[2/3] w-[92vw] shrink-0 snap-start cursor-zoom-in overflow-hidden bg-mist small:h-[calc(100vh-8.5rem)] small:max-h-[1100px] small:w-auto"
+            className="relative block aspect-[2/3] w-[92vw] shrink-0 snap-start cursor-zoom-in overflow-hidden bg-mist small:h-[calc(100vh-12.5rem)] small:max-h-[1100px] small:w-auto"
           >
             <Image
               src={image.url!}

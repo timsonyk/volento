@@ -1,7 +1,7 @@
 import Image from "next/image"
 import { Suspense } from "react"
 
-import { listCategories } from "@lib/data/categories"
+import { естьТовары, listCategories } from "@lib/data/categories"
 import { getHomeContent } from "@lib/data/home-banner"
 import { getLocale } from "@lib/data/locale-actions"
 import { listLocales } from "@lib/data/locales"
@@ -32,7 +32,19 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
 
   // Разделы строятся из настоящего каталога: заведёте раздел в админке —
   // появится в меню сам, руками ничего править не нужно.
-  const верхние = (categories ?? []).filter((c) => !c.parent_category)
+  const всеРазделы = categories ?? []
+  // пустые разделы в меню не показываем (естьТовары)
+  const непустые = new Set(
+    (
+      await Promise.all(
+        всеРазделы.map(async (c) => {
+          const ids = [c.id, ...(c.category_children ?? []).map((д) => д.id)]
+          return (await естьТовары(ids)) ? c.id : null
+        })
+      )
+    ).filter(Boolean) as string[]
+  )
+  const верхние = всеРазделы.filter((c) => !c.parent_category && непустые.has(c.id))
 
   // Для меню каталога (шторка на телефоне и панель слева на компьютере)
   // раскладываем разделы на две группы.
@@ -58,8 +70,8 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
       имя: "Мужчинам",
       // если подразделов нет, ставим сам раздел — иначе подпись висела
       // бы над пустотой
-      разделы: (мужской?.category_children ?? []).length
-        ? (мужской?.category_children ?? []).map(вссылку)
+      разделы: (мужской?.category_children ?? []).filter((д) => непустые.has(д.id)).length
+        ? (мужской?.category_children ?? []).filter((д) => непустые.has(д.id)).map(вссылку)
         : мужской
           ? [вссылку(мужской)]
           : [],

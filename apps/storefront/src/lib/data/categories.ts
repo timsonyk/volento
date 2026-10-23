@@ -54,3 +54,25 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
     )
     .then(({ product_categories }) => product_categories[0])
 }
+
+/**
+ * Есть ли в разделе (вместе с подразделами) хоть один товар. Меню не
+ * показывает пустые разделы: «Мужские рубашки» заведены, а товаров в них
+ * пока нет — ссылка вела бы на пустую страницу (встреча 23 октября).
+ * Спрашиваем один товар без полей: ответ — только число.
+ */
+export const естьТовары = async (idsРаздела: string[]): Promise<boolean> => {
+  const next = {
+    ...(await getCacheOptions("products")),
+  }
+
+  return sdk.client
+    .fetch<{ count: number }>("/store/products", {
+      query: { category_id: idsРаздела, limit: 1, fields: "id" },
+      next,
+      cache: "force-cache",
+    })
+    .then(({ count }) => count > 0)
+    // не узнали — показываем: лишняя ссылка лучше пропавшего раздела
+    .catch(() => true)
+}

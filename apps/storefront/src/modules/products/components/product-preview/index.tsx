@@ -82,13 +82,15 @@ export default function ProductPreview({
           // без минимальной высоты: она оставляла дыру под короткими
           // названиями. Цены выравнивает mt-auto ниже — он прижимает
           // строку с ценой к низу карточки
-          className="mt-[11px] line-clamp-2 pl-[13px] text-sm leading-[1.2] text-ink xsmall:mt-2.5 xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]"
+          // От 1280 px карточек в каталоге шесть в ряд — подпись мельче и
+          // ближе к краю, иначе название занимало пол-карточки
+          className="mt-[11px] line-clamp-2 pl-[13px] text-sm leading-[1.2] text-ink xsmall:mt-2.5 xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4] medium:pl-3 medium:text-[15px] medium:leading-[1.35]"
           data-testid="product-title"
         >
           {stripColor(product.title, color)}
         </h3>
 
-        <div className="mt-auto flex items-center justify-between gap-x-3 pt-1 pl-[13px] text-sm leading-[1.2] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4]">
+        <div className="mt-auto flex items-center justify-between gap-x-3 pt-1 pl-[13px] text-sm leading-[1.2] xsmall:pl-[21px] xsmall:text-base xsmall:leading-[1.4] medium:pl-3 medium:text-[15px]">
           {cheapestPrice && (
             <div className="flex shrink-0 gap-x-2">
               <PreviewPrice price={cheapestPrice} />
