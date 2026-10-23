@@ -89,9 +89,10 @@ const ProductGrid = ({
   return (
     <>
       <ul
-        // Карточки мельче (встреча 23 октября): на компьютере в высоту
-        // помещается два ряда. 2 на телефоне, 4 на ноутбуке, 6 от 1280 px.
-        className="grid w-full grid-cols-2 gap-x-2 gap-y-7 small:grid-cols-4 small:gap-y-8 medium:grid-cols-6"
+        // Карточки мельче (встреча 23 октября): 2 на телефоне, 4 на
+        // ноутбуке, 5 от 1280 px — с широкими полями по бокам (поля задаёт
+        // страница каталога).
+        className="grid w-full grid-cols-2 gap-x-2 gap-y-7 small:grid-cols-4 small:gap-y-8 medium:grid-cols-5"
         data-testid="products-list"
       >
         {товары.map((p) => (

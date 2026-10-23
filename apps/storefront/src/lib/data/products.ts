@@ -19,6 +19,9 @@ const SYSTEM_TAG = "system"
 // «Проверка оплаты» за 10 ₽ до открытия магазина.
 const HIDDEN_TAG = "skryt"
 
+// Сколько товаров с этими метками бывает в одной порции, с запасом
+const ЗАПАС_НА_СКРЫТЫЕ = 3
+
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {
   options?: string[]
@@ -83,7 +86,11 @@ export const listProducts = async ({
       {
         method: "GET",
         query: {
-          limit,
+          // Служебные и скрытые товары отсеиваются уже после ответа (ниже) —
+          // просим на пару больше, чтобы порция осталась полной. Иначе на
+          // странице, куда попадала «Проверка оплаты», карточек было 23 из
+          // 24 и последний ряд выглядел так, будто одна не показалась.
+          limit: queryParams?.handle ? limit : limit + ЗАПАС_НА_СКРЫТЫЕ,
           offset,
           region_id: region?.id,
           fields:
@@ -115,7 +122,7 @@ export const listProducts = async ({
 
       return {
         response: {
-          products: visible,
+          products: queryParams?.handle ? visible : visible.slice(0, limit),
           count: count - hidden,
         },
         nextPage: nextPage,

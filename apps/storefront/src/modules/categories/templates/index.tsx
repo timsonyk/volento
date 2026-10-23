@@ -56,7 +56,9 @@ export default async function CategoryTemplate({
   ])
 
   return (
-    <div className="content-container pt-6 pb-12" data-testid="category-container">
+    // Поля по бокам шире: от 1280 px в ряду пять карточек того же размера,
+    // что были при шести, а место шестой ушло в поля (встреча 23 октября)
+    <div className="content-container pt-6 pb-12 medium:px-[calc(56px+8vw)]" data-testid="category-container">
       <div>
         <div className="mb-4 flex flex-row items-baseline justify-center gap-4 text-base">
           {parents &&

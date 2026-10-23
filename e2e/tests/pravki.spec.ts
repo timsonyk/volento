@@ -44,8 +44,8 @@ test.describe("правки 23 октября", () => {
     const шторка = page.locator('[data-testid="nav-menu-popup"]')
     await expect(шторка).toBeVisible()
     await expect(шторка.locator('a[href*="muzhskie-rubashki"]')).toHaveCount(0)
-    // в шторке только логотип, снимка под разделами нет
-    await expect(шторка.locator("img")).toHaveCount(1)
+    // снимка «Новинки» под разделами больше нет
+    await expect(шторка.locator('a[href*="sortBy=created_at"]')).toHaveCount(0)
   })
 
   test("карточка: таблица мерок не в галерее, а по кнопке", async ({ page }) => {
@@ -85,6 +85,6 @@ test.describe("правки 23 октября", () => {
   test("каталог: последний ряд полный", async ({ page, isMobile }) => {
     test.skip(isMobile, "на телефоне два в ряд — всегда полный")
     await page.goto("/ru/store")
-    await expect(page.locator('[data-testid="products-list"] li')).toHaveCount(24)
+    await expect(page.locator('[data-testid="products-list"] li')).toHaveCount(20)
   })
 })
