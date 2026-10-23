@@ -5,7 +5,10 @@ import { OptionValueIds } from "@lib/util/product-option-filters"
 import ProductGrid from "@modules/store/components/product-grid"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
-const PRODUCT_LIMIT = 12
+// Порция делится на число карточек в ряду — 2, 4 и 6, — поэтому
+// последний ряд всегда полный. При 12 и пяти-шести в ряду в конце
+// оставалась одна-две карточки, и казалось, что часть не показалась.
+const PRODUCT_LIMIT = 24
 
 type PaginatedProductsParams = {
   limit: number
@@ -47,7 +50,7 @@ export default async function PaginatedProducts({
   }
 
   const queryParams: PaginatedProductsParams = {
-    limit: 12,
+    limit: PRODUCT_LIMIT,
   }
 
   if (collectionId) {

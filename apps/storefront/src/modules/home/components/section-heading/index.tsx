@@ -1,12 +1,14 @@
 /**
  * Заголовок блока на главной и надпись на баннере — одного размера и
- * одного шрифта: 28 px на телефоне, 36 px от планшета.
+ * одного шрифта: 30 px на телефоне, 40 px на планшете, 52 px на
+ * компьютере. Крупнее и плотнее, как «Bestsellers» у референса —
+ * попросили на встрече 23 октября.
  * Насыщенность зависит от шрифта: у Lora и Jost начертания настоящие,
  * у Tenor Sans одно-единственное — с ним font-light ничего не меняет.
  * Стиль в одном месте, чтобы менять его везде разом.
  */
 export const РАЗМЕР_ЗАГОЛОВКА =
-  "font-display text-[28px] font-light leading-[1.15] xsmall:text-[36px]"
+  "font-display text-[30px] font-normal leading-[1.1] xsmall:text-[40px] small:text-[52px]"
 
 export default function SectionHeading({
   children,

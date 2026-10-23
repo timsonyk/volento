@@ -30,28 +30,12 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
 
   const акция = оформление.акцияПоказывать ? оформление.акцияТекст : undefined
 
-  // Колонка на каждый раздел верхнего уровня, внутри — его подразделы.
-  // Список строится из настоящего каталога: заведёте раздел в админке —
-  // появится здесь сам, руками ничего править не нужно.
-  //
-  // У раздела без подразделов колонка не пустует: ставим в неё ссылку на
-  // сам раздел, иначе получался бы заголовок над пустотой.
-  //
-  // Справочные страницы — отдельной колонкой. Юридических тут нет
-  // намеренно: они открываются, только когда в админке заполнены
-  // реквизиты, и до тех пор ссылка вела бы в ошибку.
+  // Разделы строятся из настоящего каталога: заведёте раздел в админке —
+  // появится в меню сам, руками ничего править не нужно.
   const верхние = (categories ?? []).filter((c) => !c.parent_category)
 
-  const дерево = верхние.map((c) => ({
-    имя: c.name,
-    адрес: `/categories/${c.handle}`,
-    дети: (c.category_children ?? []).map((d) => ({
-      имя: d.name,
-      адрес: `/categories/${d.handle}`,
-    })),
-  }))
-
-  // Для шторки на телефоне раскладываем то же дерево на две группы.
+  // Для меню каталога (шторка на телефоне и панель слева на компьютере)
+  // раскладываем разделы на две группы.
   // Пол — не пункт меню, а подпись над списком: обе группы всегда
   // раскрыты, нажимать на «Женщинам» и «Мужчинам» нельзя.
   //
@@ -82,49 +66,14 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
     },
   ].filter((г) => г.разделы.length > 0)
 
-  const вколонку = (c: {
-    name: string
-    handle: string
-    category_children?: { name: string; handle: string }[] | null
-  }) => {
-    const дети = (c.category_children ?? []).map((d) => ({
-      имя: d.name,
-      адрес: `/categories/${d.handle}`,
-    }))
-    return {
-      заголовок: c.name,
-      адрес: `/categories/${c.handle}`,
-      ссылки: дети.length
-        ? [...дети, { имя: "Все", адрес: `/categories/${c.handle}` }]
-        : [{ имя: "Смотреть всё", адрес: `/categories/${c.handle}` }],
-    }
-  }
-
-  // На компьютере та же раскладка, что в шторке на телефоне: два
-  // именованных блока. Без подписи над колонками «Брюки» встречались
-  // дважды подряд, и было непонятно, чем они отличаются.
-  const группыКолонок = [
-    {
-      имя: "Женщинам",
-      колонки: верхние.filter((c) => c.handle !== МУЖСКОЙ).map(вколонку),
-    },
-    {
-      имя: "Мужчинам",
-      колонки: (мужской?.category_children ?? []).length
-        ? (мужской?.category_children ?? []).map(вколонку)
-        : мужской
-          ? [вколонку(мужской)]
-          : [],
-    },
-  ].filter((г) => г.колонки.length > 0)
-
   return (
     <div className="sticky inset-x-0 top-0 z-50">
       {/* полоса с акцией: текст и выключатель — в админке */}
       {акция && <PromoBar текст={акция} />}
 
       <header className="relative border-b border-rule bg-paper">
-        <nav className="content-container flex h-[3.2rem] w-full items-center justify-between small:h-[4.8rem]">
+        {/* Шапка выше и логотип крупнее — попросили на встрече 23 октября */}
+        <nav className="content-container flex h-[3.4rem] w-full items-center justify-between small:h-[5.4rem]">
           {/* слева: разделы. Шторка — только на телефоне, на компьютере
               вместо неё ряд разделов с раскрывающейся панелью.
               Поиск на телефоне остался слева, у шторки, а на компьютере
@@ -136,7 +85,6 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 locales={locales}
                 currentLocale={currentLocale}
                 группы={группы}
-                снимок={оформление.картинка("середина")}
                 юридические={!!оформление.реквизиты}
               />
             </div>
@@ -151,8 +99,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
                 { имя: "Новинки", адрес: "/store?sortBy=created_at" },
                 { имя: "Скидки", адрес: "/collections/skidki" },
               ]}
-              группы={группыКолонок}
-              снимок={оформление.картинка("середина")}
+              группы={группы}
             />
           </div>
 
@@ -169,7 +116,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               width={2691}
               height={632}
               priority
-              className="h-[36px] w-auto small:h-[52px]"
+              className="h-[40px] w-auto small:h-[62px]"
             />
           </LocalizedClientLink>
 

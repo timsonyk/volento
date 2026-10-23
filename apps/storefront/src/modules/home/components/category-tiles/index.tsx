@@ -6,14 +6,26 @@ import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 /**
- * Плитки разделов с подписями под ними. По замерам референса: на телефоне
- * это листалка — одна плитка на 88 % ширины и краешек следующей, зазор
- * 16 px; на компьютере три в ряд встык, без полей. Кадр 2:3.
+ * Плитки разделов с подписью над фотографией. На телефоне это листалка —
+ * одна плитка на 88 % ширины и краешек следующей, зазор 16 px; на
+ * компьютере четыре в ряд встык, без полей. Кадр 2:3.
+ *
+ * Разделы выбраны на встрече 23 октября: женские брюки, юбки, рубашки,
+ * мужские брюки — мужское с женским не смешиваем, блузок на главной нет
+ * (в каталоге они остаются). Подпись над фото, а не под: иначе, долистав
+ * до плиток, непонятно, что это уже разделы, а не товары. Подпись своя,
+ * а не из каталога: «Брюки» в каталоге — это женские брюки.
  *
  * Обложка берётся из записи «Оформление сайта» по ключу раздела. Если
  * своей картинки нет, показывается фотография товара из раздела — живая
  * вещь лучше заглушки. Раздел без обеих не показывается вовсе.
  */
+const ПЛИТКИ = [
+  { handle: "bryuki", подпись: "Женские брюки" },
+  { handle: "yubki", подпись: "Юбки" },
+  { handle: "rubashki", подпись: "Рубашки" },
+  { handle: "muzhskie-bryuki", подпись: "Мужские брюки" },
+]
 export default async function CategoryTiles({
   region,
   countryCode,
@@ -25,14 +37,18 @@ export default async function CategoryTiles({
     listCategories(),
     getHomeContent(countryCode),
   ])
-  const top = (categories ?? []).filter((c) => !c.parent_category)
+  const поАдресу = new Map((categories ?? []).map((c) => [c.handle, c]))
+  const выбранные = ПЛИТКИ.flatMap((п) => {
+    const c = поАдресу.get(п.handle)
+    return c ? [{ ...c, name: п.подпись }] : []
+  })
 
-  if (!top.length) {
+  if (!выбранные.length) {
     return null
   }
 
   const tiles = await Promise.all(
-    top.map(async (c) => {
+    выбранные.map(async (c) => {
       const своя = картинка(ключПлитки(c.handle))
       if (своя) {
         return { category: c, обложка: своя }
@@ -74,19 +90,19 @@ export default async function CategoryTiles({
               href={`/categories/${category.handle}`}
               className="group block"
             >
+              <span className="mb-3 block text-center text-xl text-ink xsmall:text-2xl small:mb-4">
+                {category.name}
+              </span>
               <div className="relative aspect-[2/3] w-full overflow-hidden bg-mist">
                 <Image
                   src={обложка!}
                   alt={category.name}
                   fill
-                  sizes="(max-width: 1024px) 88vw, 33vw"
+                  sizes="(max-width: 1024px) 88vw, 25vw"
                   quality={80}
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                 />
               </div>
-              <span className="mt-4 block text-center text-xl text-ink xsmall:text-2xl">
-                {category.name}
-              </span>
             </LocalizedClientLink>
           </li>
         ))}

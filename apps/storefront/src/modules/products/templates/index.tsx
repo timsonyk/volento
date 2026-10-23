@@ -18,6 +18,8 @@ type ProductTemplateProps = {
   region: HttpTypes.StoreRegion
   countryCode: string
   images: HttpTypes.StoreProductImage[]
+  /** таблица мерок отдельно от фотографий (lib/util/tablica-mer.ts) */
+  таблицы?: string[]
 }
 
 /**
@@ -32,15 +34,16 @@ type ProductTemplateProps = {
  * листаешь снимки. Раньше столбца было три (сведения слева, фото в
  * середине, кнопки справа) — читать приходилось зигзагом.
  *
- * Ширина фотографий по замерам референса — 38 % окна. Половина, как было
- * сначала, давала снимок почти в полтора экрана высотой: кадр 2:3 на
- * широком мониторе растёт быстрее, чем кажется.
+ * Ширина фотографий следует из высоты окна: снимок целиком помещается в
+ * экран (image-gallery). Раньше было 38 % ширины, и на широком мониторе
+ * кадр 2:3 выходил выше экрана.
  */
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
   product,
   region,
   countryCode,
   images,
+  таблицы = [],
 }) => {
   if (!product || !product.id) {
     return notFound()
@@ -56,10 +59,10 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       </Suspense>
       <Suspense
         fallback={
-          <ProductActions disabled={true} product={product} region={region} />
+          <ProductActions disabled={true} product={product} region={region} таблицы={таблицы} />
         }
       >
-        <ProductActionsWrapper id={product.id} region={region} />
+        <ProductActionsWrapper id={product.id} region={region} таблицы={таблицы} />
       </Suspense>
       <ProductTabs product={product} />
     </>
@@ -76,11 +79,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         </div>
 
         <div className="small:flex small:items-start small:gap-x-[7%] small:px-[50px] small:pb-16">
-          <div className="small:w-[38%] small:shrink-0">
+          <div className="small:shrink-0">
             <ImageGallery images={images} />
           </div>
 
-          <div className="flex flex-col gap-y-6 px-4 pb-12 pt-8 small:sticky small:top-24 small:max-w-[560px] small:flex-1 small:px-0 small:pt-0">
+          <div className="flex flex-col gap-y-6 px-4 pb-12 pt-8 small:sticky small:top-32 small:max-w-[560px] small:flex-1 small:px-0 small:pt-0">
             {сведения}
           </div>
         </div>

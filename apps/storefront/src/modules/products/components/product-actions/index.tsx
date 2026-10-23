@@ -4,6 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
+import ТаблицаРазмеров from "@modules/products/components/tablica-razmerov"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -15,6 +16,8 @@ type ProductActionsProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   disabled?: boolean
+  /** снимки таблицы мерок — кнопка «Таблица размеров» у выбора размера */
+  таблицы?: string[]
 }
 
 const optionsAsKeymap = (
@@ -29,6 +32,7 @@ const optionsAsKeymap = (
 export default function ProductActions({
   product,
   disabled,
+  таблицы,
 }: ProductActionsProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -261,6 +265,11 @@ export default function ProductActions({
                       )}
                       data-testid="product-options"
                       disabled={!!disabled || isAdding}
+                      рядом={
+                        (option.title ?? "").trim().toLowerCase() === "размер" ? (
+                          <ТаблицаРазмеров таблицы={таблицы ?? []} />
+                        ) : undefined
+                      }
                     />
                   </div>
                 )

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
+import { разделитьСнимки } from "@lib/util/tablica-mer"
 import { getBaseURL } from "@lib/util/env"
 import { описаниеДляПоиска, разметкаТовара } from "@lib/util/razmetka-tovara"
 import { HttpTypes } from "@medusajs/types"
@@ -140,6 +141,8 @@ export default async function ProductPage(props: Props) {
   }
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
+  // таблица мерок — не фотография: в галерее её нет, она по кнопке
+  const { фото, таблицы } = await разделитьСнимки(images ?? [])
 
   const разметка = разметкаТовара(
     pricedProduct,
@@ -160,7 +163,8 @@ export default async function ProductPage(props: Props) {
         product={pricedProduct}
         region={region}
         countryCode={params.countryCode}
-        images={images ?? []}
+        images={фото}
+        таблицы={таблицы}
       />
     </>
   )

@@ -27,8 +27,11 @@ export default async function Footer({
   return (
     <footer className="w-full bg-ink text-paper">
       <div className="content-container flex flex-col">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-12 py-16 small:grid-cols-12 small:gap-x-10 small:py-20">
-          <div className="col-span-2 small:col-span-5">
+        {/* Подвал ниже по высоте (встреча 23 октября): документы — своей
+            колонкой, а не хвостом «Покупателю», меньше воздуха сверху и
+            снизу. Расстояние между строками прежнее. */}
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-12 small:grid-cols-12 small:gap-x-10 small:py-14">
+          <div className="col-span-2 small:col-span-3">
             <p className="max-w-xs text-sm leading-relaxed text-paper/60">
               Женские классические брюки. Каждая модель — в нескольких ростах и
               размерах, чтобы длина подошла сразу.
@@ -36,7 +39,7 @@ export default async function Footer({
           </div>
 
           {topCategories.length > 0 && (
-            <nav className="small:col-span-3">
+            <nav className="small:col-span-2">
               <span className="label-type text-paper/50">Модели</span>
               <ul
                 className="mt-5 flex flex-col gap-y-3"
@@ -94,11 +97,16 @@ export default async function Footer({
                   </LocalizedClientLink>
                 </li>
               ))}
-              {/* Юридические страницы появляются, только когда в админке
-                  заполнены реквизиты продавца: до тех пор они отдают 404,
-                  и ссылка вела бы в ошибку. */}
-              {реквизиты && (
-                <>
+            </ul>
+          </nav>
+
+          {/* Юридические страницы появляются, только когда в админке
+              заполнены реквизиты продавца: до тех пор они отдают 404,
+              и ссылка вела бы в ошибку. */}
+          {реквизиты && (
+            <nav className="small:col-span-3">
+              <span className="label-type text-paper/50">Документы</span>
+              <ul className="mt-5 flex flex-col gap-y-3">
                   <li>
                     <LocalizedClientLink href="/politika" className={linkClass}>
                       Обработка данных
@@ -122,14 +130,13 @@ export default async function Footer({
                       Пользовательское соглашение
                     </LocalizedClientLink>
                   </li>
-                </>
-              )}
-            </ul>
-          </nav>
+              </ul>
+            </nav>
+          )}
         </div>
 
         {/* крупный логотип по центру, как на референсе */}
-        <div className="flex justify-center border-t border-paper/15 py-12">
+        <div className="flex justify-center border-t border-paper/15 py-8">
           <LocalizedClientLink href="/" aria-label="Volento — на главную">
             <Image
               src="/volento-logo.png"

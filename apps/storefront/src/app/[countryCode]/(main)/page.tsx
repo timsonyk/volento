@@ -2,7 +2,6 @@ import { Metadata } from "next"
 
 import CategoryTiles from "@modules/home/components/category-tiles"
 import ClosingBanner from "@modules/home/components/closing-banner"
-import FeatureBlock from "@modules/home/components/feature-block"
 import Hero from "@modules/home/components/hero"
 import LatestProducts from "@modules/home/components/latest-products"
 import Reveal from "@modules/common/components/reveal"
@@ -34,9 +33,10 @@ export default async function Home(props: {
       <Reveal>
         <CategoryTiles region={region} countryCode={countryCode} />
       </Reveal>
-      <Reveal>
-        <FeatureBlock region={region} countryCode={countryCode} />
-      </Reveal>
+      {/* Блок «квадратный баннер и карточки справа» убран: у референса
+          он показывает коллекцию, а коллекций у нас нет — непонятно, что
+          в нём держать (встреча 23 октября). Компонент feature-block
+          оставлен — вернуть одной строкой. */}
       <Reveal>
         <ClosingBanner countryCode={countryCode} />
       </Reveal>

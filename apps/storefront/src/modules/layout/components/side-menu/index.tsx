@@ -56,7 +56,6 @@ type SideMenuProps = {
   locales: Locale[] | null
   currentLocale: string | null
   группы?: ГруппаМеню[]
-  снимок?: string
   /** Заполнены ли реквизиты продавца: от этого зависят юридические ссылки. */
   юридические?: boolean
 }
@@ -66,7 +65,6 @@ const SideMenu = ({
   locales,
   currentLocale,
   группы,
-  снимок,
   юридические = false,
 }: SideMenuProps) => {
   const countryToggleState = useToggleState()
@@ -172,26 +170,8 @@ const SideMenu = ({
                           </div>
                         ))}
 
-                        {снимок && (
-                          <LocalizedClientLink
-                            href="/store?sortBy=created_at"
-                            onClick={закрыть}
-                            className="mt-8 block"
-                          >
-                            <div className="relative aspect-[4/3] w-full overflow-hidden bg-mist">
-                              <Image
-                                src={снимок}
-                                alt=""
-                                fill
-                                sizes="100vw"
-                                className="object-cover object-center"
-                              />
-                            </div>
-                            <span className="mt-5 block text-center text-base tracking-[0.1em] text-ink underline underline-offset-[6px]">
-                              Новинки
-                            </span>
-                          </LocalizedClientLink>
-                        )}
+                        {/* Фотографии под разделами больше нет: «при выборе
+                            категории она не нужна» (встреча 23 октября) */}
 
                         {/* без верхней линии: последняя строка каталога уже
                             закрыта своей border-b, две подряд читались как

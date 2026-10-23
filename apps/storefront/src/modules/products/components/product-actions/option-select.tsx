@@ -7,6 +7,8 @@ type OptionSelectProps = {
   current: string | undefined
   updateOption: (title: string, value: string) => void
   title: string
+  /** справа от подписи — например, «Таблица размеров» */
+  рядом?: React.ReactNode
   disabled: boolean
   /**
    * Значения, которых нет в наличии. Перечёркиваем, но нажимать
@@ -87,6 +89,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   "data-testid": dataTestId,
   disabled,
   нет,
+  рядом,
 }) => {
   // По возрастанию, а не в том порядке, в каком их вернула база: там
   // порядок зависит от того, когда значение последний раз правили, и
@@ -104,9 +107,12 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-sm text-muted">
-        {title}: <span className="text-ink">{current ?? "не выбран"}</span>
-      </span>
+      <div className="flex items-baseline justify-between gap-x-4">
+        <span className="text-sm text-muted">
+          {title}: <span className="text-ink">{current ?? "не выбран"}</span>
+        </span>
+        {рядом}
+      </div>
 
       {isHeight ? (
         <VerticalMeasure
