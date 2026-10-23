@@ -128,7 +128,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               width={2691}
               height={632}
               priority
-              className="h-[40px] w-auto small:h-[62px]"
+              className="h-[34px] w-auto small:h-[62px]"
             />
           </LocalizedClientLink>
 

@@ -40,7 +40,8 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
         return r.countries?.map((c) => ({
           country: c.iso_2 ?? "",
           region: r.id,
-          label: c.display_name ?? "",
+          // Medusa хранит названия стран по-английски
+          label: c.iso_2 ? new Intl.DisplayNames(["ru"], { type: "region" }).of(c.iso_2.toUpperCase()) ?? c.display_name ?? "" : c.display_name ?? "",
         }))
       })
       .flat()
