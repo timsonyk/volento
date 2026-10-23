@@ -2,7 +2,7 @@ import { deleteLineItem } from "@lib/data/cart"
 import { Spinner, Trash } from "@medusajs/icons"
 import { clx } from "@modules/common/components/ui"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 /**
  * Кнопка «удалить строку» в корзине.
@@ -24,6 +24,21 @@ const DeleteButton = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
+
+  // Строка удалена, а на экране осталась с крутящимся значком: свежую
+  // корзину перекрывала перерисовка, запущенная раньше (сменой
+  // количества), но пришедшая позже. Пока кнопка на экране и удаление
+  // идёт — ещё раз просим свежую корзину; удалённая строка исчезнет, и
+  // кнопка вместе с ней.
+  useEffect(() => {
+    if (!isDeleting) return
+    let раз = 0
+    const t = setInterval(() => {
+      if (++раз > 3) return clearInterval(t)
+      router.refresh()
+    }, 2500)
+    return () => clearInterval(t)
+  }, [isDeleting, router])
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
