@@ -13,6 +13,11 @@ import { РАЗМЕР_ЗАГОЛОВКА } from "@modules/home/components/sectio
  * второй нет, на компьютере обрезается первая. Обе вписываются с обрезкой
  * по центру — значимое держать в середине кадра.
  *
+ * На компьютере баннер ниже экрана (встреча 23 октября): под ним
+ * выглядывает лента «Новинки» — видно, что дальше есть товары. Кадр
+ * сдвинут чуть вниз от середины: люди на снимке стоят ниже центра, а
+ * должны оказаться посередине баннера.
+ *
  * Надпись поверх берётся оттуда же из метаданных, редактируется в админке.
  * Если её не задали, баннер показывается чистым.
  */
@@ -38,10 +43,10 @@ const Hero = async ({ countryCode }: { countryCode: string }) => {
   return (
     <section className="relative w-full">
       {/* Телефон: вертикальная 4:5; планшет и компьютер: широкая 8:5 */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-mist xsmall:aspect-[8/5]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-mist xsmall:aspect-[8/5] small:aspect-auto small:h-[calc(100vh-14rem)] small:min-h-[420px]">
         <picture>
           <source media="(min-width: 512px)" srcSet={широкийНабор} sizes="100vw" />
-          <img {...телефон} alt={ПОДПИСЬ} className="object-cover object-center" />
+          <img {...телефон} alt={ПОДПИСЬ} className="object-cover object-center small:object-[50%_74%]" />
         </picture>
       </div>
 
