@@ -27,9 +27,10 @@ export default async function Home(props: {
     <>
       {/* первый экран без появления: он виден сразу, анимировать нечего */}
       <Hero countryCode={countryCode} />
-      <Reveal>
-        <LatestProducts region={region} countryCode={countryCode} />
-      </Reveal>
+      {/* Новинки — тоже без появления: их край виден под баннером сразу
+          (баннер ниже экрана), а с появлением там была белая полоса,
+          пока не начнёшь листать */}
+      <LatestProducts region={region} countryCode={countryCode} />
       <Reveal>
         <CategoryTiles region={region} countryCode={countryCode} />
       </Reveal>

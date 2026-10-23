@@ -23,6 +23,9 @@ test.describe("корзина", () => {
     if (await количество.count()) {
       await количество.selectOption("2")
       await expect(page.locator('[data-testid="cart-subtotal"]')).not.toHaveText(итогДо)
+      // смена количества сохраняется и перерисовывает корзину — удаление,
+      // нажатое в ту же секунду, наползало на неё (человек так быстро не жмёт)
+      await page.waitForLoadState("networkidle")
     }
 
     await строка.locator('[data-testid="product-delete-button"]').click()
