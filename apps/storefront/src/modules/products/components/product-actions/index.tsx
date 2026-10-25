@@ -92,7 +92,11 @@ export default function ProductActions({
       params.delete("v_id")
     }
 
-    router.replace(pathname + "?" + params.toString())
+    // Только адрес в строке браузера, без похода на сервер: router.replace
+    // перерисовывал всю страницу и на телефоне бросал наверх при каждом
+    // выборе размера. Размеры одного цвета снимаются одинаково, так что
+    // перерисовывать галерею незачем.
+    window.history.replaceState(null, "", pathname + "?" + params.toString())
   }, [selectedVariant, isValidVariant])
 
   // check if the selected variant is in stock

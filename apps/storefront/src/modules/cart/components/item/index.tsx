@@ -76,8 +76,21 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
   }
 
   return (
-    <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-16 small:w-24">
+    // На телефоне строка — не таблица, а карточка: снимок слева, справа
+    // название, цена и под ними количество, «удалить» в углу. В таблице
+    // название сжималось в узкий столбик, а цена уезжала вправо.
+    <Table.Row
+      className={clx("w-full", {
+        "grid grid-cols-[4rem_1fr_auto] gap-x-4 py-4 small:table-row small:py-0":
+          type === "full",
+      })}
+      data-testid="product-row"
+    >
+      <Table.Cell
+        className={clx("!pl-0 p-4 w-16 small:w-24", {
+          "row-span-2 !p-0 small:!p-4 small:!pl-0": type === "full",
+        })}
+      >
         <LocalizedClientLink
           href={`/products/${item.product_handle}`}
           className={clx("flex", {
@@ -95,7 +108,11 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         </LocalizedClientLink>
       </Table.Cell>
 
-      <Table.Cell className="text-left">
+      <Table.Cell
+        className={clx("text-left", {
+          "col-start-2 !p-0 small:!p-4": type === "full",
+        })}
+      >
         <Text
           className="txt-medium-plus text-ui-fg-base"
           data-testid="product-title"
@@ -104,14 +121,14 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         </Text>
         <LineItemOptions variant={item.variant} data-testid="product-variant" />
         {type === "full" && (
-          <div className="mt-1 small:hidden">
+          <div className="mt-1 small:hidden [&>div]:items-start">
             <LineItemPrice item={item} style="tight" currencyCode={currencyCode} />
           </div>
         )}
       </Table.Cell>
 
       {type === "full" && (
-        <Table.Cell>
+        <Table.Cell className="col-start-2 row-start-2 !p-0 !pt-3 small:!p-4">
           <div className="flex gap-2 items-center w-28">
             <CartItemSelect
               value={item.quantity}
@@ -175,7 +192,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
 
       {/* Удалить — с самого края строки, чтобы не задеть рядом с количеством */}
       {type === "full" && (
-        <Table.Cell className="!pr-0 w-8">
+        <Table.Cell className="col-start-3 row-start-1 self-start !p-0 small:!p-4 small:!pr-0 w-8">
           <DeleteButton
             id={item.id}
             className="justify-end"

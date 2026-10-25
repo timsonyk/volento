@@ -21,7 +21,7 @@ const ItemsTemplate = async ({ cart }: ItemsTemplateProps) => {
         <Heading className="text-[2rem] leading-[2.75rem]">Корзина</Heading>
       </div>
       <Table>
-        <Table.Header className="border-t-0">
+        <Table.Header className="border-t-0 hidden small:table-header-group">
           <Table.Row className="text-ui-fg-subtle txt-medium-plus">
             <Table.HeaderCell className="!pl-0">Товар</Table.HeaderCell>
             <Table.HeaderCell></Table.HeaderCell>
