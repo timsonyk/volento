@@ -81,7 +81,8 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
     // название сжималось в узкий столбик, а цена уезжала вправо.
     <Table.Row
       className={clx("w-full", {
-        "grid grid-cols-[4rem_1fr_auto] gap-x-4 py-4 small:table-row small:py-0":
+        // подсветка при наведении на телефоне залипала после касания
+        "grid grid-cols-[4rem_1fr_auto] gap-x-4 py-4 hover:!bg-transparent small:table-row small:py-0 small:hover:!bg-gray-50":
           type === "full",
       })}
       data-testid="product-row"
