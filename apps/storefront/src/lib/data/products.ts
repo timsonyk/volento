@@ -59,8 +59,11 @@ const ПОЛЯ_СПИСКА = [
   "*variants.calculated_price",
 ].join(",")
 
+// Картинок у размеров (*variants.images) не просим: у каждого из
+// полусотни размеров лежал один и тот же набор снимков товара, это
+// половина ответа (256 КБ против 117 КБ), и вся она уезжала в страницу.
 const ПОЛЯ_ТОВАРА =
-  "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+metadata,+tags,"
+  "*variants.calculated_price,+variants.inventory_quantity,*variants.options,+metadata,+tags,"
 
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {

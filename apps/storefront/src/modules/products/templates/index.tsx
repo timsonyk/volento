@@ -11,8 +11,6 @@ import ProductInfo, { stripColor } from "@modules/products/templates/product-inf
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 
-import ProductActionsWrapper from "./product-actions-wrapper"
-
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
@@ -57,13 +55,11 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
       <Suspense fallback={null}>
         <ColorSelect product={product} countryCode={countryCode} />
       </Suspense>
-      <Suspense
-        fallback={
-          <ProductActions disabled={true} product={product} region={region} таблицы={таблицы} />
-        }
-      >
-        <ProductActionsWrapper id={product.id} region={region} таблицы={таблицы} />
-      </Suspense>
+      {/* Кнопки рисуем сразу из товара, который страница уже получила.
+          Раньше здесь был второй запрос того же товара (по id) и заглушка
+          с выключенными кнопками, пока он идёт: лишняя секунда ожидания и
+          миг, когда на странице две кнопки «В корзину». */}
+      <ProductActions product={product} region={region} таблицы={таблицы} />
       <ProductTabs product={product} />
     </>
   )

@@ -4,7 +4,6 @@ import { Suspense } from "react"
 import { естьТовары, listCategories } from "@lib/data/categories"
 import { getHomeContent } from "@lib/data/home-banner"
 import { getLocale } from "@lib/data/locale-actions"
-import { listLocales } from "@lib/data/locales"
 import { getRegion, listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import { AccountIcon, BagIcon } from "@modules/common/icons/ui"
@@ -16,10 +15,13 @@ import PromoBar from "@modules/layout/components/promo-bar"
 import SideMenu from "@modules/layout/components/side-menu"
 
 export default async function Nav({ countryCode }: { countryCode: string }) {
-  const [regions, locales, currentLocale, оформление, categories, регион] =
+  // Языков, кроме русского, у магазина нет: бэкенд на запрос списка
+  // языков отвечал 404, ошибка не запоминалась, и запрос шёл заново на
+  // каждой странице.
+  const locales = null
+  const [regions, currentLocale, оформление, categories, регион] =
     await Promise.all([
       listRegions().then((regions: StoreRegion[]) => regions),
-      listLocales(),
       getLocale(),
       getHomeContent(countryCode),
       listCategories(),
