@@ -10,6 +10,68 @@ import { HttpTypes } from "@medusajs/types"
  * Карточке нужны название, фото, цвет и модель, самая низкая цена и
  * строка размеров — их и оставляем.
  */
+const ценаКарточки = (в: any) =>
+  в?.calculated_price
+    ? {
+        calculated_amount: в.calculated_price.calculated_amount,
+        original_amount: в.calculated_price.original_amount,
+        currency_code: в.calculated_price.currency_code,
+        calculated_price: {
+          price_list_type: в.calculated_price.calculated_price?.price_list_type,
+        },
+      }
+    : undefined
+
+const можноКупить = (в: any) =>
+  в.manage_inventory === false ||
+  в.allow_backorder === true ||
+  typeof в.inventory_quantity !== "number" ||
+  в.inventory_quantity > 0
+
+/**
+ * Варианты, сжатые до нужного карточке: по одному на размер и одна цена.
+ *
+ * У модели три десятка вариантов (размер × рост), и у каждого свой объект
+ * цены — на странице каталога это 640 вариантов и четверть мегабайта в
+ * разметке. Карточка же показывает только самую низкую цену и строку
+ * размеров, где размер есть, если он есть хоть в одном росте. Поэтому
+ * оставляем один вариант на размер с ответом «есть или нет», а цену —
+ * только самую низкую, у первого.
+ */
+const вариантыКарточки = (варианты: any[]) => {
+  const дешёвый = варианты
+    .filter((в) => в.calculated_price)
+    .sort(
+      (а, б) =>
+        (а.calculated_price.calculated_amount ?? 0) -
+        (б.calculated_price.calculated_amount ?? 0)
+    )[0]
+
+  const поРазмеру = new Map<string, { опция: any; есть: boolean }>()
+  for (const в of варианты) {
+    const опция = (в.options ?? []).find(
+      (о: any) => (о.option?.title ?? "").trim().toLowerCase() === "размер"
+    )
+    const ключ = опция?.value?.trim() ?? ""
+    const уже = поРазмеру.get(ключ)
+    поРазмеру.set(ключ, {
+      опция: уже?.опция ?? опция,
+      есть: (уже?.есть ?? false) || можноКупить(в),
+    })
+  }
+
+  return [...поРазмеру.values()].map(({ опция, есть }, и) => ({
+    id: `r${и}`,
+    manage_inventory: true,
+    allow_backorder: false,
+    inventory_quantity: есть ? 1 : 0,
+    options: опция
+      ? [{ value: опция.value, option: { title: опция.option?.title } }]
+      : [],
+    calculated_price: и === 0 ? ценаКарточки(дешёвый) : undefined,
+  }))
+}
+
 export const дляКарточки = (
   p: HttpTypes.StoreProduct
 ): HttpTypes.StoreProduct =>
@@ -23,24 +85,5 @@ export const дляКарточки = (
       color: p.metadata?.color,
       model: p.metadata?.model,
     },
-    variants: (p.variants ?? []).map((в: any) => ({
-      id: в.id,
-      inventory_quantity: в.inventory_quantity,
-      manage_inventory: в.manage_inventory,
-      allow_backorder: в.allow_backorder,
-      options: (в.options ?? []).map((о: any) => ({
-        value: о.value,
-        option: { title: о.option?.title },
-      })),
-      calculated_price: в.calculated_price
-        ? {
-            calculated_amount: в.calculated_price.calculated_amount,
-            original_amount: в.calculated_price.original_amount,
-            currency_code: в.calculated_price.currency_code,
-            calculated_price: {
-              price_list_type: в.calculated_price.calculated_price?.price_list_type,
-            },
-          }
-        : undefined,
-    })),
+    variants: вариантыКарточки(p.variants ?? []),
   }) as unknown as HttpTypes.StoreProduct
