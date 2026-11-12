@@ -22,6 +22,46 @@ const HIDDEN_TAG = "skryt"
 // Сколько товаров с этими метками бывает в одной порции, с запасом
 const ЗАПАС_НА_СКРЫТЫЕ = 3
 
+/**
+ * Поля товара для списков: каталог, разделы, поиск, «похожие». Только
+ * то, что нужно карточке (lib/util/dlya-kartochki.ts) и отбору.
+ *
+ * Со всеми полями порция из двадцати товаров весила 3 МБ: у каждого из
+ * трёх десятков размеров — свои картинки и служебные столбцы. Next не
+ * кладёт в кэш ответы тяжелее 2 МБ, поэтому каталог на каждый показ
+ * заново тянул эти мегабайты с бэкенда и открывался по две секунды.
+ * Урезанная порция — около 0,5 МБ и кэшируется.
+ *
+ * Страница товара (запрос по handle) берёт всё, как раньше.
+ */
+const ПОЛЯ_СПИСКА = [
+  "id",
+  "handle",
+  "title",
+  "subtitle",
+  "thumbnail",
+  "created_at",
+  "updated_at",
+  "collection_id",
+  "metadata",
+  "images.id",
+  "images.url",
+  "tags.id",
+  "tags.value",
+  "variants.id",
+  "variants.title",
+  "variants.sku",
+  "variants.manage_inventory",
+  "variants.allow_backorder",
+  "+variants.inventory_quantity",
+  "variants.options.value",
+  "variants.options.option.title",
+  "*variants.calculated_price",
+].join(",")
+
+export const ПОЛЯ_ТОВАРА =
+  "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+metadata,+tags,"
+
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {
   options?: string[]
@@ -34,6 +74,7 @@ export const listProducts = async ({
   countryCode,
   regionId,
   сСкрытыми = false,
+  безЦен = false,
 }: {
   pageParam?: number
   queryParams?: ProductListQueryParams
@@ -44,6 +85,12 @@ export const listProducts = async ({
    * товара: в списки скрытые попадать не должны.
    */
   сСкрытыми?: boolean
+  /**
+   * Не считать цены: без региона бэкенд не прикладывает к товару варианты
+   * с ценами, и ответ легче в десятки раз. Для запросов, которым нужны
+   * только сами товары (цвета модели).
+   */
+  безЦен?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -92,9 +139,8 @@ export const listProducts = async ({
           // 24 и последний ряд выглядел так, будто одна не показалась.
           limit: queryParams?.handle ? limit : limit + ЗАПАС_НА_СКРЫТЫЕ,
           offset,
-          region_id: region?.id,
-          fields:
-            "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+metadata,+tags,",
+          ...(безЦен ? {} : { region_id: region?.id }),
+          fields: queryParams?.handle ? ПОЛЯ_ТОВАРА : ПОЛЯ_СПИСКА,
           ...queryParams,
         },
         headers,
@@ -353,7 +399,13 @@ export const listModelColors = async ({
     response: { products: siblings },
   } = await listProducts({
     countryCode,
-    queryParams: { tag_id: tagIds, limit: 100 } as ProductListQueryParams,
+    queryParams: {
+      tag_id: tagIds,
+      limit: 100,
+      // цвету нужны только адрес товара и его описание цвета
+      fields: "id,handle,metadata,tags.id,tags.value",
+    } as ProductListQueryParams,
+    безЦен: true,
   })
 
   const byModel: Record<string, ModelColor[]> = {}
