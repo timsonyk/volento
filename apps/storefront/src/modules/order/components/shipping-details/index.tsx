@@ -9,49 +9,45 @@ type ShippingDetailsProps = {
 }
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+  const адрес = order.shipping_address
+  // пустые части не оставляют после себя запятых и пробелов
+  const строка = (...части: (string | null | undefined)[]) =>
+    части.map((ч) => String(ч ?? "").trim()).filter(Boolean)
+
   return (
     <div>
       <Heading level="h2" className="flex flex-row text-3xl-regular my-6">
         Доставка
       </Heading>
-      <div className="flex items-start gap-x-8">
+      {/* на телефоне — друг под другом: в три узких столбца почта не
+          помещалась и наезжала на соседний */}
+      <div className="flex flex-col gap-y-6 small:flex-row small:items-start small:gap-x-8">
         <div
-          className="flex flex-col w-1/3"
+          className="flex flex-col small:w-1/3"
           data-testid="shipping-address-summary"
         >
           <Text className="txt-medium-plus text-ui-fg-base mb-1">
             Адрес доставки
           </Text>
           <Text className="txt-medium text-ui-fg-subtle">
-            {order.shipping_address?.first_name}{" "}
-            {order.shipping_address?.last_name}
+            {строка(адрес?.first_name, адрес?.last_name).join(" ")}
           </Text>
           <Text className="txt-medium text-ui-fg-subtle">
-            {order.shipping_address?.address_1}{" "}
-            {order.shipping_address?.address_2}
-          </Text>
-          <Text className="txt-medium text-ui-fg-subtle">
-            {order.shipping_address?.postal_code},{" "}
-            {order.shipping_address?.city}
-          </Text>
-          <Text className="txt-medium text-ui-fg-subtle">
-            {order.shipping_address?.country_code?.toUpperCase()}
+            {строка(адрес?.postal_code, адрес?.city, адрес?.address_1, адрес?.address_2).join(", ")}
           </Text>
         </div>
-
         <div
-          className="flex flex-col w-1/3 "
+          className="flex flex-col small:w-1/3"
           data-testid="shipping-contact-summary"
         >
           <Text className="txt-medium-plus text-ui-fg-base mb-1">Контакты</Text>
-          <Text className="txt-medium text-ui-fg-subtle">
-            {order.shipping_address?.phone}
+          <Text className="txt-medium text-ui-fg-subtle">{адрес?.phone}</Text>
+          <Text className="txt-medium text-ui-fg-subtle break-words">
+            {order.email}
           </Text>
-          <Text className="txt-medium text-ui-fg-subtle">{order.email}</Text>
         </div>
-
         <div
-          className="flex flex-col w-1/3"
+          className="flex flex-col small:w-1/3"
           data-testid="shipping-method-summary"
         >
           <Text className="txt-medium-plus text-ui-fg-base mb-1">

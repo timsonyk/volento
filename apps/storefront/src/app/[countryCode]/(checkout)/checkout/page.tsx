@@ -6,17 +6,23 @@ import ВходДляЗаказа from "@modules/checkout/components/vhod-dlya-z
 import CheckoutForm from "@modules/checkout/templates/checkout-form"
 import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
   title: "Оформление заказа",
 }
 
-export default async function Checkout() {
+export default async function Checkout(props: {
+  params: Promise<{ countryCode: string }>
+}) {
+  const { countryCode } = await props.params
   const cart = await retrieveCart()
 
-  if (!cart) {
-    return notFound()
+  // Оформлять нечего — показываем корзину: она скажет, что пусто, и
+  // предложит каталог. Раньше здесь была «страница не найдена», как будто
+  // сломалась ссылка.
+  if (!cart || !cart.items?.length) {
+    redirect(`/${countryCode}/cart`)
   }
 
   const customer = await retrieveCustomer()

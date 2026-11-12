@@ -48,11 +48,11 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
           {new Date(order.created_at).toLocaleDateString("ru-RU")}
         </span>
       </Text>
-      <Text className="mt-2 text-ui-fg-interactive">
+      <Text className="mt-2">
         Номер заказа: <span data-testid="order-id">{order.display_id}</span>
       </Text>
 
-      <div className="flex items-center text-compact-small gap-x-4 mt-4">
+      <div className="flex flex-wrap items-center text-compact-small gap-x-6 gap-y-1 mt-4">
         {showStatus && (
           <>
             <Text>
@@ -65,7 +65,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
               Статус оплаты:{" "}
               <span
                 className="text-ui-fg-subtle "
-                sata-testid="order-payment-status"
+                data-testid="order-payment-status"
               >
                 {formatStatus(order.payment_status)}
               </span>

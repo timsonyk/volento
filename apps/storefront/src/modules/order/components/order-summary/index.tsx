@@ -40,7 +40,12 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
           )}
           <div className="flex items-center justify-between">
             <span>Доставка</span>
-            <span>{getAmount(order.shipping_total)}</span>
+            <span>
+              {convertToLocale({
+                amount: order.shipping_total ?? 0,
+                currency_code: order.currency_code,
+              })}
+            </span>
           </div>
         </div>
         <div className="h-px w-full border-b border-gray-200 border-dashed my-4" />

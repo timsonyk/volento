@@ -7,6 +7,7 @@ import {
   найтиТовары,
   собратьПризнаки,
 } from "@lib/data/facets"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import FilterBar from "@modules/store/components/filter-bar"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -43,6 +44,31 @@ const StoreTemplate = async ({
   // Их id считаем один раз и передаём и в фильтр, и в отбор: иначе рядом
   // с галочками стояли бы числа всего магазина.
   const находки = запрос ? await идыПоиска(запрос) : undefined
+
+  // Поиск ничего не нашёл — так и говорим. Фильтр и сортировку не
+  // показываем: совет «снять часть фильтров» тут сбивал с толку, их никто
+  // не ставил.
+  if (запрос && находки?.length === 0) {
+    return (
+      <div className="content-container pt-6 pb-12" data-testid="category-container">
+        <h1 className="mb-4 text-center text-base text-ink" data-testid="store-page-title">
+          {заголовок}
+        </h1>
+        <div className="py-16 text-center" data-testid="poisk-pusto">
+          <p className="text-base text-muted">
+            По запросу «{запрос}» ничего не нашлось. Проверьте, нет ли
+            опечатки, или попробуйте слово покороче.
+          </p>
+          <LocalizedClientLink
+            href="/store"
+            className="mt-6 inline-block border-b border-ink pb-0.5 text-base text-ink"
+          >
+            Смотреть весь каталог
+          </LocalizedClientLink>
+        </div>
+      </div>
+    )
+  }
 
   const [признаки, отобранные] = await Promise.all([
     собратьПризнаки(undefined, находки),

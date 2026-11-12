@@ -154,3 +154,10 @@
     @apply text-[32px] leading-[44px] font-semibold;
   }
 }
+
+/* Готовые классы текста из набора Medusa (txt-medium, txt-compact-small и
+   другие) несут свой шрифт Inter — у нас его нет, и подписи в корзине и в
+   заказе рисовались системным шрифтом, не как остальной сайт. */
+[class*="txt-"] {
+  font-family: inherit;
+}
