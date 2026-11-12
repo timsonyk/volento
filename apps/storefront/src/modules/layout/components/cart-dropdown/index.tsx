@@ -206,8 +206,7 @@ const CartDropdown = ({
                 <div className="p-4 flex flex-col gap-y-4 text-small-regular">
                   <div className="flex items-center justify-between">
                     <span className="text-ui-fg-base font-semibold">
-                      Сумма{" "}
-                      <span className="font-normal">(без налогов)</span>
+                      Сумма
                     </span>
                     <span
                       className="text-large-semi"

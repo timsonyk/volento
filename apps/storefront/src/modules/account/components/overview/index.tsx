@@ -154,15 +154,9 @@ const getProfileCompletion = (customer: HttpTypes.StoreCustomer | null) => {
     count++
   }
 
-  const billingAddress = customer.addresses?.find(
-    (addr) => addr.is_default_billing
-  )
-
-  if (billingAddress) {
-    count++
-  }
-
-  return (count / 4) * 100
+  // Адреса плательщика в профиле больше нет, поэтому он в счёт не идёт:
+  // с ним профиль никогда не доходил до 100 %.
+  return Math.round((count / 3) * 100)
 }
 
 export default Overview
