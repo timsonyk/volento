@@ -129,6 +129,8 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               alt="Volento"
               width={2691}
               height={632}
+              // ширина на экране: без неё логотип 2691 px грузился целиком (37 КБ)
+              sizes="264px"
               priority
               className="h-[34px] w-auto small:h-[62px]"
             />

@@ -22,9 +22,16 @@ import PlaceholderImage from "@modules/common/icons/placeholder-image"
 export default function PreviewGallery({
   images,
   alt,
+  sizes = "(max-width: 576px) 68vw, (max-width: 1024px) 44vw, 23vw",
 }: {
   images: string[]
   alt: string
+  /**
+   * Ширина карточки на экране: по ней браузер выбирает размер снимка.
+   * По умолчанию рассчитано на ленты главной (на телефоне карточка в 68 %
+   * экрана); сетка каталога передаёт свою, там карточки уже.
+   */
+  sizes?: string
 }) {
   const [номер, setНомер] = useState(0)
   // Пока человек не трогал стрелки, наведение показывает второй снимок.
@@ -68,7 +75,7 @@ export default function PreviewGallery({
     fill: true,
     quality: 80,
     draggable: false,
-    sizes: "(max-width: 576px) 68vw, (max-width: 1024px) 44vw, 23vw",
+    sizes,
   } as const
 
   return (

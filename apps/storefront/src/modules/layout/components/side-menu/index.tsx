@@ -129,6 +129,8 @@ const SideMenu = ({
                           alt="Volento"
                           width={2691}
                           height={632}
+                          // ширина на экране: без неё логотип 2691 px грузился целиком (37 КБ)
+                          sizes="136px"
                           className="h-[30px] w-auto"
                         />
                       </LocalizedClientLink>

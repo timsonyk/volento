@@ -101,6 +101,10 @@ const ProductGrid = ({
               product={p}
               region={region}
               colors={цвета[p.metadata?.model as string]}
+              // В сетке две карточки в ряд на телефоне и пять на широком
+              // экране: по общей мерке (68 % экрана) телефон качал снимки
+              // в полтора раза крупнее, чем показывал.
+              sizes="(max-width: 1023px) 48vw, (max-width: 1279px) 24vw, 17vw"
             />
           </li>
         ))}

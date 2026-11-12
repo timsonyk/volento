@@ -29,7 +29,10 @@ export default function ProductPreview({
   isFeatured,
   colors,
   region: _region,
+  sizes,
 }: {
+  /** ширина карточки на экране, см. gallery.tsx */
+  sizes?: string
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
   colors?: ModelColor[]
@@ -71,6 +74,7 @@ export default function ProductPreview({
         <PreviewGallery
           images={photos}
           alt={stripColor(product.title, color)}
+          sizes={sizes}
         />
 
         {/* Текст под фото по замерам референса: на телефоне 12 px с
