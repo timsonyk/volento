@@ -142,6 +142,8 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   // телефон) — показываем те же пункты списком. Раньше в этом случае окно
   // оставалось пустым: пункт не выбрать, купить нельзя.
   const [картаНеВышла, setКартаНеВышла] = useState(false)
+  // поиск по списку пунктов, когда карты нет
+  const [искать, setИскать] = useState("")
 
   const isSameAsChosen =
     !!chosen?.pointId &&
@@ -481,6 +483,19 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     [points, tariffsByPointId]
   )
 
+  // В Москве пунктов больше четырёх тысяч: листать такой список до своей
+  // улицы невозможно, а рисовать его целиком тяжело для телефона. Поэтому
+  // даём поиск по адресу и показываем не больше сотни строк за раз.
+  const СТРОК_В_СПИСКЕ = 100
+  const найденные = useMemo(() => {
+    const слова = искать.toLowerCase().replace(/ё/g, "е").split(/[\s,]+/).filter(Boolean)
+    if (!слова.length) return списком
+    return списком.filter(({ p }) => {
+      const где = `${p.address ?? ""} ${p.name ?? ""}`.toLowerCase().replace(/ё/g, "е")
+      return слова.every((с) => где.includes(с))
+    })
+  }, [списком, искать])
+
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
@@ -507,8 +522,32 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
               Карта не загрузилась — выберите пункт из списка.
             </Text>
           </div>
+          {списком.length > 10 && (
+            <div className="px-6 pb-3 small:px-[35px]">
+              <input
+                type="search"
+                value={искать}
+                onChange={(e) => setИскать(e.target.value)}
+                placeholder="Улица или метро"
+                aria-label="Поиск пункта по адресу"
+                data-testid="pvz-poisk"
+                // 16 px: при меньшем шрифте телефон приближает страницу
+                className="w-full border border-rule bg-white px-3 py-2 text-base text-ink placeholder:text-muted focus:border-ink focus:outline-none"
+              />
+            </div>
+          )}
           <ul className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 small:px-[35px]">
-            {списком.map(({ p, от }) => (
+            {найденные.length === 0 && (
+              <li className="py-6 txt-medium text-ui-fg-muted" data-testid="pvz-poisk-pusto">
+                По такому адресу пунктов не нашлось. Попробуйте название улицы покороче.
+              </li>
+            )}
+            {найденные.length > СТРОК_В_СПИСКЕ && (
+              <li className="py-3 txt-small text-ui-fg-subtle" data-testid="pvz-poisk-mnogo">
+                Пунктов: {найденные.length}. Показаны первые {СТРОК_В_СПИСКЕ}: введите улицу, чтобы найти свой.
+              </li>
+            )}
+            {найденные.slice(0, СТРОК_В_СПИСКЕ).map(({ p, от }) => (
               <li key={p.id} className="border-b border-rule">
                 <button
                   type="button"
