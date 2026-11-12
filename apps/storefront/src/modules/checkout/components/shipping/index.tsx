@@ -237,7 +237,13 @@ const Shipping: React.FC<ShippingProps> = ({
   useEffect(() => {
     setIsLoadingPrices(true)
 
-    if (_shippingMethods?.length) {
+    // Без города цену не спрашиваем вовсе: бэкенд на такой запрос отвечал
+    // ошибкой 500, и она сыпалась в его журнал при каждом открытии
+    // оформления. Вариант и так остаётся серым, пока города нет.
+    if (!(cart.shipping_address?.city ?? "").trim()) {
+      setCalculatedPricesMap({})
+      setIsLoadingPrices(false)
+    } else if (_shippingMethods?.length) {
       const promises = _shippingMethods
         .filter((sm) => sm.price_type === "calculated")
         .map((sm) => calculatePriceForShippingOption(sm.id, cart.id))
