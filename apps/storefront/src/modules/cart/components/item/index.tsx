@@ -14,7 +14,7 @@ import Spinner from "@modules/common/icons/spinner"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { поЧеловечески } from "@lib/util/sklad"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
@@ -75,19 +75,12 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
       })
   }
 
-  // Количество могли выбрать раньше, чем страница ожила: на медленном
-  // телефоне список уже нажимается, а обработчика ещё нет. Тогда в списке
-  // стоит новое число, а корзина и сумма остались прежними. Сверяем один
-  // раз после загрузки и досылаем выбор.
-  const список = useRef<HTMLSelectElement>(null)
-  useEffect(() => {
-    const выбрано = Number(список.current?.value)
-    if (Number.isInteger(выбрано) && выбрано > 0 && выбрано !== item.quantity) {
-      changeQuantity(выбрано)
-    }
-    // только при первом показе строки
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // Пока страница не ожила, список количества выключен. Иначе на
+  // медленном телефоне его успевали нажать раньше, чем появлялся
+  // обработчик: выбор молча сбрасывался обратно, корзина и сумма
+  // оставались прежними.
+  const [живая, setЖивая] = useState(false)
+  useEffect(() => setЖивая(true), [])
 
   return (
     // На телефоне строка — не таблица, а карточка: снимок слева, справа
@@ -146,7 +139,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         <Table.Cell className="col-start-2 row-start-2 !p-0 !pt-3 small:!p-4">
           <div className="flex gap-2 items-center w-28">
             <CartItemSelect
-              ref={список}
+              disabled={!живая}
               value={item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
               className="w-14 h-10 p-4"
