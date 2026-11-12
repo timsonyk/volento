@@ -51,6 +51,9 @@ test.describe("правки 23 октября", () => {
   test("карточка: таблица мерок не в галерее, а по кнопке", async ({ page }) => {
     await page.goto(ТОВАР_С_ТАБЛИЦЕЙ)
     const кнопка = page.locator('[data-testid="tablica-razmerov"]')
+    // пока страница дорисовывается, кнопок на миг две: заготовка и
+    // настоящая, с остатками. Ждём, пока останется одна.
+    await expect(кнопка).toHaveCount(1)
     await expect(кнопка).toBeVisible()
     await кнопка.click()
     const окно = page.locator('[data-testid="prosmotr"]')
