@@ -59,7 +59,7 @@ const ПОЛЯ_СПИСКА = [
   "*variants.calculated_price",
 ].join(",")
 
-export const ПОЛЯ_ТОВАРА =
+const ПОЛЯ_ТОВАРА =
   "*variants.calculated_price,+variants.inventory_quantity,*variants.images,*variants.options,+metadata,+tags,"
 
 type ProductListQueryParams = (HttpTypes.FindParams &
@@ -75,6 +75,7 @@ export const listProducts = async ({
   regionId,
   сСкрытыми = false,
   безЦен = false,
+  целиком = false,
 }: {
   pageParam?: number
   queryParams?: ProductListQueryParams
@@ -91,6 +92,8 @@ export const listProducts = async ({
    * только сами товары (цвета модели).
    */
   безЦен?: boolean
+  /** Товар со всеми полями, как на его странице, — когда ищем не по handle. */
+  целиком?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -140,7 +143,7 @@ export const listProducts = async ({
           limit: queryParams?.handle ? limit : limit + ЗАПАС_НА_СКРЫТЫЕ,
           offset,
           ...(безЦен ? {} : { region_id: region?.id }),
-          fields: queryParams?.handle ? ПОЛЯ_ТОВАРА : ПОЛЯ_СПИСКА,
+          fields: queryParams?.handle || целиком ? ПОЛЯ_ТОВАРА : ПОЛЯ_СПИСКА,
           ...queryParams,
         },
         headers,

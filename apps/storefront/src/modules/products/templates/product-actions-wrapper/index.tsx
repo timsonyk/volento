@@ -1,4 +1,4 @@
-import { listProducts, ПОЛЯ_ТОВАРА } from "@lib/data/products"
+import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import ProductActions from "@modules/products/components/product-actions"
 
@@ -16,7 +16,8 @@ export default async function ProductActionsWrapper({
 }) {
   const product = await listProducts({
     // кнопкам нужен товар целиком: опции, остатки, картинки размеров
-    queryParams: { id: [id], fields: ПОЛЯ_ТОВАРА } as any,
+    queryParams: { id: [id] },
+    целиком: true,
     regionId: region.id,
     // страница товара открылась по ссылке — значит, и скрытый (метка
     // skryt, например «Проверка оплаты») должен продаваться
