@@ -72,7 +72,33 @@ export default async function проверкаМест({ container }: ExecArgs) 
   for (const подключение of options.connections ?? []) {
     if (!подключение.is_enabled) continue
     const служба: string = подключение.provider_key
-    const тариф = Number((подключение.allowed_point_tariff_ids ?? [])[0])
+    // Тариф до пункта выдачи: из настроек, а если там не перечислены —
+    // первый, что вернёт расчёт (расчёт бесплатный и ничего не создаёт)
+    let тариф = Number((подключение.allowed_point_tariff_ids ?? [])[0])
+    if (!тариф) {
+      const адрес = (а: any) => ({
+        countryCode: "RU",
+        city: а.city,
+        region: а.province ?? а.city,
+        addressString: [а.city, а.address_1].filter(Boolean).join(", "),
+      })
+      const { data: расчёт } = await клиент.calculatorApi.getCalculator({
+        calculatorRequest: {
+          to: адрес(заказ.shipping_address),
+          from: адрес(склад.address ?? {}),
+          places: [{ height: 11, length: 30, width: 40, weight: 1300 }],
+          pickupTypes: [подключение.point_in_id ? 2 : 1],
+          deliveryTypes: [2],
+          providerKeys: [служба],
+          assessedCost: 13000,
+          codCost: 0,
+          includeFees: false,
+        },
+      })
+      const тарифы = (расчёт?.deliveryToPoint ?? []).flatMap((п: any) => п?.tariffs ?? [])
+      тариф = Number(тарифы[0]?.tariffId)
+      logger.info(`[места] ${служба}: тарифы до пункта из расчёта — ${тарифы.map((т: any) => `${т.tariffId} «${т.tariffName}»`).join(", ") || "нет"}`)
+    }
     if (!тариф) {
       logger.info(`[места] ${служба}: нет тарифа до пункта выдачи, пропускаем`)
       continue

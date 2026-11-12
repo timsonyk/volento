@@ -150,6 +150,8 @@ describe("пакеты и сборка", () => {
     expect(этоПостамат({ type: 2 })).toBe(true)
     expect(этоПостамат({ type: "1", name: "Постамат Халва" })).toBe(true)
     expect(этоПостамат({ type: 1, name: "СДЭК на Ленина" })).toBe(false)
+    expect(этоПостамат({ type: 1 }, { tariffName: "Посылка склад-постамат" })).toBe(true)
+    expect(этоПостамат({ type: 1 }, { tariffName: "Посылка склад-склад" })).toBe(false)
     expect(этоПостамат(null)).toBe(false)
   })
 })

@@ -17,6 +17,8 @@ export type ЗаказДляСклада = {
   живыеСборки: number
   /** пункт выдачи, который выбрал покупатель; курьером — null */
   пункт: Record<string, any> | null
+  /** тариф службы, который выбрал покупатель */
+  тариф: Record<string, any> | null
 }
 
 export async function найтиЗаказ(
@@ -82,6 +84,10 @@ export async function найтиЗаказ(
     пункт:
       ((заказ as any).shipping_methods ?? [])
         .map((с: any) => с?.data?.apishipData?.point)
+        .find(Boolean) ?? null,
+    тариф:
+      ((заказ as any).shipping_methods ?? [])
+        .map((с: any) => с?.data?.apishipData?.tariff)
         .find(Boolean) ?? null,
   }
 }
