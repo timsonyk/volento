@@ -48,7 +48,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { response } = await listProducts({
       countryCode: СТРАНА,
-      queryParams: { limit: 1000, fields: "handle,updated_at" } as any,
+      queryParams: { limit: 1000, fields: "handle,updated_at,tags.id,tags.value" } as any,
+      // карте сайта цены не нужны, а с ними запрос шёл 3–4 секунды
+      безЦен: true,
     })
 
     const товары: MetadataRoute.Sitemap = (response?.products ?? [])

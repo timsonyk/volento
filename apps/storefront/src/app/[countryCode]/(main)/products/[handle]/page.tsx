@@ -33,6 +33,8 @@ export async function generateStaticParams() {
           const { response } = await listProducts({
             countryCode: country,
             queryParams: { limit: 100, fields: "handle" },
+            // нужны только адреса: с ценами тот же запрос шёл 4–6 секунд
+            безЦен: true,
           })
           return { country, products: response.products }
         } catch (error) {
