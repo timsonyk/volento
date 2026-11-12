@@ -20,8 +20,12 @@ const { assembleApishipOptions, assertApishipToken } = require(
   "@gorgo/medusa-fulfillment-apiship/lib/apiship-options"
 )
 const { createApishipClient } = require("@gorgo/medusa-fulfillment-apiship/lib/client")
+// сборщик заявки плагин наружу не отдаёт — берём файлом, рядом с клиентом
 const { mapToApishipOrderRequest } = require(
-  "@gorgo/medusa-fulfillment-apiship/providers/fulfillment-apiship/utils/mapping"
+  require("node:path").join(
+    require("node:path").dirname(require.resolve("@gorgo/medusa-fulfillment-apiship/lib/client")),
+    "../providers/fulfillment-apiship/utils/mapping.js"
+  )
 )
 
 const К = (n: number) => `010460123456789021PrVrK${n}\u001d93TeSt`
