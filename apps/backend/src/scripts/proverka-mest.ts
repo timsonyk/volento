@@ -37,7 +37,8 @@ export default async function проверкаМест({ container }: ExecArgs) 
     .listStockLocations({}, { take: 1, relations: ["address"] })
 
   const options = assembleApishipOptions(
-    await resolveIntegrationOptions({ identifier: "apiship", instance_id: null })
+    // номер подключения — тот же APISHIP_ID, что в medusa-config.ts
+    await resolveIntegrationOptions({ identifier: "apiship", instance_id: "apiship-1" })
   )
   assertApishipToken(options)
   const клиент = createApishipClient({ token: options.token, isTest: options.is_test })
