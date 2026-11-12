@@ -14,7 +14,29 @@ import { привязатьПамять } from "../../../lib/pamyat-vitriny"
  *
  * Отдаём только id товаров. Ответ держим минуту: остатки склад заливает
  * пачками, точнее минуты витрине не нужно.
+ *
+ * Считаем одним запросом к базе: через связи Medusa те же 10 тысяч
+ * размеров собирались 3,5 секунды, и раз в минуту главная с каталогом
+ * открывались на эти секунды дольше. Запрос — 0,06 секунды. Если он не
+ * прошёл (после обновления Medusa таблицы могли смениться), считаем
+ * прежним, медленным способом.
  */
+const ЗАПРОС = `
+  with u as (
+    select inventory_item_id, sum(stocked_quantity - reserved_quantity) as svobodno
+    from inventory_level where deleted_at is null group by 1
+  ),
+  p as (
+    select l.variant_id, bool_and(coalesce(u.svobodno, 0) >= l.required_quantity) as ok
+    from product_variant_inventory_item l
+    left join u on u.inventory_item_id = l.inventory_item_id
+    where l.deleted_at is null group by 1
+  )
+  select distinct v.product_id as id
+  from product_variant v left join p on p.variant_id = v.id
+  where v.deleted_at is null and v.product_id is not null
+    and (v.manage_inventory = false or v.allow_backorder = true or p.ok)
+`
 const ДЕРЖИМ_МС = 60_000
 
 let запомнили: { когда: number; ids: string[] } | null = null
@@ -32,6 +54,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const inventory = req.scope.resolve(Modules.INVENTORY)
+
+  try {
+    const база: any = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
+    const { rows } = await база.raw(ЗАПРОС)
+    запомнили = { когда: Date.now(), ids: rows.map((р: any) => String(р.id)) }
+    return res.json({ ids: запомнили.ids })
+  } catch (ошибка: any) {
+    logger.warn(`Наличие прямым запросом не посчиталось (${ошибка?.message}), считаем через связи`)
+  }
 
   try {
     const [{ data: варианты }, уровни] = await Promise.all([
