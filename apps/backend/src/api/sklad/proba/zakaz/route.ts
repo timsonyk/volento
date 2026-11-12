@@ -43,7 +43,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   try {
-    const заказ = await создатьТестовыйЗаказ(req.scope, количества, покупатель)
+    // postamat: true — заказ «едет в постамат»: проверить, что делить его
+    // на пакеты нельзя
+    const постамат = (req.body as { postamat?: unknown })?.postamat === true
+    const заказ = await создатьТестовыйЗаказ(req.scope, количества, покупатель, постамат)
     logger.info(`Склад создал тестовый заказ ${заказ.nomer}`)
     return res.json(заказ)
   } catch (ошибка: any) {

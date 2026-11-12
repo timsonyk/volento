@@ -176,10 +176,9 @@ c=$(r POST /sklad/proba/vozvrat/$N); check "вторая заявка — на �
 V2=$(jq -c '[.pary[].kod]' /tmp/sk.out)
 c=$(r POST /sklad/proba/vozvrat/$N); check "третьей нечего вернуть — 409" 409 "$c"
 c=$(r GET "/sklad/vozvraty?test=1"); check "склад видит обе заявки" 200 "$c" "[.vozvraty[]|select(.nomer==\"$N\" and .vid==\"pokupatel\")]|length==2"
-K1=$(jq -r '.[0]' <<<"$V1")
-c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$V1,\"otkloneno\":[{\"kod\":\"$K1\",\"prichina\":\"носили\"}]}")
+c=$(r POST /sklad/zadaniya/$N/vozvrat "$(jq -c '{kody: ., otkloneno: [{kod: .[0], prichina: "носили"}]}' <<<"$V1")")
 check "приняли 1 из 2, одну отклонили" 200 "$c" '.zayavki[0].status=="chastichno" and .zayavki[0].vernuli==10 and (.zayavki[0].otkloneno|length)==1'
-c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":[\"$K1\"],\"otkloneno\":[{\"kod\":\"chuzhoy\"}]}"); check "отклонить можно только пришедшее — 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/vozvrat "$(jq -c '{kody: [.[0]], otkloneno: [{kod: "chuzhoy"}]}' <<<"$V1")"); check "отклонить можно только пришедшее — 400" 400 "$c"
 c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$V2}"); check "вторая заявка принята целиком" 200 "$c" '.zayavki[0].status=="prinyat" and .zayavki[0].vernuli==10 and .sovpalo==true'
 itog $ID; check "по заказу вернули 20 ₽" 200 200 '([.order.payment_collections[].payments[].refunds[]?.amount]|add)==20'
 c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$V2}"); check "повтор — uzhe_prinyat" 200 "$c" '.sostoyanie=="uzhe_prinyat"'
@@ -196,5 +195,46 @@ ALL=$(jq -c -n --argjson a "$NV" --argjson b "$VK" '$a+$b')
 c=$(r POST /sklad/zadaniya/$N/vozvrat "{\"kody\":$ALL}"); check "одна посылка закрыла оба" 200 "$c" '.sovpalo==true and .zayavki[0].status=="prinyat" and .zayavki[0].vernuli==10'
 itog $ID; check "по заказу вернули 20 ₽: невыкуп и возврат" 200 200 '([.order.payment_collections[].payments[].refunds[]?.amount]|add)==20'
 
+echo "== Два пакета: заказ [2,1] из двух помещений"
+N=$(novyi '{"kolichestva":[2,1]}'); S=$(stroki "$N"); S1=$(jq -r '.[0]' <<<"$S"); S2=$(jq -r '.[1]' <<<"$S")
+r POST /sklad/zadaniya/$N/vzyat >/dev/null
+P1="{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod p1$N)\"]}"
+P2="{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod p2$N)\"]},{\"id_stroki\":\"$S2\",\"kolichestvo\":1,\"kody\":[\"$(kod p3$N)\"]}"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$P1]}],\"pozicii\":[$P1]}"); check "pakety и pozicii вместе 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$P1]},{\"sklad\":\"B\"}]}"); check "пакет без позиций 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[{\"id_stroki\":\"$S1\",\"kolichestvo\":2,\"kody\":[\"$(kod p1$N)\",\"$(kod p4$N)\"]}]},{\"sklad\":\"B\",\"pozicii\":[$P2]}]}"); check "разложено больше, чем в заказе, 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$P1]},{\"sklad\":\"B\",\"pozicii\":[{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod p1$N)\"]},{\"id_stroki\":\"$S2\",\"kolichestvo\":1,\"kody\":[\"$(kod p3$N)\"]}]}]}"); check "один код в двух пакетах 400" 400 "$c"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$P1]},{\"sklad\":\"B\",\"pozicii\":[$P2]}]}"); check "собрано двумя пакетами" 200 "$c" '.sostoyanie=="v_sborke" and .paketov==2'
+c=$(r GET "/sklad/k-upakovke?test=1"); check "к упаковке: два пакета, у каждого своё" 200 "$c" "[.k_upakovke[]|select(.nomer==\"$N\")]|.[0] as \$z|(\$z.pakety|length)==2 and \$z.pakety[0].sklad==\"A\" and \$z.pakety[1].sklad==\"B\" and (\$z.pakety[0].pozicii|map(.kolichestvo)|add)==1 and (\$z.pakety[1].pozicii|map(.kolichestvo)|add)==2 and (\$z.pakety[1].pozicii[0].kody|length)==1 and (\$z.pakety[1].etiketka|endswith(\"paket=2\")) and (\$z.pozicii|map(.kolichestvo)|add)==3 and \$z.pakety[0].upakovan==false"
+stranic() { grep -a -o "/Type */Page[^s]" "$1" | wc -l; }
+c=$(curl -s -o /tmp/sk.pdf -w "%{http_code}" "$B/sklad/zadaniya/$N/etiketka" -H "X-Sklad-Key: $K")
+if [ "$c" = 200 ] && [ "$(stranic /tmp/sk.pdf)" = 2 ]; then OK=$((OK+1)); echo "OK   общая наклейка — 2 страницы"; else BAD=$((BAD+1)); echo "FAIL общая наклейка: $c, страниц $(stranic /tmp/sk.pdf)"; fi
+c=$(curl -s -o /tmp/sk.pdf -D /tmp/sk.hdr -w "%{http_code}" "$B/sklad/zadaniya/$N/etiketka?paket=2" -H "X-Sklad-Key: $K")
+if [ "$c" = 200 ] && [ "$(stranic /tmp/sk.pdf)" = 1 ] && grep -a -q "PLACE 2 OF 2" /tmp/sk.pdf && ! grep -qi "x-nakleyka" /tmp/sk.hdr; then OK=$((OK+1)); echo "OK   наклейка пакета 2 — одна страница, своя"; else BAD=$((BAD+1)); echo "FAIL наклейка пакета 2: $c, страниц $(stranic /tmp/sk.pdf)"; fi
+c=$(r GET "/sklad/zadaniya/$N/etiketka?paket=3"); check "наклейка пакета 3 — 404" 404 "$c"
+c=$(r POST /sklad/zadaniya/$N/upakovano '{"paket":3}'); check "упакован пакет 3 — 404" 404 "$c"
+c=$(r POST /sklad/zadaniya/$N/upakovano '{"paket":2}'); check "упакован пакет 2, ждём первый" 200 "$c" '.sostoyanie=="paket_upakovan" and .ostalos==[1]'
+c=$(r POST /sklad/zadaniya/$N/upakovano '{"paket":2}'); check "пакет 2 повтор — то же" 200 "$c" '.sostoyanie=="paket_upakovan" and .ostalos==[1]'
+c=$(r GET "/sklad/k-upakovke?test=1"); check "заказ ещё в списке, пакет 2 отмечен" 200 "$c" "[.k_upakovke[]|select(.nomer==\"$N\")]|.[0].pakety|(.[0].upakovan==false and .[1].upakovan==true)"
+c=$(r POST /sklad/zadaniya/$N/upakovano '{"paket":1}'); check "упакован последний пакет — заказ упакован" 200 "$c" '.sostoyanie=="upakovan"'
+c=$(r GET "/sklad/k-upakovke?test=1"); check "ушёл из к упаковке" 200 "$c" "[.k_upakovke[]|select(.nomer==\"$N\")]|length==0"
+c=$(r POST /sklad/proba/vydacha/$N '{"vykupleno":[1,1]}'); check "выдача по парам не зависит от пакетов" 200 "$c" '.vernuli==10'
+
+N=$(novyi '{"kolichestva":[1,1]}'); S=$(stroki "$N"); S1=$(jq -r '.[0]' <<<"$S"); S2=$(jq -r '.[1]' <<<"$S")
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod q1$N)\"]}]},{\"sklad\":\"B\",\"pozicii\":[{\"id_stroki\":\"$S2\",\"kolichestvo\":1,\"kody\":[\"$(kod q2$N)\"]}]}]}"); check "два пакета" 200 "$c" '.paketov==2'
+r GET "/sklad/k-upakovke?test=1" >/dev/null
+c=$(r POST /sklad/zadaniya/$N/upakovano); check "упаковано без paket — все пакеты разом" 200 "$c" '.sostoyanie=="upakovan"'
+
+N=$(novyi '{"kolichestva":[1,1]}'); S=$(stroki "$N"); S1=$(jq -r '.[0]' <<<"$S"); S2=$(jq -r '.[1]' <<<"$S")
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"B\",\"pozicii\":[{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod w1$N)\"]},{\"id_stroki\":\"$S2\",\"kolichestvo\":1,\"kody\":[\"$(kod w2$N)\"]}]}]}"); check "pakety с одним пакетом" 200 "$c" '.paketov==1'
+c=$(r GET "/sklad/k-upakovke?test=1"); check "один пакет, помещение B, наклейка без paket" 200 "$c" "[.k_upakovke[]|select(.nomer==\"$N\")]|.[0].pakety|length==1 and .[0].sklad==\"B\" and (.[0].etiketka|endswith(\"/etiketka\"))"
+c=$(r POST /sklad/zadaniya/$N/upakovano '{"paket":1}'); check "единственный пакет упакован — заказ упакован" 200 "$c" '.sostoyanie=="upakovan"'
+
+N=$(novyi '{"kolichestva":[1,1],"postamat":true}'); S=$(stroki "$N"); S1=$(jq -r '.[0]' <<<"$S"); S2=$(jq -r '.[1]' <<<"$S")
+D1="{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod t1$N)\"]}"; D2="{\"id_stroki\":\"$S2\",\"kolichestvo\":1,\"kody\":[\"$(kod t2$N)\"]}"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$D1]},{\"sklad\":\"B\",\"pozicii\":[$D2]}]}"); check "в постамат двумя пакетами нельзя — 409" 409 "$c"
+c=$(r POST /sklad/zadaniya/$N/sborka "{\"pozicii\":[$D1,$D2]}"); check "в постамат одним пакетом" 200 "$c" '.paketov==1'
+r GET "/sklad/k-upakovke?test=1" >/dev/null; r POST /sklad/zadaniya/$N/upakovano >/dev/null
+
 echo "== Итог: $OK прошло, $BAD не прошло"
-rm -f /tmp/sk.out /tmp/sk.pdf
+rm -f /tmp/sk.out /tmp/sk.pdf /tmp/sk.hdr

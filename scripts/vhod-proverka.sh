@@ -78,7 +78,8 @@ check "без входа — 401" 401 "$c"
 c=$(curl -s -o /tmp/vh.out -w "%{http_code}" "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T")
 check "свой заказ: можно вернуть 2 пары" 200 "$c"
 jq -e '(.pary|length)==2 and .do!=null and (.prichiny|length)>3' /tmp/vh.out >/dev/null && { OK=$((OK+1)); echo "OK   пары, срок и причины"; } || { BAD=$((BAD+1)); echo "FAIL ответ: $(head -c 300 /tmp/vh.out)"; }
-KOD=$(jq -r '.pary[0].kod' /tmp/vh.out)
+# код с невидимым разделителем GS — держим в виде JSON-строки, с кавычками
+KOD=$(jq -c '.pary[0].kod' /tmp/vh.out)
 P2="e2e-chuzhoy-$RANDOM$RANDOM@example.com"
 K2=$(curl -s -X POST "$B/store/vhod" "${H[@]}" -H "x-e2e-klyuch: $EK" -d "{\"email\":\"$P2\"}" | jq -r '.["код"]')
 T2=$(curl -s -X POST "$B/auth/customer/kod" "${H[@]}" -d "{\"email\":\"$P2\",\"code\":\"$K2\"}" | jq -r .token)
@@ -86,16 +87,16 @@ curl -s -X POST "$B/store/customers" "${H[@]}" -H "authorization: Bearer $T2" -d
 T2=$(curl -s -X POST "$B/auth/token/refresh" "${H[@]}" -H "authorization: Bearer $T2" | jq -r .token)
 c=$(curl -s -o /tmp/vh.out -w "%{http_code}" "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T2")
 check "чужой заказ — 404" 404 "$c"
-c=$(curl -s -o /tmp/vh.out -w "%{http_code}" -X POST "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T2" -d "{\"kody\":[\"$KOD\"]}")
+c=$(curl -s -o /tmp/vh.out -w "%{http_code}" -X POST "$B/store/vozvrat/$ID" "${H[@]}" -H "authorization: Bearer $T2" -d "{\"kody\":[$KOD]}")
 check "оформить возврат чужого — 404" 404 "$c"
 c=$(post /store/vozvrat/$ID '{"kody":[]}' -H "authorization: Bearer $T")
 check "пустой выбор — 400" 400 "$c"
 c=$(post /store/vozvrat/$ID '{"kody":["nesushchestvuyushchiy"]}' -H "authorization: Bearer $T")
 check "чужой код — 400" 400 "$c"
-c=$(post /store/vozvrat/$ID "{\"kody\":[\"$KOD\"],\"prichina\":\"Не подошёл размер\",\"kommentariy\":\"велики в талии\"}" -H "authorization: Bearer $T")
+c=$(post /store/vozvrat/$ID "{\"kody\":[$KOD],\"prichina\":\"Не подошёл размер\",\"kommentariy\":\"велики в талии\"}" -H "authorization: Bearer $T")
 check "свой возврат оформлен" 200 "$c"
 jq -e '(.nomer|test("-В1$")) and (.pary|length)==1 and (.zayavki|length)==1 and .zayavki[0].status=="zhdem"' /tmp/vh.out >/dev/null && { OK=$((OK+1)); echo "OK   заявка видна, пара ушла из доступных"; } || { BAD=$((BAD+1)); echo "FAIL ответ: $(head -c 300 /tmp/vh.out)"; }
-c=$(post /store/vozvrat/$ID "{\"kody\":[\"$KOD\"]}" -H "authorization: Bearer $T")
+c=$(post /store/vozvrat/$ID "{\"kody\":[$KOD]}" -H "authorization: Bearer $T")
 check "ту же пару второй раз — 400" 400 "$c"
 
 echo "== Итог: $OK прошло, $BAD не прошло"

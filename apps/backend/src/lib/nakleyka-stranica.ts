@@ -25,5 +25,6 @@ export async function страницаНаклейки(
   const [страница] = await один.copyPages(весь, [место - 1])
   один.addPage(страница)
 
-  return один.save()
+  // без сжатых объектов: так файл читают и старые драйверы принтеров наклеек
+  return один.save({ useObjectStreams: false })
 }

@@ -33,7 +33,7 @@ const РАЗМЕРЫ = ["46/170", "48/176", "50/182"]
  * покупатель — id покупателя, чей кабинет увидит заказ (автотесты кнопки
  * возврата); без него заказ ничей.
  */
-export async function создатьТестовыйЗаказ(scope: MedusaContainer, количества: number[], покупатель?: { id: string; email: string }) {
+export async function создатьТестовыйЗаказ(scope: MedusaContainer, количества: number[], покупатель?: { id: string; email: string }, постамат = false) {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
 
   const { data: способы } = await query.graph({
@@ -81,7 +81,12 @@ export async function создатьТестовыйЗаказ(scope: MedusaCont
           data: {
             [ТЕСТ]: true,
             apishipData: {
-              point: { id: "test", name: "Тестовый пункт", address: "Москва, Тестовая, 1" },
+              point: {
+                id: "test",
+                name: постамат ? "Тестовый постамат" : "Тестовый пункт",
+                address: "Москва, Тестовая, 1",
+                type: постамат ? 2 : 1,
+              },
               tariff: { providerKey: "yataxi", tariffId: 0 },
             },
           },
