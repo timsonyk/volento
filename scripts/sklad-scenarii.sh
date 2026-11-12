@@ -206,7 +206,7 @@ c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":
 c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$P1]},{\"sklad\":\"B\",\"pozicii\":[{\"id_stroki\":\"$S1\",\"kolichestvo\":1,\"kody\":[\"$(kod p1$N)\"]},{\"id_stroki\":\"$S2\",\"kolichestvo\":1,\"kody\":[\"$(kod p3$N)\"]}]}]}"); check "один код в двух пакетах 400" 400 "$c"
 c=$(r POST /sklad/zadaniya/$N/sborka "{\"pakety\":[{\"sklad\":\"A\",\"pozicii\":[$P1]},{\"sklad\":\"B\",\"pozicii\":[$P2]}]}"); check "собрано двумя пакетами" 200 "$c" '.sostoyanie=="v_sborke" and .paketov==2'
 c=$(r GET "/sklad/k-upakovke?test=1"); check "к упаковке: два пакета, у каждого своё" 200 "$c" "[.k_upakovke[]|select(.nomer==\"$N\")]|.[0] as \$z|(\$z.pakety|length)==2 and \$z.pakety[0].sklad==\"A\" and \$z.pakety[1].sklad==\"B\" and (\$z.pakety[0].pozicii|map(.kolichestvo)|add)==1 and (\$z.pakety[1].pozicii|map(.kolichestvo)|add)==2 and (\$z.pakety[1].pozicii[0].kody|length)==1 and (\$z.pakety[1].etiketka|endswith(\"paket=2\")) and (\$z.pozicii|map(.kolichestvo)|add)==3 and \$z.pakety[0].upakovan==false"
-stranic() { grep -a -o "/Type */Page[^s]" "$1" | wc -l; }
+stranic() { grep -a -o -E "/Type */Page($|[^s])" "$1" | wc -l; }
 c=$(curl -s -o /tmp/sk.pdf -w "%{http_code}" "$B/sklad/zadaniya/$N/etiketka" -H "X-Sklad-Key: $K")
 if [ "$c" = 200 ] && [ "$(stranic /tmp/sk.pdf)" = 2 ]; then OK=$((OK+1)); echo "OK   общая наклейка — 2 страницы"; else BAD=$((BAD+1)); echo "FAIL общая наклейка: $c, страниц $(stranic /tmp/sk.pdf)"; fi
 c=$(curl -s -o /tmp/sk.pdf -D /tmp/sk.hdr -w "%{http_code}" "$B/sklad/zadaniya/$N/etiketka?paket=2" -H "X-Sklad-Key: $K")
