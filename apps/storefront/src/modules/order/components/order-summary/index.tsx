@@ -20,7 +20,7 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
   return (
     <div>
       <h2 className="text-base-semi">Ваш заказ</h2>
-      <div className="text-small-regular text-ui-fg-base my-2">
+      <div className="text-base-regular text-ui-fg-base my-2">
         <div className="flex items-center justify-between text-base-regular text-ui-fg-base mb-2">
           <span>Сумма без доставки</span>
           <span>{getAmount(order.item_subtotal)}</span>

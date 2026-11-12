@@ -173,7 +173,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
             "flex flex-col items-end h-full justify-center": type === "preview",
           })}
         >
-          {type === "preview" && (
+          {type === "preview" && item.quantity > 1 && (
             <span className="flex gap-x-1 ">
               <Text className="text-ui-fg-muted">{item.quantity}x </Text>
               <LineItemUnitPrice

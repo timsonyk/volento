@@ -77,7 +77,7 @@ export default async function CategoryTiles({
         : "small:grid-cols-2"
 
   return (
-    <section id="siluety" className="pb-3 small:pb-12">
+    <section id="siluety" className="pt-8 pb-3 small:pt-0 small:pb-12">
       {/* Колонок ровно столько, сколько плиток, но не больше четырёх:
           при жёстких трёх колонках четвёртый раздел оставался один в
           нижнем ряду и вся сетка выглядела развалившейся. */}
