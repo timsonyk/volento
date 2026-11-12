@@ -10,6 +10,11 @@ import { собранныеНеУпакованные } from "../../../lib/sklad
  * сначала заводит отправление. Пока её нет, заказ лежит в
  * zhdut_etiketku: склад видит, что он не потерялся.
  *
+ * pakety — места отправления: что положить в каждый пакет, в каком
+ * помещении он собран и своя наклейка. Заказ не делили — пакет один.
+ * Пакетов несколько — на каждый клеится своя наклейка, а служба
+ * принимает их все вместе, одним отправлением.
+ *
  * Упаковал и отдал водителю — POST /sklad/zadaniya/{nomer}/upakovano,
  * заказ уходит из списка.
  */
@@ -32,6 +37,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           trek: о.трек,
           etiketka: `/sklad/zadaniya/${о.номер}/etiketka`,
           pozicii: о.позиции,
+          pakety: о.пакеты.map((п) => ({
+            ...п,
+            etiketka:
+              о.пакеты.length > 1
+                ? `/sklad/zadaniya/${о.номер}/etiketka?paket=${п.nomer}`
+                : `/sklad/zadaniya/${о.номер}/etiketka`,
+          })),
         })),
       zhdut_etiketku: отправления.filter((о) => !о.наклейка).map((о) => о.номер),
     })

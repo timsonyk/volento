@@ -1,6 +1,7 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
+import { ПАКЕТЫ, УПАКОВАНЫ, пакетыСборки } from "./sklad-pakety"
 import { этоТест } from "./sklad-test-metka"
 
 /**
@@ -33,6 +34,20 @@ export type Отправление = {
   трек: string | null
   наклейка: string | null
   позиции: { artikul: string | null; nazvanie: string | null; kolichestvo: number }[]
+  /** Места отправления. Заказ не делили — один пакет со всеми вещами. */
+  пакеты: ПакетКУпаковке[]
+}
+
+export type ПакетКУпаковке = {
+  nomer: number
+  sklad: string | null
+  upakovan: boolean
+  pozicii: {
+    artikul: string | null
+    nazvanie: string | null
+    kolichestvo: number
+    kody: string[]
+  }[]
 }
 
 const ПОЛЯ = [
@@ -41,6 +56,7 @@ const ПОЛЯ = [
   "shipped_at",
   "canceled_at",
   "data",
+  "metadata",
   "labels.tracking_number",
   "labels.label_url",
   "items.line_item_id",
@@ -56,7 +72,50 @@ const ПОЛЯ = [
 const вОтправление = (с: any): Отправление => {
   const ярлык = (с.labels ?? []).find((л: any) => л?.label_url) ?? (с.labels ?? [])[0]
 
+  const строки = new Map<string, { sku: string | null; title: string | null; штук: number }>()
+  for (const п of с.items ?? []) {
+    if (!п?.line_item_id) continue
+    const уже = строки.get(п.line_item_id)
+    строки.set(п.line_item_id, {
+      sku: п.sku || null,
+      title: п.title || null,
+      штук: (уже?.штук ?? 0) + Number(п.quantity ?? 0),
+    })
+  }
+
+  const упакованы: Record<string, string> = (с.metadata ?? {})[УПАКОВАНЫ] ?? {}
+  const поСкладу = пакетыСборки(
+    (с.order?.metadata ?? {})[ПАКЕТЫ],
+    new Map([...строки].map(([id, х]) => [id, х.штук]))
+  )
+  const пакеты: ПакетКУпаковке[] = поСкладу.length
+    ? поСкладу.map((п) => ({
+        nomer: п.nomer,
+        sklad: п.sklad ?? null,
+        upakovan: Boolean(упакованы[String(п.nomer)]),
+        pozicii: п.stroki.map((х) => ({
+          artikul: строки.get(х.id)?.sku ?? null,
+          nazvanie: строки.get(х.id)?.title ?? null,
+          kolichestvo: х.quantity,
+          kody: х.kody ?? [],
+        })),
+      }))
+    : [
+        {
+          nomer: 1,
+          sklad: ((с.order?.metadata ?? {})[ПАКЕТЫ] ?? [])[0]?.sklad ?? null,
+          upakovan: Boolean(упакованы["1"]),
+          pozicii: [...строки.values()].map((х) => ({
+            artikul: х.sku,
+            nazvanie: х.title,
+            kolichestvo: х.штук,
+            kody: [],
+          })),
+        },
+      ]
+
   return {
+    пакеты,
     idСборки: с.id,
     idЗаказа: с.order?.id,
     номер: String(с.order?.display_id ?? ""),

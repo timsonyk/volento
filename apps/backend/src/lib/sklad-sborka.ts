@@ -3,6 +3,7 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createOrderFulfillmentWorkflow } from "@medusajs/medusa/core-flows"
 
 import { КОДЫ } from "./sklad-kody"
+import { ПАКЕТЫ, type Пакет } from "./sklad-pakety"
 import { позвать } from "./trevoga"
 
 /**
@@ -64,11 +65,16 @@ export function проверитьКоды(строки: СтрокаСборк�
  * передаёт службе по каждой паре (lib/primerka.ts). Чек «полный расчёт»
  * здесь не пробиваем — только когда служба скажет, что покупатель забрал
  * (lib/dostavka-itog.ts): при примерке он может забрать не всё.
+ *
+ * пакеты — как склад разделил заказ (lib/sklad-pakety.ts). Не переданы —
+ * остаётся то, что уже записано в заказе: так сборку после неполной
+ * заводит кнопка в админке, а пакеты склад прислал раньше.
  */
 export async function завестиСборку(
   scope: MedusaContainer,
   заказ: { id: string; display_id: number; metadata?: Record<string, any> | null },
-  строки: СтрокаСборки[]
+  строки: СтрокаСборки[],
+  пакеты?: Пакет[]
 ) {
   const logger = scope.resolve(ContainerRegistrationKeys.LOGGER)
   const stockLocation = scope.resolve(Modules.STOCK_LOCATION)
@@ -92,7 +98,12 @@ export async function завестиСборку(
   await orderModule.updateOrders([
     {
       id: заказ.id,
-      metadata: { ...(заказ.metadata ?? {}), [КОДЫ]: коды, [НЕХВАТКА]: null },
+      metadata: {
+        ...(заказ.metadata ?? {}),
+        [КОДЫ]: коды,
+        [НЕХВАТКА]: null,
+        ...(пакеты ? { [ПАКЕТЫ]: пакеты } : {}),
+      },
     },
   ])
 

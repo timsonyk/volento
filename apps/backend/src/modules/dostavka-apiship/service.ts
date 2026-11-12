@@ -2,7 +2,9 @@ import { AsyncLocalStorage } from "node:async_hooks"
 
 import { КОДЫ } from "../../lib/sklad-kody"
 import { безНомера, допУслуги, кодыПоАртикулу, поПарам, type ДопУслуга } from "../../lib/primerka"
+import { ПАКЕТЫ, пакетыСборки, разложитьПоМестам, type Пакет } from "../../lib/sklad-pakety"
 import { ТЕСТ, тестоваяНаклейка } from "../../lib/sklad-test-metka"
+import { размерыМеста } from "../../lib/upakovka-tablica"
 
 // Плагин отдаёт класс провайдера только внутри описания модуля, отдельным
 // путём его не достать — берём оттуда же, откуда его берёт Medusa.
@@ -38,6 +40,11 @@ const ApishipService: any = (плагин.default ?? плагин).services[0]
  *    каждый такой запрос шёл в счёт бесплатных расчётов. Ответ для
  *    покупателя тот же: цена появится после выбора доставки.
  *
+ * 5. Несколько мест (lib/sklad-pakety.ts). Склад может разделить заказ на
+ *    пакеты — тогда в службу уходит одно отправление из нескольких мест,
+ *    у каждого свои товары, вес и размеры. Размеры любого места, и
+ *    единственного тоже, — из таблицы упаковки (lib/upakovka-tablica.ts).
+ *
  * И тестовые заказы склада (lib/sklad-test): в службу не ходим вовсе —
  * поддельный трек и наклейка, отмена тоже без ApiShip.
  */
@@ -45,6 +52,8 @@ type Заявка = {
   цены: Map<string, number>
   коды: Map<string, string[]>
   услуги: ДопУслуга[]
+  пакеты: Пакет[]
+  артикулСтроки: Map<string, string>
 }
 
 const заявка = new AsyncLocalStorage<Заявка>()
@@ -53,20 +62,6 @@ class DostavkaApishipService extends ApishipService {
   static identifier = ApishipService.identifier
 
   async createFulfillment(data: any, items: any[], order: any, fulfillment: any) {
-    if (data?.[ТЕСТ]) {
-      const номер = String(order?.display_id ?? order?.id ?? "")
-      return {
-        data: { test: true },
-        labels: [
-          {
-            tracking_number: `TEST-${номер}`,
-            tracking_url: "",
-            label_url: тестоваяНаклейка(номер),
-          },
-        ],
-      }
-    }
-
     const собрано = new Map<string, number>()
     for (const п of items ?? []) {
       if (!п?.line_item_id) {
@@ -76,6 +71,22 @@ class DostavkaApishipService extends ApishipService {
         п.line_item_id,
         (собрано.get(п.line_item_id) ?? 0) + Number(п.quantity ?? 0)
       )
+    }
+    const пакеты = пакетыСборки((order?.metadata ?? {})[ПАКЕТЫ], собрано)
+    const мест = Math.max(1, пакеты.length)
+
+    if (data?.[ТЕСТ]) {
+      const номер = String(order?.display_id ?? order?.id ?? "")
+      return {
+        data: { test: true, mest: мест },
+        labels: [
+          {
+            tracking_number: `TEST-${номер}`,
+            tracking_url: "",
+            label_url: тестоваяНаклейка(номер, мест),
+          },
+        ],
+      }
     }
 
     const заказ = собрано.size
@@ -89,10 +100,12 @@ class DostavkaApishipService extends ApishipService {
 
     // Цена штуки по артикулу — так строки посылки названы в запросе плагина
     const поАртикулу = new Map<string, number>()
+    const артикулСтроки = new Map<string, string>()
     for (const т of заказ?.items ?? []) {
       const артикул = т.variant?.sku
       if (артикул) {
         поАртикулу.set(артикул, Number(т.unit_price ?? 0))
+        артикулСтроки.set(т.id, артикул)
       }
     }
 
@@ -103,10 +116,14 @@ class DostavkaApishipService extends ApishipService {
     )
     const выбор = data?.apishipData
     const услуги = допУслуги(выбор?.tariff?.providerKey, выбор?.point)
-    const отправить = (с: ДопУслуга[]) =>
-      заявка.run({ цены: поАртикулу, коды, услуги: с }, () =>
-        super.createFulfillment(data, items, заказ, fulfillment)
+    const отправить = async (с: ДопУслуга[]) => {
+      const итог = await заявка.run(
+        { цены: поАртикулу, коды, услуги: с, пакеты, артикулСтроки },
+        () => super.createFulfillment(data, items, заказ, fulfillment)
       )
+      // сколько мест заявили — по этому числу склад ждёт наклеек
+      return { ...итог, data: { ...(итог?.data ?? {}), mest: мест } }
+    }
 
     if (!услуги.length) {
       return отправить([])
@@ -149,8 +166,22 @@ class DostavkaApishipService extends ApishipService {
       const з = запрос.orderRequest
       let всего = 0
 
+      // Плагин кладёт всё в одно место. Сначала пары — номера у одинаковых
+      // сквозные по заказу, — потом места: по пакетам склада или одно.
+      const [первое] = з.places ?? []
+      if (первое) {
+        const пары = поПарам(первое.items ?? [], наша.коды)
+        з.places =
+          наша.пакеты.length > 1
+            ? разложитьПоМестам(первое, пары, наша.пакеты, наша.артикулСтроки)
+            : [{ ...первое, ...размерыМеста(пары), items: пары }]
+        const вес = з.places.reduce((с: number, м: any) => с + Number(м.weight ?? 0), 0)
+        if (з.order && вес > 0) {
+          з.order.weight = вес
+        }
+      }
+
       for (const место of з.places ?? []) {
-        место.items = поПарам(место.items ?? [], наша.коды)
         for (const п of место.items) {
           if (наша.цены.size) {
             п.assessedCost = наша.цены.get(безНомера(п.articul)) ?? 0

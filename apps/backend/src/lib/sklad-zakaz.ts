@@ -15,6 +15,8 @@ export type ЗаказДляСклада = {
   metadata: Record<string, any> | null
   items: { id: string; quantity: number; variant_sku?: string; title?: string }[]
   живыеСборки: number
+  /** пункт выдачи, который выбрал покупатель; курьером — null */
+  пункт: Record<string, any> | null
 }
 
 export async function найтиЗаказ(
@@ -40,6 +42,7 @@ export async function найтиЗаказ(
     "items.variant_sku",
     "fulfillments.id",
     "fulfillments.canceled_at",
+    "shipping_methods.data",
   ]
 
   const числом = Number(чистый)
@@ -76,5 +79,9 @@ export async function найтиЗаказ(
       })),
     живыеСборки: (заказ.fulfillments ?? []).filter((с: any) => !с.canceled_at)
       .length,
+    пункт:
+      ((заказ as any).shipping_methods ?? [])
+        .map((с: any) => с?.data?.apishipData?.point)
+        .find(Boolean) ?? null,
   }
 }

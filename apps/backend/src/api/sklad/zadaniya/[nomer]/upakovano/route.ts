@@ -1,7 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { createOrderShipmentWorkflow } from "@medusajs/medusa/core-flows"
 
+import { УПАКОВАНЫ } from "../../../../../lib/sklad-pakety"
 import { собранныеНеУпакованные } from "../../../../../lib/sklad-upakovka"
 import { найтиЗаказ } from "../../../../../lib/sklad-zakaz"
 
@@ -10,6 +11,10 @@ import { найтиЗаказ } from "../../../../../lib/sklad-zakaz"
  *
  * В Medusa это «отправлено»: заказ уходит из /sklad/k-upakovke. Повтор
  * не ошибка — отвечаем «уже упакован».
+ *
+ * Заказ из нескольких пакетов можно отмечать по одному: { paket: 2 } —
+ * «второй пакет упакован и с наклейкой». Заказ уходит из списка, когда
+ * отмечены все. Без paket — упакованы все пакеты разом.
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
@@ -33,6 +38,51 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(409).json({
       ошибка: "Наклейки ещё нет — без неё посылку не примут",
     })
+  }
+
+  const сырой = (req.body as { paket?: unknown } | undefined)?.paket
+
+  if (сырой !== undefined && сырой !== null) {
+    const пакет = отправление.пакеты.find((п) => п.nomer === Number(сырой))
+
+    if (!пакет) {
+      return res.status(404).json({
+        ошибка: `В этом заказе нет пакета ${String(сырой)} — пакетов ${отправление.пакеты.length}`,
+      })
+    }
+
+    const остались = отправление.пакеты.filter((п) => !п.upakovan && п.nomer !== пакет.nomer)
+
+    if (остались.length) {
+      try {
+        const fulfillment = req.scope.resolve(Modules.FULFILLMENT)
+        const сборка: any = await fulfillment.retrieveFulfillment(отправление.idСборки)
+        await fulfillment.updateFulfillment(отправление.idСборки, {
+          metadata: {
+            ...(сборка?.metadata ?? {}),
+            [УПАКОВАНЫ]: {
+              ...((сборка?.metadata ?? {})[УПАКОВАНЫ] ?? {}),
+              [String(пакет.nomer)]: new Date().toISOString(),
+            },
+          },
+        } as any)
+      } catch (ошибка: any) {
+        logger.error(`Склад: пакет ${пакет.nomer} заказа ${номер} не отметился — ${ошибка?.message}`)
+        return res
+          .status(500)
+          .json({ ошибка: "Не удалось отметить", podrobnosti: ошибка?.message })
+      }
+
+      logger.info(`Склад упаковал пакет ${пакет.nomer} заказа ${заказ.display_id}`)
+
+      return res.json({
+        nomer: номер,
+        sostoyanie: "paket_upakovan",
+        paket: пакет.nomer,
+        ostalos: остались.map((п) => п.nomer),
+      })
+    }
+    // это был последний неотмеченный пакет — заказ упакован целиком
   }
 
   // Отправляем ровно то, что в этой сборке

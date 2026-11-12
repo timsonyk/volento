@@ -11,22 +11,38 @@ export const этоТест = (з: any) => Boolean((з?.metadata ?? {})[ТЕСТ
 
 /**
  * Поддельная наклейка 75×120 мм — PDF без шрифтов кириллицы, поэтому
- * латиницей. Склад проверит на ней печать и размер.
+ * латиницей. Склад проверит на ней печать и размер. Мест несколько —
+ * страниц столько же, как у настоящей: по наклейке на место.
  */
-export function тестоваяНаклейка(номер: string): string {
-  const строки = ["TEST LABEL", `ORDER ${номер}`, "NOT FOR SHIPPING"]
-  const текст = строки
-    .map((с, и) => `BT /F1 ${и ? 14 : 22} Tf 20 ${280 - и * 40} Td (${с}) Tj ET`)
-    .join("\n")
+export function тестоваяНаклейка(номер: string, мест = 1): string {
+  const всего = Math.max(1, Math.trunc(мест) || 1)
+  const страница = (место: number) => {
+    const строки = [
+      "TEST LABEL",
+      `ORDER ${номер}`,
+      ...(всего > 1 ? [`PLACE ${место} OF ${всего}`] : []),
+      "NOT FOR SHIPPING",
+    ]
+    return строки
+      .map((с, и) => `BT /F1 ${и ? 14 : 22} Tf 20 ${280 - и * 40} Td (${с}) Tj ET`)
+      .join("\n")
+  }
 
+  // 1 — каталог, 2 — список страниц, 3 — шрифт, дальше по два на страницу
+  const страницы = Array.from({ length: всего }, (_, и) => 4 + и * 2)
   const объекты = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    // 75×120 мм в пунктах
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 212.6 340.2] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
-    `<< /Length ${текст.length} >>\nstream\n${текст}\nendstream`,
+    `<< /Type /Pages /Kids [${страницы.map((н) => `${н} 0 R`).join(" ")}] /Count ${всего} >>`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
   ]
+  страницы.forEach((н, и) => {
+    const текст = страница(и + 1)
+    объекты.push(
+      // 75×120 мм в пунктах
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 212.6 340.2] /Contents ${н + 1} 0 R /Resources << /Font << /F1 3 0 R >> >> >>`,
+      `<< /Length ${текст.length} >>\nstream\n${текст}\nendstream`
+    )
+  })
 
   let pdf = "%PDF-1.4\n"
   const смещения: number[] = []
@@ -41,4 +57,3 @@ export function тестоваяНаклейка(номер: string): string {
 
   return `data:application/pdf;base64,${Buffer.from(pdf, "latin1").toString("base64")}`
 }
-

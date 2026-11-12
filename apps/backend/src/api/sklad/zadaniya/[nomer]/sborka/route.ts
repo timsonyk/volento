@@ -7,6 +7,12 @@ import {
   завестиСборку,
   проверитьКоды,
 } from "../../../../../lib/sklad-sborka"
+import {
+  ПАКЕТЫ,
+  безПустых,
+  разобратьСборку,
+  этоПостамат,
+} from "../../../../../lib/sklad-pakety"
 import { найтиЗаказ } from "../../../../../lib/sklad-zakaz"
 import { позвать } from "../../../../../lib/trevoga"
 
@@ -16,6 +22,11 @@ import { позвать } from "../../../../../lib/trevoga"
  *
  * Тело: { pozicii: [{ id_stroki, kolichestvo, kody: [...] }] } — по коду
  * на каждую штуку. Строку можно назвать и артикулом (artikul).
+ *
+ * Вещи лежат в двух помещениях — склад делит заказ на пакеты:
+ * { pakety: [{ sklad, pozicii: [...] }, { sklad, pozicii: [...] }] }.
+ * В службу уйдёт одно отправление из стольких же мест, наклейка будет на
+ * каждое (lib/sklad-pakety.ts).
  *
  * Собрано всё — заводим сборку: плагин ApiShip создаёт отправление, и
  * через несколько минут заказ с наклейкой появится в /sklad/k-upakovke.
@@ -30,13 +41,6 @@ import { позвать } from "../../../../../lib/trevoga"
  * тем же состоянием, второй сборки не заводим — иначе остаток списался
  * бы дважды.
  */
-type ПозицияСклада = {
-  id_stroki?: string
-  artikul?: string
-  kolichestvo?: number
-  kody?: unknown
-}
-
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const orderModule = req.scope.resolve(Modules.ORDER)
@@ -60,47 +64,20 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.json({ nomer: номер, sostoyanie: "zhdem_klienta" })
   }
 
-  const позиции = (req.body as { pozicii?: ПозицияСклада[] })?.pozicii
+  const разбор = разобратьСборку(req.body, заказ)
 
-  if (!Array.isArray(позиции) || !позиции.length) {
-    return res.status(400).json({
-      ошибка: "Пришлите pozicii: что собрано и коды маркировки по каждой штуке",
-    })
+  if ("ошибка" in разбор) {
+    return res.status(400).json({ ошибка: разбор.ошибка, ...(разбор.подробности ?? {}) })
   }
 
-  const строки: СтрокаСборки[] = []
+  const строки: СтрокаСборки[] = разбор.строки
+  const пакеты = безПустых(разбор.пакеты)
 
-  for (const п of позиции) {
-    const строка = заказ.items.find((т) =>
-      п.id_stroki ? т.id === String(п.id_stroki) : т.variant_sku === п.artikul
-    )
-
-    if (!строка) {
-      return res.status(400).json({
-        ошибка: "Такой строки нет в этом заказе",
-        poziciya: п,
-      })
-    }
-
-    if (строки.some((с) => с.id === строка.id)) {
-      return res.status(400).json({
-        ошибка: "Строка прислана дважды — пришлите её один раз со всеми кодами",
-        id_stroki: строка.id,
-      })
-    }
-
-    const сколько = Number(п.kolichestvo)
-
-    if (!Number.isInteger(сколько) || сколько < 0 || сколько > строка.quantity) {
-      return res.status(400).json({
-        ошибка: `Количество от 0 до ${строка.quantity}`,
-        id_stroki: строка.id,
-      })
-    }
-
-    const коды = Array.isArray(п.kody) ? п.kody.map((к) => String(к).trim()) : []
-
-    строки.push({ id: строка.id, quantity: сколько, kody: коды })
+  if (пакеты.length > 1 && этоПостамат(заказ.пункт)) {
+    return res.status(409).json({
+      ошибка:
+        "Этот заказ едет в постамат — в ячейку кладут одно место. Соберите его одним пакетом",
+    })
   }
 
   const ошибкаКодов = проверитьКоды(строки)
@@ -140,7 +117,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     await orderModule.updateOrders([
       {
         id: заказ.id,
-        metadata: { ...(заказ.metadata ?? {}), [НЕХВАТКА]: нехватка },
+        // пакеты помним: сборку потом заведёт кнопка в админке
+        metadata: { ...(заказ.metadata ?? {}), [НЕХВАТКА]: нехватка, [ПАКЕТЫ]: пакеты },
       },
     ])
 
@@ -162,11 +140,16 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   try {
-    const idСборки = await завестиСборку(req.scope, заказ, собрано)
+    const idСборки = await завестиСборку(req.scope, заказ, собрано, пакеты)
 
-    logger.info(`Склад собрал заказ ${заказ.display_id}`)
+    logger.info(`Склад собрал заказ ${заказ.display_id}, пакетов: ${пакеты.length}`)
 
-    return res.json({ nomer: номер, sostoyanie: "v_sborke", id_sborki: idСборки })
+    return res.json({
+      nomer: номер,
+      sostoyanie: "v_sborke",
+      id_sborki: idСборки,
+      paketov: пакеты.length,
+    })
   } catch (ошибка: any) {
     logger.error(`Склад: сборка заказа ${номер} не завелась — ${ошибка?.message}`)
     return res
