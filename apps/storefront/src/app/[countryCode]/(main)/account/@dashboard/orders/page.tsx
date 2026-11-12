@@ -3,8 +3,6 @@ import { Metadata } from "next"
 import OrderOverview from "@modules/account/components/order-overview"
 import { notFound } from "next/navigation"
 import { listOrders } from "@lib/data/orders"
-import Divider from "@modules/common/components/divider"
-import TransferRequestForm from "@modules/account/components/transfer-request-form"
 
 export const metadata: Metadata = {
   title: "Заказы",
@@ -23,14 +21,14 @@ export default async function Orders() {
       <div className="mb-8 flex flex-col gap-y-4">
         <h1 className="text-2xl-semi">Заказы</h1>
         <p className="text-base-regular">
-          Просматривайте свои прошлые заказы и их статус. При необходимости вы
-          можете оформить возврат или обмен.
+          Здесь все ваши заказы и их статус. Вернуть вещь можно из карточки
+          заказа — кнопка «Подробнее».
         </p>
       </div>
       <div>
         <OrderOverview orders={orders} />
-        <Divider className="mb-8 mt-8" />
-        <TransferRequestForm />
+        {/* «Перенос заказов» из шаблона убран: заказ у нас оформляет
+            только вошедший покупатель, заказов «без кабинета» не бывает */}
       </div>
     </div>
   )
