@@ -31,7 +31,7 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
                 e.stopPropagation()
                 onRemove()
               }}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+              className="border-b border-ink pb-0.5 text-ink hover:opacity-70"
             >
               Убрать
             </button>
@@ -43,7 +43,7 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
                 e.stopPropagation()
                 onEdit()
               }}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+              className="border-b border-ink pb-0.5 text-ink hover:opacity-70"
             >
               Изменить
             </button>
@@ -53,7 +53,7 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
 
       {isToPoint ? (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 w-[60%]">
+          <div className="flex flex-col gap-4 small:w-[60%]">
             <div className="flex flex-col">
               <Text>{chosen.point?.name}</Text>
               {chosen.point?.address && (

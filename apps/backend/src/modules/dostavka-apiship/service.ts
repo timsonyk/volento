@@ -148,7 +148,15 @@ class DostavkaApishipService extends ApishipService {
     if (!String(context?.shipping_address?.city ?? "").trim()) {
       throw new Error("Город не выбран — цену доставки посчитаем после выбора")
     }
-    return super.calculatePrice(optionData, data, context)
+    const цена = await super.calculatePrice(optionData, data, context)
+    // Целые рубли. Служба присылает цену с копейками (304,99 ₽), витрина
+    // в списке тарифов показывает её округлённой (305 ₽), а в итог заказа
+    // попадало 304,99: покупатель видел две разные цены одной доставки.
+    // Округляем так же, как витрина (ценаСтрокой), — цифры сходятся.
+    const сумма = Number((цена as any)?.calculated_amount)
+    return Number.isFinite(сумма)
+      ? { ...цена, calculated_amount: Math.round(сумма) }
+      : цена
   }
 
   async cancelFulfillment(data: any) {
