@@ -9,6 +9,7 @@ import {
   текстОтправки,
   темаОтправки,
 } from "../lib/trek-email"
+import { отправить } from "../lib/pochta"
 
 /**
  * Склад отметил «упаковано» — пишем покупателю номер для отслеживания.
@@ -69,7 +70,7 @@ export default async function заказОтправлен({
       ссылка: ссылкаОтслеживания(ключСлужбы, метка.tracking_number, метка.tracking_url || null),
     }
 
-    await container.resolve(Modules.NOTIFICATION).createNotifications({
+    await отправить(container, {
       to: заказ.email,
       channel: "email",
       template: "zakaz-otpravlen",

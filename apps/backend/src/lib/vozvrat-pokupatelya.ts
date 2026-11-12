@@ -6,6 +6,7 @@ import { итогиЗаказа } from "./dostavka-itog"
 import { чекВозвратаТовара } from "./kassa"
 import { этоТест } from "./sklad-test-metka"
 import { позвать } from "./trevoga"
+import { отправить } from "./pochta"
 
 /**
  * Возврат через кабинет: покупатель выбирает заказ, отмечает пары и
@@ -260,6 +261,7 @@ export async function принятьЗаявки(
         const платёж = платежи.find((п: any) => п.captured_at && !п.canceled_at)
         if (!платёж) {
           await позвать(scope, {
+            тест: этоТест(заказ),
             тема: `Возврат ${заявка.nomer}: верните ${сумма} ₽ вручную`,
             текст: `Склад принял возврат, а списанного платежа в заказе нет. Верните деньги в карточке заказа.`,
           })
@@ -303,6 +305,7 @@ export async function принятьЗаявки(
 
       if (отклонено.length) {
         await позвать(scope, {
+          тест: этоТест(заказ),
           тема: `Возврат ${заявка.nomer}: склад не принял ${отклонено.length} шт.`,
           текст:
             `Заказ ${заказ.display_id}, ${заказ.email}.\n\n${отклонено.map((о) => `${название(заявка.pary.find((п) => п.kod === о.kod)!)}: ${о.prichina}`).join("\n")}\n\n` +
@@ -340,7 +343,7 @@ async function письмо(scope: MedusaContainer, заказ: any, _номер
   </td></tr></table>
 </body></html>`
 
-  await scope.resolve(Modules.NOTIFICATION).createNotifications({
+  await отправить(scope, {
     to: заказ.email,
     channel: "email",
     template: шаблон,

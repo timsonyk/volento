@@ -4,6 +4,7 @@ import { createOrderFulfillmentWorkflow } from "@medusajs/medusa/core-flows"
 
 import { КОДЫ } from "./sklad-kody"
 import { ПАКЕТЫ, type Пакет } from "./sklad-pakety"
+import { этоТест } from "./sklad-test-metka"
 import { позвать } from "./trevoga"
 
 /**
@@ -118,6 +119,7 @@ export async function завестиСборку(
   const сборка: any = result
   if (сборка?.data?.primerka === false) {
     await позвать(scope, {
+      тест: этоТест(заказ),
       тема: `Заказ ${заказ.display_id} ушёл без примерки`,
       текст:
         `Служба не приняла заказ с частичным выкупом и примеркой, отправили без них — ` +

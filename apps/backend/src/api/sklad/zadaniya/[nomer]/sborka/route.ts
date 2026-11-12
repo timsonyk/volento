@@ -13,6 +13,7 @@ import {
   разобратьСборку,
   этоПостамат,
 } from "../../../../../lib/sklad-pakety"
+import { этоТест } from "../../../../../lib/sklad-test-metka"
 import { найтиЗаказ } from "../../../../../lib/sklad-zakaz"
 import { позвать } from "../../../../../lib/trevoga"
 
@@ -127,6 +128,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       .join("\n")
 
     await позвать(req.scope, {
+      тест: этоТест(заказ),
       тема: `Заказ ${заказ.display_id}: склад собрал не всё — позвоните покупателю`,
       текст:
         `Не хватает:\n${чего}\n\n` +

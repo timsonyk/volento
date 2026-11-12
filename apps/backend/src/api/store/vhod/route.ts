@@ -9,6 +9,7 @@ import {
   отпечаток,
   почтаКлючом,
 } from "../../../lib/kod-vhoda"
+import { отправить } from "../../../lib/pochta"
 
 /**
  * Выдаёт код для входа: придумывает число, кладёт его отпечаток личности
@@ -81,7 +82,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   try {
-    await notification.createNotifications({
+    await отправить(req.scope, {
       to: почта,
       channel: "email",
       template: "vhod-kod",

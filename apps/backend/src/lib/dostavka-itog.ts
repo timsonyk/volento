@@ -6,6 +6,7 @@ import { чекВозврата, чекРасчёта } from "./kassa"
 import { ИТОГ, type Итог } from "./primerka"
 import { этоТест } from "./sklad-test-metka"
 import { позвать } from "./trevoga"
+import { отправить } from "./pochta"
 
 /**
  * Посылку выдали — подводим итог: что покупатель забрал, а что едет
@@ -153,6 +154,7 @@ export async function подвестиИтог(
         const платёж = платежи.find((п: any) => п.captured_at && !п.canceled_at)
         if (!платёж) {
           await позвать(scope, {
+            тест: этоТест(заказ),
             тема: `Заказ ${заказ.display_id}: верните ${сумма} ₽ вручную`,
             текст: `Покупатель не забрал часть посылки, а списанного платежа в заказе нет. Верните деньги в карточке заказа.`,
           })
@@ -255,7 +257,7 @@ async function письмоПокупателю(scope: MedusaContainer, зака
   </td></tr></table>
 </body></html>`
 
-  await scope.resolve(Modules.NOTIFICATION).createNotifications({
+  await отправить(scope, {
     to: заказ.email,
     channel: "email",
     template: "zakaz-nevykup",

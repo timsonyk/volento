@@ -8,6 +8,7 @@ import {
   текстПисьма,
   темаПисьма,
 } from "../lib/order-email"
+import { отправить } from "../lib/pochta"
 
 /**
  * Письмо покупателю сразу после оформления заказа.
@@ -80,7 +81,7 @@ export default async function orderPlacedHandler({
         : null,
     }
 
-    await notification.createNotifications({
+    await отправить(container, {
       to: заказ.email,
       channel: "email",
       template: "order-placed",
