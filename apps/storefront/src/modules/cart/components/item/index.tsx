@@ -56,6 +56,29 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         : "Этого размера больше нет в наличии."
       : null
 
+  // Сервер количество сохранил, а страница иногда остаётся прежней: в
+  // списке старое число, сумма старая, хотя после перезагрузки всё верно.
+  // Помним, какое число просили, и перерисовываем, пока строка его не
+  // покажет (как у кнопки «удалить»).
+  const [ждём, setЖдём] = useState<number | null>(null)
+  useEffect(() => {
+    if (ждём === null) return
+    if (item.quantity === ждём) {
+      setЖдём(null)
+      return
+    }
+    let раз = 0
+    const t = setInterval(() => {
+      if (++раз > 4) {
+        clearInterval(t)
+        setЖдём(null)
+        return
+      }
+      router.refresh()
+    }, 2000)
+    return () => clearInterval(t)
+  }, [ждём, item.quantity, router])
+
   const changeQuantity = async (quantity: number) => {
     setError(null)
     setUpdating(true)
@@ -66,7 +89,10 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
     })
       // ответ на изменение иногда приносит корзину со старой суммой —
       // перерисовываем страницу заново (как после «В корзину»)
-      .then(() => router.refresh())
+      .then(() => {
+        setЖдём(quantity)
+        router.refresh()
+      })
       .catch((err: Error) => {
         setError(поЧеловечески(err.message, остаток))
       })
@@ -151,7 +177,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
                 </option>
               ))}
             </CartItemSelect>
-            {updating && <Spinner />}
+            {(updating || ждём !== null) && <Spinner />}
           </div>
           <ErrorMessage
             error={error ?? нехватает}
