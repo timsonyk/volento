@@ -5,9 +5,18 @@ import { parseOptionValueIds } from "@lib/util/product-option-filters"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
 
-export const metadata: Metadata = {
-  title: "Каталог",
-  description: "Смотрите все наши товары.",
+// Адрес без ?page и ?sortBy: страницы и сортировки каталога для
+// поисковика одна и та же страница.
+export async function generateMetadata(props: {
+  params: Promise<{ countryCode: string }>
+}): Promise<Metadata> {
+  const { countryCode } = await props.params
+  return {
+    title: "Каталог | Volento",
+    description:
+      "Каталог Volento: женские брюки, юбки, блузки и рубашки. Размеры и роста в наличии, доставка по России с примеркой.",
+    alternates: { canonical: `/${countryCode}/store` },
+  }
 }
 
 type StorePageSearchParams = Record<string, string | string[] | undefined> & {

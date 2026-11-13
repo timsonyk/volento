@@ -57,10 +57,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   try {
     const productCategory = await getCategoryByHandle(params.category)
 
-    const title = productCategory.name + " | Volento"
+    // У подраздела в заголовке стоит и родитель: «Брюки» есть и женские,
+    // и в «Мужском», в выдаче их было не различить.
+    const родитель = productCategory.parent_category?.name
+    const title =
+      (родитель
+        ? `${productCategory.name}, ${родитель.toLowerCase()}`
+        : productCategory.name) + " | Volento"
 
+    // Описание раздела в админке обычно пустое (пустая строка, не null),
+    // поэтому запасной текст подставляем через ||.
     const description =
-      productCategory.description ?? `Категория ${productCategory.name}.`
+      productCategory.description?.trim() ||
+      `${productCategory.name}${родитель ? ` (${родитель.toLowerCase()})` : ""} Volento: модели в наличии, размеры и роста, доставка по России с примеркой.`
 
     return {
       title,
