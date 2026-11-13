@@ -2,7 +2,6 @@
 
 import {
   Popover,
-  PopoverButton,
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
@@ -101,7 +100,10 @@ const CartDropdown = ({
       onMouseLeave={close}
     >
       <Popover className="relative h-full">
-        <PopoverButton className="flex h-full items-center">
+        {/* Просто обёртка, не кнопка: внутри уже ссылка на корзину, а
+            ссылка в кнопке — неверная разметка, программы чтения с экрана
+            объявляли её дважды. Окошко открывается наведением (выше). */}
+        <div className="flex h-full items-center">
           <LocalizedClientLink
             className="relative flex items-center text-ink transition-opacity hover:opacity-60"
             href="/cart"
@@ -115,7 +117,7 @@ const CartDropdown = ({
               </span>
             )}
           </LocalizedClientLink>
-        </PopoverButton>
+        </div>
         <Transition
           show={cartDropdownOpen}
           as={Fragment}
