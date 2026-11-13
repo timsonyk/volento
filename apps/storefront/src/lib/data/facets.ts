@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { найтиПоСловам } from "@lib/util/poisk-slova"
 import { HttpTypes } from "@medusajs/types"
 
 import { listCategories } from "./categories"
@@ -59,6 +60,7 @@ export type ВыбранныеФильтры = {
 
 type Лёгкий = {
   id: string
+  title?: string | null
   created_at?: string
   metadata?: Record<string, unknown> | null
   tags?: { value?: string }[] | null
@@ -109,7 +111,7 @@ const всяВыписка = async (): Promise<Лёгкий[]> => {
           // Medusa молча пропускает. Без меток служебная «Проверка оплаты»
           // считалась новинкой и выбивала карточки на главной.
           fields:
-            "id,created_at,metadata,tags.value,+categories.id,+categories.name,+categories.handle",
+            "id,title,created_at,metadata,tags.value,+categories.id,+categories.name,+categories.handle",
         },
         headers,
         next,
@@ -160,25 +162,14 @@ export const идыПоиска = async (запрос: string): Promise<string[]
     return []
   }
 
-  const headers = { ...(await getAuthHeaders()) }
-  const next = { ...(await getCacheOptions("products")) }
-
-  try {
-    const { products } = await sdk.client.fetch<{ products: { id: string }[] }>(
-      "/store/products",
-      {
-        method: "GET",
-        query: { limit: 1000, fields: "id", q: чистый },
-        headers,
-        next,
-        cache: "force-cache",
-      }
-    )
-    return (products ?? []).map((p) => p.id)
-  } catch (e) {
-    console.error("Поиск по каталогу не отработал", e)
-    return []
-  }
+  // Ищем сами, по выписке каталога (она уже в кэше для фильтра), а не
+  // встроенным поиском Medusa: тот не понимал «черные брюки», «чёрный»,
+  // «юбки» — см. lib/util/poisk-slova.ts. Служебные и скрытые товары в
+  // находки не попадают.
+  const каталог = (await всяВыписка()).filter(
+    (т) => !т.tags?.some((м) => м.value === "system" || м.value === "skryt")
+  )
+  return найтиПоСловам(каталог, чистый)
 }
 
 /**
