@@ -64,7 +64,8 @@ const RefinementList = ({
     })
 
   return (
-    <div className="flex flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
+    // строка над сеткой, а не колонка слева: так же, как в каталоге
+    <div className="mb-6 flex flex-col gap-6 py-2">
       <SortProducts
         sortBy={sortBy}
         setQueryParams={setQueryParams}
