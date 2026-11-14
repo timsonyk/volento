@@ -1,4 +1,5 @@
-import { Heading } from "@modules/common/components/ui"
+import { Heading, Text } from "@modules/common/components/ui"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartTotals from "@modules/common/components/cart-totals"
 import Help from "@modules/order/components/help"
 import Items from "@modules/order/components/items"
@@ -29,6 +30,28 @@ export default async function OrderCompletedTemplate({
             <span>Ваш заказ успешно оформлен.</span>
           </Heading>
           <OrderDetails order={order} />
+          <div className="flex flex-col gap-y-3" data-testid="chto-dalshe">
+            <Text>
+              Мы соберём заказ и передадим в доставку. Когда он уедет, пришлём
+              письмо с номером для отслеживания. Следить за заказом и
+              оформить возврат можно в личном кабинете.
+            </Text>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <LocalizedClientLink
+                href={`/account/orders/details/${order.id}`}
+                className="underline underline-offset-4"
+                data-testid="zakaz-v-kabinete"
+              >
+                Открыть заказ в кабинете
+              </LocalizedClientLink>
+              <LocalizedClientLink
+                href="/store"
+                className="underline underline-offset-4"
+              >
+                Вернуться в каталог
+              </LocalizedClientLink>
+            </div>
+          </div>
           <Heading level="h2" className="flex flex-row text-3xl-regular">
             Ваш заказ
           </Heading>

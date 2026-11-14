@@ -7,9 +7,9 @@ type OrderDetailsProps = {
 }
 
 const statusLabels: Record<string, string> = {
-  not_fulfilled: "Не собран",
-  partially_fulfilled: "Частично собран",
-  fulfilled: "Собран",
+  not_fulfilled: "Собираем",
+  partially_fulfilled: "Собираем",
+  fulfilled: "Собран, ждёт отправки",
   partially_shipped: "Частично отправлен",
   shipped: "Отправлен",
   partially_delivered: "Частично доставлен",

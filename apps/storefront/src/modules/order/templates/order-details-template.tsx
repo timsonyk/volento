@@ -24,7 +24,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
   return (
     <div className="flex flex-col justify-center gap-y-4">
       <div className="flex gap-2 justify-between items-center">
-        <h1 className="text-2xl-semi">Детали заказа</h1>
+        <h1 className="text-2xl-semi">Заказ №{order.display_id}</h1>
         <LocalizedClientLink
           href="/account/orders"
           // на телефоне эту ссылку дублирует «‹ Личный кабинет» над заголовком
