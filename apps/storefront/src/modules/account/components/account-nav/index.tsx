@@ -8,7 +8,6 @@ import { signout } from "@lib/data/customer"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ChevronDown from "@modules/common/icons/chevron-down"
-import MapPin from "@modules/common/icons/map-pin"
 import Package from "@modules/common/icons/package"
 import User from "@modules/common/icons/user"
 
@@ -55,21 +54,6 @@ const AccountNav = ({
                       <div className="flex items-center gap-x-2">
                         <User size={20} />
                         <span>Профиль</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink
-                    href="/account/addresses"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
-                    data-testid="addresses-link"
-                  >
-                    <>
-                      <div className="flex items-center gap-x-2">
-                        <MapPin size={20} />
-                        <span>Адреса</span>
                       </div>
                       <ChevronDown className="transform -rotate-90" />
                     </>
@@ -130,15 +114,6 @@ const AccountNav = ({
                   data-testid="profile-link"
                 >
                   Профиль
-                </AccountNavLink>
-              </li>
-              <li>
-                <AccountNavLink
-                  href="/account/addresses"
-                  route={route!}
-                  data-testid="addresses-link"
-                >
-                  Адреса
                 </AccountNavLink>
               </li>
               <li>

@@ -15,9 +15,9 @@ const Overview = ({ customer, orders }: OverviewProps) => {
     <div data-testid="overview-page-wrapper">
       <div className="hidden small:block">
         <div className="text-xl-semi flex justify-between items-center mb-4">
-          <span data-testid="welcome-message" data-value={customer?.first_name}>
+          <h1 data-testid="welcome-message" data-value={customer?.first_name}>
             Здравствуйте, {customer?.first_name}
-          </span>
+          </h1>
           <span className="text-small-regular text-ui-fg-base">
             Вы вошли как:{" "}
             <span
@@ -44,22 +44,6 @@ const Overview = ({ customer, orders }: OverviewProps) => {
                   </span>
                   <span className="uppercase text-base-regular text-ui-fg-subtle">
                     заполнен
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-y-4">
-                <h3 className="text-large-semi">Адреса</h3>
-                <div className="flex items-end gap-x-2">
-                  <span
-                    className="text-3xl-semi leading-none"
-                    data-testid="addresses-count"
-                    data-value={customer?.addresses?.length || 0}
-                  >
-                    {customer?.addresses?.length || 0}
-                  </span>
-                  <span className="uppercase text-base-regular text-ui-fg-subtle">
-                    сохранено
                   </span>
                 </div>
               </div>
