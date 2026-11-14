@@ -27,6 +27,36 @@ const BACKEND = (() => {
  */
 const nextConfig = {
   reactStrictMode: true,
+  // не сообщаем каждому ответом, на чём сделан сайт
+  poweredByHeader: false,
+  /**
+   * Защитные заголовки на все страницы. Раньше не было ни одного.
+   *
+   * - сайт нельзя вставить в чужую страницу рамкой (подмена кнопок под
+   *   курсором). Понадобится Вебвизор Яндекс Метрики — он показывает сайт
+   *   в рамке, тогда в frame-ancestors надо добавить его адреса;
+   * - браузер не гадает тип файла по содержимому;
+   * - на чужие сайты уходит только адрес нашего сайта, без пути и запроса
+   *   (в адресе поиска и заказа бывают личные данные);
+   * - браузер запоминает на год, что сайт открывается только по https;
+   * - камера и микрофон сайту не нужны, местоположение — только своей
+   *   карте пунктов выдачи.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+        ],
+      },
+    ]
+  },
   logging: {
     fetches: {
       fullUrl: true,
