@@ -2,7 +2,7 @@ import ВозвратИзБанка from "@modules/checkout/components/vozvrat-i
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Оплата заказа",
+  title: "Оплата заказа | Volento",
   robots: { index: false },
 }
 

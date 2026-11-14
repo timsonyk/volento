@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import InteractiveLink from "@modules/common/components/interactive-link"
 
 export const metadata: Metadata = {
-  title: "404",
+  title: "Страница не найдена | Volento",
   description: "Что-то пошло не так",
 }
 

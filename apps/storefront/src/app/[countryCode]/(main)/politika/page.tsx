@@ -10,7 +10,7 @@ import PageLayout, {
 } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
-  title: "Политика конфиденциальности — Volento",
+  title: "Политика конфиденциальности | Volento",
 }
 
 /** Дата последней редакции. Менять при любой правке текста. */

@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import PageLayout, { Раздел } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
-  title: "Оплата — Volento",
+  title: "Оплата | Volento",
   description: "Как оплатить заказ в Volento: карта, СБП, чек по 54-ФЗ.",
 }
 

@@ -9,7 +9,7 @@ import PageLayout, {
 } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
-  title: "Согласие на обработку персональных данных — Volento",
+  title: "Согласие на обработку персональных данных | Volento",
 }
 
 /** Дата последней редакции. Менять при любой правке текста. */

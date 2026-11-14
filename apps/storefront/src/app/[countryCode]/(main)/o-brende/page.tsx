@@ -4,7 +4,7 @@ import PageLayout, { Раздел } from "@modules/content/components/page-layou
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 export const metadata: Metadata = {
-  title: "О бренде — Volento",
+  title: "О бренде | Volento",
   description:
     "Volento — женские классические брюки. Каждая модель в нескольких ростах и размерах, чтобы длина подошла сразу.",
 }

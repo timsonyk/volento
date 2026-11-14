@@ -6,7 +6,7 @@ import { notFound } from "next/navigation"
 import { retrieveCustomer } from "@lib/data/customer"
 
 export const metadata: Metadata = {
-  title: "Профиль",
+  title: "Профиль | Volento",
   description: "Просмотр и редактирование вашего профиля Volento.",
 }
 

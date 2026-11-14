@@ -4,7 +4,7 @@ import { getHomeContent } from "@lib/data/home-banner"
 import PageLayout, { Раздел } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
-  title: "Возврат и обмен — Volento",
+  title: "Возврат и обмен | Volento",
   description:
     "Как вернуть или обменять брюки Volento: сроки, условия, порядок возврата денег.",
 }

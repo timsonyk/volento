@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { listOrders } from "@lib/data/orders"
 
 export const metadata: Metadata = {
-  title: "Заказы",
+  title: "Заказы | Volento",
   description: "Обзор ваших прошлых заказов.",
 }
 

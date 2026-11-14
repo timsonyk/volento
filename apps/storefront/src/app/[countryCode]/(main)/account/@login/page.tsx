@@ -9,11 +9,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const customer = await retrieveCustomer().catch(() => null)
   return customer
     ? {
-        title: "Личный кабинет",
+        title: "Личный кабинет | Volento",
         description: "Ваши заказы и данные в магазине Volento.",
       }
     : {
-        title: "Войти",
+        title: "Войти | Volento",
         description: "Войдите в свой личный кабинет Volento.",
       }
 }

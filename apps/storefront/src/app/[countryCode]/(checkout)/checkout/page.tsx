@@ -9,7 +9,7 @@ import { Metadata } from "next"
 import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Оформление заказа",
+  title: "Оформление заказа | Volento",
 }
 
 export default async function Checkout(props: {

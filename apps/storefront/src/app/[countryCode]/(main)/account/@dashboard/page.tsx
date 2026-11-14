@@ -6,7 +6,7 @@ import { retrieveCustomer } from "@lib/data/customer"
 import { listOrders } from "@lib/data/orders"
 
 export const metadata: Metadata = {
-  title: "Личный кабинет",
+  title: "Личный кабинет | Volento",
   description: "Обзор активности в вашем личном кабинете.",
 }
 

@@ -7,7 +7,7 @@ type Props = {
   params: Promise<{ id: string }>
 }
 export const metadata: Metadata = {
-  title: "Заказ подтверждён",
+  title: "Заказ подтверждён | Volento",
   description: "Ваша покупка успешно оформлена",
 }
 
