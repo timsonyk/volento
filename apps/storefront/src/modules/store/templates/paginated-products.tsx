@@ -2,6 +2,7 @@ import { listModelColors, listProductsWithSort } from "@lib/data/products"
 import { дляКарточки } from "@lib/util/dlya-kartochki"
 import { getRegion } from "@lib/data/regions"
 import { OptionValueIds } from "@lib/util/product-option-filters"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ProductGrid from "@modules/store/components/product-grid"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
@@ -27,6 +28,7 @@ export default async function PaginatedProducts({
   countryCode,
   optionValueIds,
   ничегоНеНайдено,
+  естьФильтры = true,
 }: {
   sortBy?: SortOptions
   page: number
@@ -37,16 +39,29 @@ export default async function PaginatedProducts({
   optionValueIds?: OptionValueIds
   /** фильтр отработал и не нашёл ни одного товара */
   ничегоНеНайдено?: boolean
+  /** покупатель что-то выбрал в фильтрах (от этого зависит текст пустого списка) */
+  естьФильтры?: boolean
 }) {
   // Пустой список id в запрос не отправляем: Medusa поймёт его как
   // «без условия» и вернёт весь каталог, хотя показать надо ничего.
+  // Пустой раздел без фильтров — не «ничего не нашлось»: совет снять
+  // фильтры тут сбивал с толку, снимать было нечего.
+  const пусто = естьФильтры ? (
+    <p className="py-16 text-center text-base text-muted">
+      По выбранным условиям ничего не нашлось. Попробуйте снять часть
+      фильтров.
+    </p>
+  ) : (
+    <p className="py-16 text-center text-base text-muted" data-testid="pustoy-razdel">
+      Здесь пока нет вещей.{" "}
+      <LocalizedClientLink href="/store" className="text-ink underline underline-offset-4">
+        Смотреть весь каталог
+      </LocalizedClientLink>
+    </p>
+  )
+
   if (ничегоНеНайдено) {
-    return (
-      <p className="py-16 text-center text-base text-muted">
-        По выбранным условиям ничего не нашлось. Попробуйте снять часть
-        фильтров.
-      </p>
-    )
+    return пусто
   }
 
   const queryParams: PaginatedProductsParams = {
@@ -88,6 +103,10 @@ export default async function PaginatedProducts({
     countryCode,
     optionValueIds,
   })
+
+  if (!count) {
+    return пусто
+  }
 
   // цвета всех моделей страницы — одним запросом, а не по одному на карточку
   const colorsByModel = await listModelColors({ products, countryCode })

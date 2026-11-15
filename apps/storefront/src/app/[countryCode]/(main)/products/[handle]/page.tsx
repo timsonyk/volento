@@ -97,7 +97,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     queryParams: { handle },
   }).then(({ response }) => response.products[0])
 
-  if (!product) {
+  // служебная запись («Оформление сайта») не товар: и названия её во
+  // вкладке быть не должно
+  if (!product || product.tags?.some((t) => t.value === "system")) {
     notFound()
   }
 

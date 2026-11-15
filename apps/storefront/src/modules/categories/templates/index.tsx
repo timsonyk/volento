@@ -94,6 +94,11 @@ export default async function CategoryTemplate({
             optionValueIds={optionValueIds}
             productsIds={отобранные ?? undefined}
             ничегоНеНайдено={отобранные?.length === 0}
+            естьФильтры={
+              Object.values(фильтры ?? {}).some((v) =>
+                Array.isArray(v) ? v.length > 0 : v === true
+              ) || !!optionValueIds?.length
+            }
           />
         </Suspense>
       </div>
