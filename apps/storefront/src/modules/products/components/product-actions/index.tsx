@@ -20,6 +20,8 @@ type ProductActionsProps = {
   таблицы?: string[]
 }
 
+const КЛЮЧ_РАЗМЕРА = "volento_moy_razmer"
+
 const optionsAsKeymap = (
   variantOptions: HttpTypes.StoreProductVariant["options"]
 ) => {
@@ -41,6 +43,8 @@ export default function ProductActions({
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
   const [ошибка, setОшибка] = useState<string | null>(null)
+  // «Мой размер»: что подставили сами, чтобы сказать об этом покупателю
+  const [подставлен, setПодставлен] = useState<string | null>(null)
   const countryCode = useParams().countryCode as string
 
   // If there is only 1 variant, preselect the options
@@ -64,6 +68,8 @@ export default function ProductActions({
 
   // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
+    setПодставлен(null)
+    запомнитьРазмер(optionId, value)
     setOptions((prev) => ({
       ...prev,
       [optionId]: value,
@@ -170,6 +176,53 @@ export default function ProductActions({
 
     return { размерId, ростId, размеры, ростаУРазмера, всеРоста }
   }, [product.variants, product.options])
+
+  /**
+   * «Мой размер». Размер и рост у человека одни и те же во всех брюках,
+   * а выбирать их приходилось в каждой карточке заново. Запоминаем
+   * последний выбор в браузере и подставляем в следующей вещи — только
+   * если такой размер (и рост) у неё есть в наличии.
+   */
+  const запомнитьРазмер = (optionId: string, value: string) => {
+    const поле =
+      optionId === наличие.размерId
+        ? "размер"
+        : optionId === наличие.ростId
+        ? "рост"
+        : null
+    if (!поле) return
+    try {
+      const было = JSON.parse(localStorage.getItem(КЛЮЧ_РАЗМЕРА) || "{}")
+      localStorage.setItem(КЛЮЧ_РАЗМЕРА, JSON.stringify({ ...было, [поле]: value }))
+    } catch {
+      // браузер без хранилища — просто не запоминаем
+    }
+  }
+
+  useEffect(() => {
+    if ((product.variants?.length ?? 0) <= 1 || !наличие.размерId) return
+    let мой: { размер?: string; рост?: string } = {}
+    try {
+      мой = JSON.parse(localStorage.getItem(КЛЮЧ_РАЗМЕРА) || "{}")
+    } catch {
+      return
+    }
+    if (!мой.размер || !наличие.размеры.has(мой.размер)) return
+
+    const выбор: Record<string, string> = { [наличие.размерId]: мой.размер }
+    let подпись = `размер ${мой.размер}`
+    if (
+      наличие.ростId &&
+      мой.рост &&
+      наличие.ростаУРазмера.get(мой.размер)?.has(мой.рост)
+    ) {
+      выбор[наличие.ростId] = мой.рост
+      подпись += `, рост ${мой.рост}`
+    }
+    setOptions((prev) => (Object.keys(prev).length ? prev : выбор))
+    setПодставлен(подпись)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id])
 
   /** Значения, которые надо перечеркнуть у конкретной опции. */
   const перечеркнуть = (id: string, значения: string[]) => {
@@ -278,6 +331,11 @@ export default function ProductActions({
                   </div>
                 )
               })}
+              {подставлен && (
+                <p className="text-sm text-muted" data-testid="moy-razmer">
+                  Подставили ваш прошлый выбор: {подставлен}. Его можно сменить.
+                </p>
+              )}
             </div>
           )}
         </div>
