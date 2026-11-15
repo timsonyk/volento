@@ -277,7 +277,13 @@ const Вход = ({ заголовок = "Вход", пояснение }: Св�
             />
             <span className="text-sm leading-relaxed text-ink">
               Даю{" "}
-              <LocalizedClientLink href="/soglasie" className="underline">
+              {/* в новой вкладке: иначе человек уходит с анкеты и теряет вход */}
+              <LocalizedClientLink
+                href="/soglasie"
+                className="underline"
+                target="_blank"
+                rel="noopener"
+              >
                 согласие на обработку персональных данных
               </LocalizedClientLink>
             </span>

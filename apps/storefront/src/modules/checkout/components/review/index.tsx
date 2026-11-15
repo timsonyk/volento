@@ -56,22 +56,22 @@ const Review = ({ cart }: { cart: HttpTypes.StoreCart }) => {
       {/* Заголовок пункта рисует обёртка «Шаг» — здесь он был бы вторым. */}
       <Галочка отмечено={данные} сменить={setДанные} testId="consent-checkbox">
         Даю{" "}
-        <LocalizedClientLink href="/soglasie" className="underline">
+        <LocalizedClientLink href="/soglasie" className="underline" target="_blank" rel="noopener">
           согласие на обработку персональных данных
         </LocalizedClientLink>
       </Галочка>
 
       <Галочка отмечено={оферта} сменить={setОферта} testId="offer-checkbox">
         Принимаю условия{" "}
-        <LocalizedClientLink href="/oferta" className="underline">
+        <LocalizedClientLink href="/oferta" className="underline" target="_blank" rel="noopener">
           публичной оферты
         </LocalizedClientLink>
         , знаком с{" "}
-        <LocalizedClientLink href="/politika" className="underline">
+        <LocalizedClientLink href="/politika" className="underline" target="_blank" rel="noopener">
           политикой конфиденциальности
         </LocalizedClientLink>{" "}
         и{" "}
-        <LocalizedClientLink href="/soglashenie" className="underline">
+        <LocalizedClientLink href="/soglashenie" className="underline" target="_blank" rel="noopener">
           пользовательским соглашением
         </LocalizedClientLink>
       </Галочка>
