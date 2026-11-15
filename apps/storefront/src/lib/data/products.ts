@@ -62,8 +62,10 @@ const ПОЛЯ_СПИСКА = [
 // Картинок у размеров (*variants.images) не просим: у каждого из
 // полусотни размеров лежал один и тот же набор снимков товара, это
 // половина ответа (256 КБ против 117 КБ), и вся она уезжала в страницу.
+// Разделы (*categories) нужны хлебным крошкам и «Моему размеру»: раньше
+// их не просили, и крошки молча пропускали звено раздела.
 const ПОЛЯ_ТОВАРА =
-  "*variants.calculated_price,+variants.inventory_quantity,*variants.options,+metadata,+tags,"
+  "*variants.calculated_price,+variants.inventory_quantity,*variants.options,+metadata,+tags,*categories,"
 
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {

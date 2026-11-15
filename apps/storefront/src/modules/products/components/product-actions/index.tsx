@@ -183,6 +183,27 @@ export default function ProductActions({
    * последний выбор в браузере и подставляем в следующей вещи — только
    * если такой размер (и рост) у неё есть в наличии.
    */
+  /**
+   * Размер запоминаем отдельно по видам вещей: 46 в брюках не значит 46
+   * в блузке, а мужская сетка своя. Вид берём из разделов каталога.
+   */
+  const вид = useMemo(() => {
+    const разделы = (product.categories ?? []).map((c) => c.handle ?? "")
+    const верх = разделы.some((h) => /bluzk|rubashk/.test(h))
+    const мужское = разделы.some((h) => h.startsWith("muzhsk"))
+    return `${мужское ? "muzh-" : ""}${верх ? "verh" : "niz"}`
+  }, [product.categories])
+
+  type Запись = { размер?: string; рост?: string }
+  const прочитатьРазмеры = (): Record<string, Запись> => {
+    const было = JSON.parse(localStorage.getItem(КЛЮЧ_РАЗМЕРА) || "{}")
+    // первая версия хранила один размер на всё; тогда это были брюки
+    if (typeof было.размер === "string" || typeof было.рост === "string") {
+      return { niz: { размер: было.размер, рост: было.рост } }
+    }
+    return было && typeof было === "object" ? было : {}
+  }
+
   const запомнитьРазмер = (optionId: string, value: string) => {
     const поле =
       optionId === наличие.размерId
@@ -192,8 +213,11 @@ export default function ProductActions({
         : null
     if (!поле) return
     try {
-      const было = JSON.parse(localStorage.getItem(КЛЮЧ_РАЗМЕРА) || "{}")
-      localStorage.setItem(КЛЮЧ_РАЗМЕРА, JSON.stringify({ ...было, [поле]: value }))
+      const все = прочитатьРазмеры()
+      localStorage.setItem(
+        КЛЮЧ_РАЗМЕРА,
+        JSON.stringify({ ...все, [вид]: { ...все[вид], [поле]: value } })
+      )
     } catch {
       // браузер без хранилища — просто не запоминаем
     }
@@ -201,9 +225,9 @@ export default function ProductActions({
 
   useEffect(() => {
     if ((product.variants?.length ?? 0) <= 1 || !наличие.размерId) return
-    let мой: { размер?: string; рост?: string } = {}
+    let мой: Запись = {}
     try {
-      мой = JSON.parse(localStorage.getItem(КЛЮЧ_РАЗМЕРА) || "{}")
+      мой = прочитатьРазмеры()[вид] ?? {}
     } catch {
       return
     }

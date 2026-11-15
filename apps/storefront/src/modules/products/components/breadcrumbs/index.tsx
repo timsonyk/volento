@@ -3,8 +3,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 
 /**
  * Хлебные крошки над карточкой товара: показывают, откуда пришли и как
- * подняться обратно. Раздел берём первый из привязанных к товару — их
- * обычно один; если разделов нет, ведём просто в каталог.
+ * подняться обратно. Раздел берём самый точный из привязанных к товару; если разделов нет, ведём просто в каталог.
  */
 const Breadcrumbs = ({
   product,
@@ -13,7 +12,10 @@ const Breadcrumbs = ({
   product: HttpTypes.StoreProduct
   название: string
 }) => {
-  const раздел = product.categories?.[0]
+  // вещь бывает сразу в «Брюках» и в «Прямых»: ведём в более точный раздел
+  const раздел =
+    product.categories?.find((c) => c.parent_category_id) ??
+    product.categories?.[0]
 
   const звенья = [
     { имя: "Главная", адрес: "/" },
