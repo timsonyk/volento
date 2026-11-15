@@ -65,7 +65,7 @@ const ПОЛЯ_СПИСКА = [
 // Разделы (*categories) нужны хлебным крошкам и «Моему размеру»: раньше
 // их не просили, и крошки молча пропускали звено раздела.
 const ПОЛЯ_ТОВАРА =
-  "*variants.calculated_price,+variants.inventory_quantity,*variants.options,+metadata,+tags,*categories,"
+  "*variants.calculated_price,+variants.inventory_quantity,*variants.options,+metadata,+tags,*categories,*categories.parent_category,"
 
 type ProductListQueryParams = (HttpTypes.FindParams &
   HttpTypes.StoreProductListParams) & {

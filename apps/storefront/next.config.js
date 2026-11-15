@@ -1,3 +1,4 @@
+const path = require("path")
 const checkEnvVariables = require("./check-env-variables")
 
 checkEnvVariables()
@@ -27,6 +28,9 @@ const BACKEND = (() => {
  */
 const nextConfig = {
   reactStrictMode: true,
+  // корень проекта называем сами: в репозитории два package-lock.json, и
+  // сборка каждый раз предупреждала, что угадывает (угадывала этот же)
+  outputFileTracingRoot: path.join(__dirname, "../../"),
   // не сообщаем каждому ответом, на чём сделан сайт
   poweredByHeader: false,
   /**
