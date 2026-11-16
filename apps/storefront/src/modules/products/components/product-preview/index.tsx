@@ -2,6 +2,7 @@ import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ModelColor } from "types/global"
+import Сердечко from "@modules/products/components/v-izbrannoe/serdechko"
 import PreviewGallery from "./gallery"
 import PreviewPrice from "./price"
 import PreviewSizes, { размерыТовара } from "./sizes"
@@ -66,6 +67,14 @@ export default function ProductPreview({
   const остальные = swatches.length - видимые.length
 
   return (
+    <div className="relative h-full">
+    <Сердечко
+      вещь={{
+        handle: product.handle ?? "",
+        title: product.title,
+        thumbnail: product.thumbnail,
+      }}
+    />
     <LocalizedClientLink
       href={`/products/${product.handle}`}
       className="group block h-full"
@@ -143,5 +152,6 @@ export default function ProductPreview({
         </div>
       </div>
     </LocalizedClientLink>
+    </div>
   )
 }
