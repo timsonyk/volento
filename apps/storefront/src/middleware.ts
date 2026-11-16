@@ -116,7 +116,29 @@ export async function middleware(request: NextRequest) {
   const firstPathSegment = request.nextUrl.pathname.split("/")[1]?.toLowerCase()
   const urlHasCountry = firstPathSegment === country.toLowerCase()
 
+  // За обратным прокси Next не доверяет заголовку Host и подставляет localhost.
+  // Берём реальный адрес сайта из заголовков, которые проставляет nginx.
+  const forwardedHost =
+    request.headers.get("x-forwarded-host") || request.headers.get("host")
+  const forwardedProto =
+    request.headers.get("x-forwarded-proto") ||
+    request.nextUrl.protocol.replace(":", "")
+  const origin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : request.nextUrl.origin
+  const queryString = request.nextUrl.search || ""
+
   if (urlHasCountry) {
+    // «/RU/store» проходил как есть, страна «RU» не находилась, и каталог
+    // открывался пустым. Ведём на адрес строчными буквами.
+    const какВАдресе = request.nextUrl.pathname.split("/")[1]
+    if (какВАдресе !== firstPathSegment) {
+      const хвост = request.nextUrl.pathname.slice(какВАдресе.length + 1)
+      return NextResponse.redirect(
+        `${origin}/${firstPathSegment}${хвост}${queryString}`,
+        308
+      )
+    }
     if (!cacheIdCookie) {
       const response = NextResponse.next()
       response.cookies.set("_medusa_cache_id", cacheId, {
@@ -130,17 +152,6 @@ export async function middleware(request: NextRequest) {
   // if the url doesn't have the country, redirect to it
   const redirectPath =
     request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname
-  const queryString = request.nextUrl.search || ""
-  // За обратным прокси Next не доверяет заголовку Host и подставляет localhost.
-  // Берём реальный адрес сайта из заголовков, которые проставляет nginx.
-  const forwardedHost =
-    request.headers.get("x-forwarded-host") || request.headers.get("host")
-  const forwardedProto =
-    request.headers.get("x-forwarded-proto") ||
-    request.nextUrl.protocol.replace(":", "")
-  const origin = forwardedHost
-    ? `${forwardedProto}://${forwardedHost}`
-    : request.nextUrl.origin
   const redirectUrl = `${origin}/${country}${redirectPath}${queryString}`
 
   return NextResponse.redirect(redirectUrl, 307)

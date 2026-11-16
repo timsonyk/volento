@@ -6,9 +6,19 @@ import { notFound } from "next/navigation"
 type Props = {
   params: Promise<{ id: string }>
 }
-export const metadata: Metadata = {
-  title: "Заказ подтверждён | Volento",
-  description: "Ваша покупка успешно оформлена",
+// у чужого или несуществующего заказа во вкладке не должно стоять
+// «Заказ подтверждён»
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params
+  const order = await retrieveOrder(params.id).catch(() => null)
+  if (!order) {
+    notFound()
+  }
+  return {
+    title: "Заказ подтверждён | Volento",
+    description: "Ваша покупка успешно оформлена",
+    robots: { index: false },
+  }
 }
 
 export default async function OrderConfirmedPage(props: Props) {

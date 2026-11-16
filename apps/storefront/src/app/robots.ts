@@ -33,7 +33,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/*/account", "/*/cart", "/*/checkout", "/*/order/"],
+        disallow: ["/*/account", "/*/cart", "/*/checkout", "/*/order/", "/*/search"],
       },
     ],
     sitemap: `${адрес}/sitemap.xml`,

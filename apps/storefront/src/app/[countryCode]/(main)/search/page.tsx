@@ -5,9 +5,18 @@ import { parseOptionValueIds } from "@lib/util/product-option-filters"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
 
-export const metadata: Metadata = {
-  title: "Поиск | Volento",
-  description: "Поиск по каталогу Volento",
+// Во вкладке видно, что искали; в выдачу поисковиков страницы находок
+// не просим: это бесконечное число копий каталога.
+export async function generateMetadata(props: {
+  searchParams: Promise<{ q?: string | string[] }>
+}): Promise<Metadata> {
+  const { q } = await props.searchParams
+  const запрос = (Array.isArray(q) ? q[0] : q ?? "").trim().slice(0, 60)
+  return {
+    title: запрос ? `Поиск: ${запрос} | Volento` : "Поиск | Volento",
+    description: "Поиск по каталогу Volento",
+    robots: { index: false, follow: true },
+  }
 }
 
 // страница читает куки и слово из адреса — статически собраться не может
