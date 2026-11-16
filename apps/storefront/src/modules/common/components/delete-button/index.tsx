@@ -60,7 +60,7 @@ const DeleteButton = ({
     >
       <button
         type="button"
-        className="flex gap-x-1 text-ui-fg-subtle hover:text-ui-fg-base cursor-pointer"
+        className="-m-2 flex gap-x-1 p-2 text-ui-fg-subtle hover:text-ui-fg-base cursor-pointer"
         onClick={() => handleDelete(id)}
         aria-label={children ? undefined : "Удалить из корзины"}
         aria-busy={isDeleting || undefined}

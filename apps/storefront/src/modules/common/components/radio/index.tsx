@@ -13,24 +13,25 @@ const Radio = ({
   "data-testid"?: string
 }) => {
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={checked}
+    // Кружок только рисует состояние: выбором управляет строка вокруг
+    // него (у неё и роль, и название). Раньше кружок сам был кнопкой без
+    // названия внутри другой кнопки.
+    <span
+      aria-hidden
       data-state={checked ? "checked" : "unchecked"}
       className="group relative flex h-5 w-5 items-center justify-center outline-none"
       data-testid={dataTestId || "radio-button"}
     >
-      <div
+      <span
         className={`flex h-[14px] w-[14px] items-center justify-center rounded-full border transition-colors ${
           checked
             ? "border-ink bg-ink"
             : "border-rule bg-paper group-hover:border-muted"
         }`}
       >
-        {checked && <div className="h-1.5 w-1.5 rounded-full bg-paper" />}
-      </div>
-    </button>
+        {checked && <span className="block h-1.5 w-1.5 rounded-full bg-paper" />}
+      </span>
+    </span>
   )
 }
 

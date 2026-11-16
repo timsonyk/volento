@@ -1,7 +1,7 @@
 import { остаткиКорзины } from "@lib/data/ostatki"
 import repeat from "@lib/util/repeat"
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Table } from "@modules/common/components/ui"
+import { Table } from "@modules/common/components/ui"
 
 import Item from "@modules/cart/components/item"
 import SkeletonLineItem from "@modules/skeletons/components/skeleton-line-item"
@@ -18,7 +18,7 @@ const ItemsTemplate = async ({ cart }: ItemsTemplateProps) => {
   return (
     <div>
       <div className="pb-3 flex items-center">
-        <Heading className="text-[2rem] leading-[2.75rem]">Корзина</Heading>
+        <h1 className="font-semibold text-[2rem] leading-[2.75rem]">Корзина</h1>
       </div>
       <Table>
         <Table.Header className="border-t-0 hidden small:table-header-group">

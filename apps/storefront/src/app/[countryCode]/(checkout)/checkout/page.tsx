@@ -43,6 +43,10 @@ export default async function Checkout(props: {
 
   return (
     <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
+      {/* главный заголовок страницы: глазами он не нужен (шаги говорят
+          сами за себя), а программа чтения с экрана без него не знает,
+          где оказалась */}
+      <h1 className="sr-only">Оформление заказа</h1>
       {форма}
       <CheckoutSummary cart={cart} />
     </div>

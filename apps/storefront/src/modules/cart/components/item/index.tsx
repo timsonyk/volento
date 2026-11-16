@@ -169,6 +169,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
               value={item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
               className="w-14 h-10 p-4"
+              aria-label="Количество"
               data-testid="product-select-button"
             >
               {Array.from({ length: можно }, (_, i) => (
