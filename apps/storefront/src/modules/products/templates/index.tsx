@@ -2,6 +2,7 @@ import React, { Suspense } from "react"
 
 import { HttpTypes } from "@medusajs/types"
 import Breadcrumbs from "@modules/products/components/breadcrumbs"
+import ВИзбранное from "@modules/products/components/v-izbrannoe"
 import ColorSelect from "@modules/products/components/color-select"
 import ImageGallery from "@modules/products/components/image-gallery"
 import ProductActions from "@modules/products/components/product-actions"
@@ -60,6 +61,13 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           с выключенными кнопками, пока он идёт: лишняя секунда ожидания и
           миг, когда на странице две кнопки «В корзину». */}
       <ProductActions product={product} region={region} таблицы={таблицы} />
+      <ВИзбранное
+        вещь={{
+          handle: product.handle ?? "",
+          title: product.title,
+          thumbnail: product.thumbnail,
+        }}
+      />
       <ProductTabs product={product} />
     </>
   )
