@@ -41,7 +41,7 @@ const Breadcrumbs = ({
         <span key={з.адрес} className="flex items-center gap-x-2">
           <LocalizedClientLink
             href={з.адрес}
-            className="text-muted transition-colors hover:text-ink"
+            className="py-1.5 text-muted transition-colors hover:text-ink"
           >
             {з.имя}
           </LocalizedClientLink>

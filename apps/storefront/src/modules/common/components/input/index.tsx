@@ -1,5 +1,5 @@
 import { Label } from "@modules/common/components/ui"
-import React, { useEffect, useImperativeHandle, useState } from "react"
+import React, { useEffect, useId, useImperativeHandle, useState } from "react"
 
 import Eye from "@modules/common/icons/eye"
 import EyeOff from "@modules/common/icons/eye-off"
@@ -41,6 +41,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const inputRef = React.useRef<HTMLInputElement>(null)
+    // подпись привязываем к полю по id: раньше она ссылалась на имя поля,
+    // а id у поля не было, и программа чтения с экрана читала поле без
+    // названия
+    const свойId = useId()
+    const id = props.id ?? свойId
     const [showPassword, setShowPassword] = useState(false)
     const [inputType, setInputType] = useState(type)
 
@@ -72,10 +77,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               ошибка ? "border-red-500" : "border-ui-border-base"
             }`}
             {...props}
+            id={id}
             ref={inputRef}
           />
           <label
-            htmlFor={name}
+            htmlFor={id}
             onClick={() => inputRef.current?.focus()}
             className="flex items-center justify-center mx-3 px-1 transition-all absolute duration-300 top-3 -z-1 origin-0 text-ui-fg-subtle"
           >
