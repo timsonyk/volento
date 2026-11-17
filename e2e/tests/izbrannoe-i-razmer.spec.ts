@@ -1,0 +1,77 @@
+import { expect, test } from "@playwright/test"
+
+import { выбратьРазмерВНаличии, первыйТовар } from "./pomoshniki"
+
+test.describe("избранное", () => {
+  test("сердечко на карточке откладывает вещь и не открывает её", async ({ page }) => {
+    await page.goto("/ru/categories/bryuki")
+    const сердечки = page.locator('[data-testid="serdechko"]')
+    await expect(сердечки.first()).toBeVisible()
+    await сердечки.nth(0).click()
+    await сердечки.nth(1).click()
+    await expect(page).toHaveURL(/\/ru\/categories\/bryuki/)
+    await expect(сердечки.nth(0)).toHaveAttribute("aria-pressed", "true")
+
+    await page.goto("/ru/izbrannoe")
+    const список = page.locator('[data-testid="izbrannoe-spisok"] li')
+    await expect(список).toHaveCount(2)
+    await page.getByRole("button", { name: "Убрать" }).first().click()
+    await expect(список).toHaveCount(1)
+    await список.first().locator("a").click()
+    await expect(page).toHaveURL(/\/products\//)
+  })
+
+  test("кнопка на товаре: отметка переживает перезагрузку", async ({ page }) => {
+    await page.goto(await первыйТовар(page))
+    const кнопка = page.locator('[data-testid="v-izbrannoe"]')
+    await expect(кнопка).toHaveText("В избранное")
+    await кнопка.click()
+    await expect(кнопка).toHaveText("В избранном")
+    await page.reload()
+    await expect(кнопка).toHaveText("В избранном")
+    await page.getByRole("link", { name: "Открыть избранное" }).click()
+    await expect(page.locator('[data-testid="izbrannoe-spisok"] li')).toHaveCount(1)
+  })
+
+  test("пустое избранное зовёт в каталог", async ({ page }) => {
+    await page.goto("/ru/izbrannoe")
+    await expect(page.locator('[data-testid="izbrannoe-pusto"]')).toBeVisible()
+    await page.getByRole("link", { name: "Смотреть каталог" }).click()
+    await expect(page).toHaveURL(/\/ru\/store/)
+  })
+})
+
+test.describe("мой размер", () => {
+  test("выбранный размер подставляется при следующем заходе", async ({ page }) => {
+    const товар = await первыйТовар(page)
+    await page.goto(товар)
+    await expect(page.locator('[data-testid="moy-razmer"]')).toHaveCount(0)
+    test.skip(!(await выбратьРазмерВНаличии(page)), "у первого товара нет размеров в наличии")
+
+    // тот же товар открываем заново, без ?v_id: размер должен встать сам
+    await page.goto(товар)
+    await expect(page.locator('[data-testid="moy-razmer"]')).toBeVisible()
+    await expect(page.locator('[data-testid="add-product-button"]').first()).toContainText("В корзину")
+  })
+})
+
+test.describe("адреса и пустые страницы", () => {
+  test("адрес с заглавным кодом страны ведёт на обычный", async ({ page }) => {
+    await page.goto("/RU/store")
+    await expect(page).toHaveURL(/\/ru\/store/)
+    await expect(page.locator('a[href*="/products/"]:visible').first()).toBeVisible()
+  })
+
+  test("во вкладке поиска видно, что искали", async ({ page }) => {
+    await page.goto("/ru/search?q=брюки")
+    await expect(page).toHaveTitle("Поиск: брюки | Volento")
+  })
+
+  test("над товаром есть раздел каталога", async ({ page }) => {
+    await page.goto("/ru/categories/bryuki")
+    await page.locator('a[href*="/products/"]:visible').first().click()
+    await expect(
+      page.locator('nav[aria-label="Вы здесь"] a[href*="/categories/"]').first()
+    ).toBeVisible()
+  })
+})
