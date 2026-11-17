@@ -7,6 +7,7 @@ import { getLocale } from "@lib/data/locale-actions"
 import { getRegion, listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import { AccountIcon, BagIcon } from "@modules/common/icons/ui"
+import ЗначокИзбранного from "@modules/products/components/v-izbrannoe/znachok"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import Поиск from "@modules/layout/components/poisk"
@@ -144,6 +145,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               className="hidden small:block"
               data-testid="nav-search-link"
             />
+            <ЗначокИзбранного />
             <LocalizedClientLink
               href="/account"
               aria-label="Личный кабинет"
