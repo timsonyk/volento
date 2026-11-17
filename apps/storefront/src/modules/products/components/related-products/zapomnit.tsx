@@ -13,10 +13,30 @@ const СКОЛЬКО = 12
  * видит сразу, без второго запроса из браузера. Только id товаров, до
  * двенадцати, на месяц. Не вышло записать (запрещены cookie) — блока
  * просто не будет.
+ *
+ * Эта cookie не из необходимых: без неё работают и корзина, и вход.
+ * Поэтому пишем её только после «Принять» в уведомлении о cookie. Кто
+ * выбрал «Только необходимые» или ещё не выбрал, тому не пишем, а
+ * записанную раньше стираем.
  */
+const согласен = () => {
+  try {
+    const выбор = JSON.parse(localStorage.getItem("volento_cookie_consent") || "null")
+    return выбор?.решение === "принято"
+  } catch {
+    return false
+  }
+}
+
 export default function ZapomnitProsmotr({ id }: { id: string }) {
   useEffect(() => {
     try {
+      if (!согласен()) {
+        if (document.cookie.includes(`${СМОТРЕЛИ}=`)) {
+          document.cookie = `${СМОТРЕЛИ}=; path=/; max-age=0; samesite=lax`
+        }
+        return
+      }
       const было =
         document.cookie
           .split("; ")

@@ -122,26 +122,32 @@ test.describe("кривые адреса каталога", () => {
   })
 })
 
-test.describe("образец «Вы смотрели»", () => {
-  test("без включения ленты нет, после включения в ней прежняя вещь", async ({ page }) => {
-    await page.goto("/ru/categories/bryuki")
-    const ссылки = page.locator('[data-testid="product-wrapper"]')
-    await expect(ссылки.first()).toBeVisible()
-    const адреса = await page
-      .locator('a[href*="/products/"]:has([data-testid="product-wrapper"])')
-      .evaluateAll((а) => [...new Set(а.map((э) => э.getAttribute("href")!))].slice(0, 2))
+test.describe("«Вы смотрели» и согласие на cookie", () => {
+  const естьКука = async (page: import("@playwright/test").Page) =>
+    (await page.context().cookies()).some((к) => к.name === "smotreli")
 
-    await page.goto(адреса[0])
-    await page.goto(адреса[1])
+  test("cookie просмотров пишется только после «Принять»", async ({ page }) => {
+    await page.goto(await первыйТовар(page))
     await expect(page.locator('[data-testid="product-container"]')).toBeVisible()
-    await expect(page.locator('[data-testid="vy-smotreli"]')).toHaveCount(0)
+    await page.waitForTimeout(1500)
+    expect(await естьКука(page)).toBe(false)
 
-    await page.goto(адреса[0] + "?obrazec=smotreli")
-    await page.goto(адреса[1])
-    const лента = page.locator('[data-testid="vy-smotreli"]')
-    await expect(лента).toBeVisible()
-    await expect(лента.locator("li")).toHaveCount(1)
-    await лента.locator("a").first().click()
-    await expect(page).toHaveURL(new RegExp(адреса[0].replace(/^.*\/products\//, "/products/")))
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "volento_cookie_consent",
+        JSON.stringify({ версия: 2, решение: "принято", когда: new Date().toISOString() })
+      )
+    )
+    await page.reload()
+    await expect.poll(() => естьКука(page)).toBe(true)
+
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "volento_cookie_consent",
+        JSON.stringify({ версия: 2, решение: "только необходимые", когда: new Date().toISOString() })
+      )
+    )
+    await page.reload()
+    await expect.poll(() => естьКука(page)).toBe(false)
   })
 })
