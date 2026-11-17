@@ -1,3 +1,4 @@
+import { сортировкаИзАдреса, страницаИзАдреса } from "@lib/util/adres-kataloga"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
@@ -25,8 +26,8 @@ export default async function CategoryTemplate({
   optionValueIds?: OptionValueIds
   фильтры?: ВыбранныеФильтры
 }) {
-  const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const pageNumber = страницаИзАдреса(page)
+  const sort = сортировкаИзАдреса(sortBy)
 
   if (!category || !countryCode) notFound()
 

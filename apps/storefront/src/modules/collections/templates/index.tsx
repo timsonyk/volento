@@ -1,3 +1,4 @@
+import { сортировкаИзАдреса, страницаИзАдреса } from "@lib/util/adres-kataloga"
 import { Suspense } from "react"
 
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
@@ -22,8 +23,8 @@ export default async function CollectionTemplate({
   countryCode: string
   optionValueIds?: OptionValueIds
 }) {
-  const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const pageNumber = страницаИзАдреса(page)
+  const sort = сортировкаИзАдреса(sortBy)
 
   // Есть ли в подборке хоть один товар: спрашиваем налегке, без цен.
   // Пустая подборка («Скидки», пока скидок нет) раньше показывала

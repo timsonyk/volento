@@ -95,3 +95,29 @@ test.describe("адреса и пустые страницы", () => {
     ).toBeVisible()
   })
 })
+
+test.describe("кривые адреса каталога", () => {
+  test("неизвестная сортировка открывает обычный список", async ({ page }) => {
+    await page.goto("/ru/categories/bryuki?sortBy=abc")
+    await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
+  })
+
+  test("номер страницы буквами открывает первую страницу", async ({ page }) => {
+    await page.goto("/ru/store?page=abc")
+    await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
+  })
+
+  test("страницы за концом списка нет, ссылка ведёт в начало", async ({ page }) => {
+    await page.goto("/ru/categories/bryuki?page=999")
+    const нет = page.locator('[data-testid="net-takoy-stranicy"]')
+    await expect(нет).toBeVisible()
+    await нет.getByRole("link", { name: "Перейти в начало" }).click()
+    await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
+    await expect(page).not.toHaveURL(/page=/)
+  })
+
+  test("фильтр без находок советует снять фильтры", async ({ page }) => {
+    await page.goto("/ru/categories/bryuki?" + new URLSearchParams({ "цвет": "нет-такого" }))
+    await expect(page.getByText("По выбранным условиям ничего не нашлось")).toBeVisible()
+  })
+})

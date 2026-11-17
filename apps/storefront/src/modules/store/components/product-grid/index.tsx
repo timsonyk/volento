@@ -1,5 +1,6 @@
 "use client"
 
+import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 
 import { следующаяСтраницаТоваров } from "@lib/data/products"
@@ -84,6 +85,26 @@ const ProductGrid = ({
         setОшибка("Не удалось загрузить. Попробуйте ещё раз.")
       }
     })
+  }
+
+  const путь = usePathname()
+  const параметры = useSearchParams()
+
+  // Номер страницы из адреса больше, чем страниц в списке (старая ссылка
+  // после распродажи): раньше тут была пустая сетка без объяснений.
+  if (!товары.length) {
+    // фильтры и сортировку оставляем, убираем только номер страницы
+    const безСтраницы = new URLSearchParams(параметры.toString())
+    безСтраницы.delete("page")
+    const вНачало = безСтраницы.toString() ? `${путь}?${безСтраницы}` : путь
+    return (
+      <p className="py-16 text-center text-base text-muted" data-testid="net-takoy-stranicy">
+        Такой страницы в списке нет.{" "}
+        <a href={вНачало} className="text-ink underline underline-offset-4">
+          Перейти в начало
+        </a>
+      </p>
+    )
   }
 
   return (

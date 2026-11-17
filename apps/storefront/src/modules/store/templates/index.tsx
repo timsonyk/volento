@@ -1,3 +1,4 @@
+import { сортировкаИзАдреса, страницаИзАдреса } from "@lib/util/adres-kataloga"
 import { Suspense } from "react"
 
 import { OptionValueIds } from "@lib/util/product-option-filters"
@@ -37,8 +38,8 @@ const StoreTemplate = async ({
   запрос?: string
   заголовок?: string
 }) => {
-  const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const pageNumber = страницаИзАдреса(page)
+  const sort = сортировкаИзАдреса(sortBy)
 
   // Когда пришли из поиска, каталог для этой страницы — только находки.
   // Их id считаем один раз и передаём и в фильтр, и в отбор: иначе рядом
