@@ -256,6 +256,16 @@ export const listProductsWithSort = async ({
       const начало = Math.max(page - 1, 0) * limit
       const страница = всеИды.slice(начало, начало + limit)
 
+      // Страница за концом списка. Пустой список id слать нельзя: Medusa
+      // понимает его как «без условия» и отдаёт начало каталога.
+      if (!страница.length) {
+        return {
+          response: { products: [], count: всеИды.length },
+          nextPage: null,
+          queryParams,
+        }
+      }
+
       const {
         response: { products },
       } = await listProducts({
@@ -305,6 +315,14 @@ export const listProductsWithSort = async ({
       })
       const начало = Math.max(page - 1, 0) * limit
       const страница = порядок.slice(начало, начало + limit)
+
+      if (!страница.length) {
+        return {
+          response: { products: [], count: порядок.length },
+          nextPage: null,
+          queryParams,
+        }
+      }
 
       const {
         response: { products },
