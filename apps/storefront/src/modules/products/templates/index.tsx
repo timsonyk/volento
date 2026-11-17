@@ -2,6 +2,7 @@ import React, { Suspense } from "react"
 
 import { HttpTypes } from "@medusajs/types"
 import Breadcrumbs from "@modules/products/components/breadcrumbs"
+import ВыСмотрели from "@modules/products/components/vy-smotreli"
 import ВИзбранное from "@modules/products/components/v-izbrannoe"
 import ColorSelect from "@modules/products/components/color-select"
 import ImageGallery from "@modules/products/components/image-gallery"
@@ -101,6 +102,14 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
           <RelatedProducts product={product} countryCode={countryCode} />
         </Suspense>
       </div>
+
+      <ВыСмотрели
+        вещь={{
+          handle: product.handle ?? "",
+          title: stripColor(product.title, color),
+          thumbnail: product.thumbnail,
+        }}
+      />
     </>
   )
 }

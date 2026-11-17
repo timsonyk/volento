@@ -121,3 +121,27 @@ test.describe("кривые адреса каталога", () => {
     await expect(page.getByText("По выбранным условиям ничего не нашлось")).toBeVisible()
   })
 })
+
+test.describe("образец «Вы смотрели»", () => {
+  test("без включения ленты нет, после включения в ней прежняя вещь", async ({ page }) => {
+    await page.goto("/ru/categories/bryuki")
+    const ссылки = page.locator('[data-testid="product-wrapper"]')
+    await expect(ссылки.first()).toBeVisible()
+    const адреса = await page
+      .locator('a[href*="/products/"]:has([data-testid="product-wrapper"])')
+      .evaluateAll((а) => [...new Set(а.map((э) => э.getAttribute("href")!))].slice(0, 2))
+
+    await page.goto(адреса[0])
+    await page.goto(адреса[1])
+    await expect(page.locator('[data-testid="product-container"]')).toBeVisible()
+    await expect(page.locator('[data-testid="vy-smotreli"]')).toHaveCount(0)
+
+    await page.goto(адреса[0] + "?obrazec=smotreli")
+    await page.goto(адреса[1])
+    const лента = page.locator('[data-testid="vy-smotreli"]')
+    await expect(лента).toBeVisible()
+    await expect(лента.locator("li")).toHaveCount(1)
+    await лента.locator("a").first().click()
+    await expect(page).toHaveURL(new RegExp(адреса[0].replace(/^.*\/products\//, "/products/")))
+  })
+})
