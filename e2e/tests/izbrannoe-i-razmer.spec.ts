@@ -15,10 +15,30 @@ test.describe("избранное", () => {
     await page.goto("/ru/izbrannoe")
     const список = page.locator('[data-testid="izbrannoe-spisok"] li')
     await expect(список).toHaveCount(2)
-    await page.getByRole("button", { name: "Убрать" }).first().click()
+    // свежие карточки приходят с ценой, как в каталоге
+    await expect(page.locator('[data-testid="izbrannoe-veshch"] [data-testid="product-wrapper"]')).toHaveCount(2)
+    await expect(список.first()).toContainText("₽")
+    await page.getByRole("button", { name: "Убрать", exact: true }).first().click()
     await expect(список).toHaveCount(1)
     await список.first().locator("a").click()
     await expect(page).toHaveURL(/\/products\//)
+  })
+
+  test("снятая с продажи вещь помечена и не ведёт на пустую страницу", async ({ page }) => {
+    await page.goto("/ru/dostavka")
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "volento_izbrannoe",
+        JSON.stringify([{ handle: "takoy-veshchi-net-e2e", title: "Снятая вещь", thumbnail: null }])
+      )
+    )
+    await page.goto("/ru/izbrannoe")
+    const снятая = page.locator('[data-testid="izbrannoe-snyata"]')
+    await expect(снятая).toBeVisible()
+    await expect(снятая).toContainText("Больше не продаётся")
+    await expect(снятая.locator("a")).toHaveCount(0)
+    await снятая.getByRole("button", { name: "Убрать", exact: true }).click()
+    await expect(page.locator('[data-testid="izbrannoe-pusto"]')).toBeVisible()
   })
 
   test("кнопка на товаре: отметка переживает перезагрузку", async ({ page }) => {

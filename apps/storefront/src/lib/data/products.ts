@@ -481,3 +481,64 @@ export const следующаяСтраницаТоваров = async ({
     естьЕщё: показано < count,
   }
 }
+
+/**
+ * Свежие карточки для страницы «Избранное». Список отложенного живёт в
+ * браузере и хранит только адрес, название и снимок: цена там устаревает,
+ * а снятая с продажи вещь висела бы как живая. Возвращаем то, что сейчас
+ * продаётся; чего в ответе нет, страница пометит сама.
+ */
+export const вещиПоАдресам = async (
+  handles: string[],
+  countryCode: string
+): Promise<HttpTypes.StoreProduct[]> => {
+  const адреса = Array.from(
+    new Set(
+      (Array.isArray(handles) ? handles : []).filter(
+        (h) => typeof h === "string" && /^[a-z0-9-]{1,200}$/.test(h)
+      )
+    )
+  ).slice(0, 60)
+  if (!адреса.length) return []
+
+  const region = await getRegion(countryCode)
+  if (!region) return []
+
+  const headers = { ...(await getAuthHeaders()) }
+  const next = { ...(await getCacheOptions("products")) }
+
+  // Порциями по двадцать: адреса уходят в строке запроса, и длинный
+  // список в неё не помещается (см. ПРЕДЕЛ_ID выше).
+  const порции: string[][] = []
+  for (let и = 0; и < адреса.length; и += 20) {
+    порции.push(адреса.slice(и, и + 20))
+  }
+
+  const ответы = await Promise.all(
+    порции.map((порция) =>
+      sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>(
+        `/store/products`,
+        {
+          method: "GET",
+          query: {
+            handle: порция,
+            limit: порция.length,
+            region_id: region.id,
+            fields: ПОЛЯ_СПИСКА,
+          },
+          headers,
+          next,
+          cache: "force-cache",
+        }
+      )
+    )
+  )
+
+  return ответы
+    .flatMap((о) => о.products)
+    .filter(
+      (p) =>
+        !p.tags?.some((t) => t.value === SYSTEM_TAG || t.value === HIDDEN_TAG)
+    )
+    .map(дляКарточки)
+}
