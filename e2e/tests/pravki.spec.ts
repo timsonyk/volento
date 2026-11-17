@@ -80,6 +80,8 @@ test.describe("правки 23 октября", () => {
     test.skip(isMobile, "на телефоне листалка вбок")
     await page.goto(ТОВАР_С_ТАБЛИЦЕЙ)
     const снимок = page.locator('[data-testid="product-gallery"] button').first()
+    // без ожидания рамка изредка бралась раньше, чем снимок появился
+    await expect(снимок).toBeVisible()
     const рамка = await снимок.boundingBox()
     const окно = page.viewportSize()!
     expect(рамка!.y + рамка!.height).toBeLessThanOrEqual(окно.height)
