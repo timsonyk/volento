@@ -1,3 +1,4 @@
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { listProducts } from "@lib/data/products"
@@ -107,11 +108,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   // размер в адресе не делает страницу другой
   const описание = описаниеДляПоиска(product)
   return {
-    title: `${product.title} | Volento`,
+    title: `${цветСЁ(product.title)} | Volento`,
     description: описание,
     alternates: { canonical: `/${params.countryCode}/products/${handle}` },
     openGraph: {
-      title: `${product.title} | Volento`,
+      title: `${цветСЁ(product.title)} | Volento`,
       description: описание,
       type: "website",
       images: product.thumbnail ? [product.thumbnail] : [],

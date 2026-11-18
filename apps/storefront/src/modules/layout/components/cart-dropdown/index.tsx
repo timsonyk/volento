@@ -1,5 +1,6 @@
 "use client"
 
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import {
   Popover,
   PopoverPanel,
@@ -170,7 +171,7 @@ const CartDropdown = ({
                                     href={`/products/${item.product_handle}`}
                                     data-testid="product-link"
                                   >
-                                    {item.title}
+                                    {цветСЁ(item.title ?? "")}
                                   </LocalizedClientLink>
                                 </h3>
                                 <LineItemOptions

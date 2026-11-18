@@ -1,5 +1,6 @@
 "use client"
 
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { Table, Text, clx } from "@modules/common/components/ui"
 import { updateLineItem } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
@@ -151,7 +152,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
           className="txt-medium-plus text-ui-fg-base"
           data-testid="product-title"
         >
-          {item.product_title}
+          {цветСЁ(item.product_title ?? "")}
         </Text>
         <LineItemOptions variant={item.variant} data-testid="product-variant" />
         {type === "full" && (

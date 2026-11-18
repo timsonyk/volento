@@ -1,5 +1,6 @@
 "use client"
 
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { useEffect, useState } from "react"
 
 import { вещиПоАдресам } from "@lib/data/products"
@@ -114,7 +115,7 @@ const СписокИзбранного = ({
           <>
             <Thumbnail thumbnail={в.thumbnail} size="full" />
             <span className="mt-2.5 block pl-[13px] text-sm leading-[1.3] text-ink xsmall:pl-[21px] small:text-base medium:pl-3">
-              {в.title}
+              {цветСЁ(в.title)}
             </span>
           </>
         )
