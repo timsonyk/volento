@@ -1,5 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 
+import { цветСЁ } from "./cvet-s-yo"
 import { getProductPrice } from "./get-product-price"
 
 /**
@@ -38,12 +39,14 @@ export function разметкаТовара(
     .filter((s, i, все) => все.indexOf(s) === i)
     .slice(0, 6)
   const артикул = product.metadata?.article
+  const цвет = product.metadata?.color
 
   return {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.title,
+    name: цветСЁ(product.title),
     description: описаниеДляПоиска(product),
+    ...(typeof цвет === "string" && цвет.trim() ? { color: цветСЁ(цвет.trim()) } : {}),
     image: снимки,
     ...(typeof артикул === "string" && артикул ? { sku: артикул } : {}),
     brand: { "@type": "Brand", name: "Volento" },

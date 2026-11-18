@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next"
 
-import { listCategories } from "@lib/data/categories"
+import { естьТовары, listCategories } from "@lib/data/categories"
 import { listProducts } from "@lib/data/products"
 import { getBaseURL } from "@lib/util/env"
 
@@ -65,7 +65,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // listCategories отдаёт сразу массив. Раньше здесь ждали объект
     // { product_categories } — разделы молча выпадали из карты
     const разделы = await listCategories({ limit: 200 })
-    const рубрики: MetadataRoute.Sitemap = (разделы ?? []).map((р) => ({
+    // Пустые разделы («Мужские рубашки» заведены, а вещей в них нет) в
+    // карту не кладём: поисковику там нечего показывать. Раздел с
+    // подразделами считаем вместе с ними, как и сама его страница.
+    const сТоварами = await Promise.all(
+      (разделы ?? []).map((р) =>
+        естьТовары([р.id, ...(р.category_children ?? []).map((д) => д.id)])
+      )
+    )
+    const рубрики: MetadataRoute.Sitemap = (разделы ?? []).filter((_, и) => сТоварами[и]).map((р) => ({
       url: `${адрес}/${СТРАНА}/categories/${р.handle}`,
       lastModified: сейчас,
       changeFrequency: "weekly" as const,
