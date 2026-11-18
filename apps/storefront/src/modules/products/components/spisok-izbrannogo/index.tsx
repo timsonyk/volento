@@ -15,9 +15,6 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import ProductPreview from "@modules/products/components/product-preview"
 import Thumbnail from "@modules/products/components/thumbnail"
 
-import Поделиться from "./podelitsya"
-import СписокПоСсылке from "./po-ssylke"
-
 /**
  * Страница «Избранное»: отложенные вещи из браузера покупателя.
  *
@@ -37,17 +34,6 @@ const СписокИзбранного = ({
   const [список, setСписок] = useState<Избранная[] | null>(null)
   // null: свежих данных нет (ещё грузятся или магазин не ответил)
   const [свежие, setСвежие] = useState<Record<string, HttpTypes.StoreProduct> | null>(null)
-
-  // адреса вещей из ссылки «Поделиться» (?spisok=a,b,c); null — своя страница
-  const [чужой, setЧужой] = useState<string[] | null>(null)
-
-  useEffect(() => {
-    const изСсылки = (new URLSearchParams(window.location.search).get("spisok") ?? "")
-      .split(",")
-      .filter((а) => /^[a-z0-9-]{1,200}$/.test(а))
-      .slice(0, 60)
-    if (изСсылки.length) setЧужой(изСсылки)
-  }, [])
 
   useEffect(() => {
     const сохранённые = прочитатьИзбранное()
@@ -73,22 +59,7 @@ const СписокИзбранного = ({
       отменено = true
       window.removeEventListener(СОБЫТИЕ, обновить)
     }
-    // после «Добавить всё» список перечитывается: появились новые вещи
-  }, [countryCode, чужой])
-
-  if (чужой) {
-    return (
-      <СписокПоСсылке
-        адреса={чужой}
-        region={region}
-        countryCode={countryCode}
-        закрыть={() => {
-          window.history.replaceState(null, "", window.location.pathname)
-          setЧужой(null)
-        }}
-      />
-    )
-  }
+  }, [countryCode])
 
   if (список === null) {
     return <p className="py-16 text-center text-base text-muted">Загружаем…</p>
@@ -117,8 +88,6 @@ const СписокИзбранного = ({
   )
 
   return (
-    <>
-    <Поделиться список={список} />
     <ul
       className="grid grid-cols-2 gap-x-2 gap-y-10 small:grid-cols-4"
       data-testid="izbrannoe-spisok"
@@ -174,7 +143,6 @@ const СписокИзбранного = ({
         )
       })}
     </ul>
-    </>
   )
 }
 

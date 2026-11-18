@@ -172,32 +172,3 @@ test.describe("пустой раздел", () => {
     await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
   })
 })
-
-test.describe("образец «Поделиться списком»", () => {
-  test("кнопка скрыта без включения; список по ссылке забирается в избранное", async ({ page }) => {
-    await page.goto("/ru/categories/bryuki")
-    const сердечки = page.locator('[data-testid="serdechko"]')
-    await expect(сердечки.first()).toBeVisible()
-    await сердечки.nth(0).click()
-    await сердечки.nth(1).click()
-
-    await page.goto("/ru/izbrannoe")
-    await expect(page.locator('[data-testid="izbrannoe-spisok"] li')).toHaveCount(2)
-    await expect(page.locator('[data-testid="podelitsya-spiskom"]')).toHaveCount(0)
-
-    await page.goto("/ru/izbrannoe?obrazec=podelitsya")
-    await expect(page.locator('[data-testid="podelitsya-spiskom"]')).toBeVisible()
-
-    const адреса = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("volento_izbrannoe") || "[]").map((в: { handle: string }) => в.handle)
-    )
-    await page.evaluate(() => localStorage.removeItem("volento_izbrannoe"))
-
-    await page.goto("/ru/izbrannoe?spisok=" + адреса.join(","))
-    const чужой = page.locator('[data-testid="spisok-po-ssylke"]')
-    await expect(чужой.locator('[data-testid="product-wrapper"]')).toHaveCount(2)
-    await page.locator('[data-testid="zabrat-spisok"]').click()
-    await expect(page.locator('[data-testid="izbrannoe-spisok"] li')).toHaveCount(2)
-    await expect(page).not.toHaveURL(/spisok=/)
-  })
-})
