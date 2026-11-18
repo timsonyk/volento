@@ -162,3 +162,13 @@ test.describe("названия цветов", () => {
     await expect(page.locator('[data-testid="product-colors"] a[aria-label*="черн"]')).toHaveCount(0)
   })
 })
+
+test.describe("пустой раздел", () => {
+  test("поисковику не показывается, обычный раздел показывается", async ({ page }) => {
+    await page.goto("/ru/categories/muzhskie-rubashki")
+    await expect(page.locator('[data-testid="pustoy-razdel"]')).toBeVisible()
+    await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(1)
+    await page.goto("/ru/categories/bryuki")
+    await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
+  })
+})

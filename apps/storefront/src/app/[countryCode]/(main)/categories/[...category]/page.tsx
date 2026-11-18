@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { getCategoryByHandle, listCategories } from "@lib/data/categories"
+import { естьТовары, getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
 import { HttpTypes, StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
@@ -71,9 +71,18 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       productCategory.description?.trim() ||
       `${productCategory.name}${родитель ? ` (${родитель.toLowerCase()})` : ""} Volento: модели в наличии, размеры и роста, доставка по России с примеркой.`
 
+    // Раздел без вещей в продаже поисковику не показываем: страница с
+    // одной строкой «здесь пока нет вещей» в выдаче только мешает. По
+    // ссылкам с неё робот ходит, как обычно.
+    const пустой = !(await естьТовары([
+      productCategory.id,
+      ...(productCategory.category_children ?? []).map((д) => д.id),
+    ]))
+
     return {
       title,
       description,
+      ...(пустой ? { robots: { index: false, follow: true } } : {}),
       // Полный путь: относительный «bryuki» поисковик достраивал от корня
       // сайта, и canonical указывал на несуществующую страницу
       alternates: {
