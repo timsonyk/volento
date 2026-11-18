@@ -1,3 +1,4 @@
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -40,12 +41,12 @@ const ColorSelect = async ({ product, countryCode }: ColorSelectProps) => {
     <div className="flex flex-col gap-y-3">
       <span className="text-sm text-muted">
         Цвет:{" "}
-        <span className="text-ink">{currentColor?.toLowerCase() ?? "—"}</span>
+        <span className="text-ink">{currentColor ? цветСЁ(currentColor.toLowerCase()) : "—"}</span>
       </span>
       <div className="flex flex-wrap gap-3" data-testid="product-colors">
         {colors.map((c) => {
           const isCurrent = c.id === product.id
-          const name = (c.metadata?.color as string) ?? ""
+          const name = цветСЁ((c.metadata?.color as string) ?? "")
 
           return (
             <LocalizedClientLink

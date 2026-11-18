@@ -1,3 +1,4 @@
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -129,7 +130,7 @@ export default function ProductPreview({
               {видимые.map((c) => (
                 <span
                   key={c.id}
-                  title={c.color}
+                  title={цветСЁ(c.color)}
                   aria-hidden
                   className={
                     c.id === product.id
@@ -145,7 +146,7 @@ export default function ProductPreview({
                 </span>
               )}
               <span className="sr-only">
-                Цвета модели: {swatches.map((c) => c.color).join(", ")}
+                Цвета модели: {swatches.map((c) => цветСЁ(c.color)).join(", ")}
               </span>
             </div>
           )}

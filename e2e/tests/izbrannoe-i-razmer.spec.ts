@@ -151,3 +151,14 @@ test.describe("«Вы смотрели» и согласие на cookie", () =>
     await expect.poll(() => естьКука(page)).toBe(false)
   })
 })
+
+test.describe("названия цветов", () => {
+  test("цвет на странице товара показан с буквой «ё»", async ({ page }) => {
+    await page.goto("/ru/search?" + new URLSearchParams({ q: "чёрные брюки" }))
+    const карточка = page.locator('a[href*="/products/"]:has([data-testid="product-wrapper"])').first()
+    await expect(карточка).toBeVisible()
+    await page.goto((await карточка.getAttribute("href"))!)
+    await expect(page.getByText(/Цвет:\s*чёрн/)).toBeVisible()
+    await expect(page.locator('[data-testid="product-colors"] a[aria-label*="черн"]')).toHaveCount(0)
+  })
+})

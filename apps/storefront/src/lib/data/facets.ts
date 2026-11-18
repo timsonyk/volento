@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { найтиПоСловам } from "@lib/util/poisk-slova"
 import { HttpTypes } from "@medusajs/types"
 
@@ -275,7 +276,7 @@ export const собратьПризнаки = async (
     модели: вСписок(модели),
     покрои: вСписок(покрои),
     цвета: [...цвета.entries()]
-      .map(([значение, v]) => ({ значение, сколько: v.сколько, код: v.код }))
+      .map(([значение, v]) => ({ значение, подпись: цветСЁ(значение), сколько: v.сколько, код: v.код }))
       .sort((a, b) => b.сколько - a.сколько || a.значение.localeCompare(b.значение)),
     новинок,
   }
