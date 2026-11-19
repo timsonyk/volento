@@ -3,6 +3,8 @@ import { Metadata } from "next"
 import PageLayout, { Раздел } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
+  // основной адрес: ссылки с метками рекламы поисковик склеит с ним
+  alternates: { canonical: "/ru/dostavka" },
   title: "Доставка | Volento",
   description:
     "Как доставляются заказы Volento: пункты выдачи СДЭК и Яндекс Доставки.",

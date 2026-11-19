@@ -8,6 +8,8 @@ import Reveal from "@modules/common/components/reveal"
 import { getRegion } from "@lib/data/regions"
 
 export const metadata: Metadata = {
+  // основной адрес: ссылки с метками рекламы поисковик склеит с ним
+  alternates: { canonical: "/ru" },
   title: "Volento — женские классические брюки",
   description:
     "Интернет-магазин Volento: женские классические брюки для работы и на каждый день.",

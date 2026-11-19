@@ -4,6 +4,8 @@ import { getHomeContent } from "@lib/data/home-banner"
 import PageLayout, { Раздел } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
+  // основной адрес: ссылки с метками рекламы поисковик склеит с ним
+  alternates: { canonical: "/ru/vozvrat" },
   title: "Возврат и обмен | Volento",
   description:
     "Как вернуть или обменять брюки Volento: сроки, условия, порядок возврата денег.",

@@ -9,6 +9,8 @@ import PageLayout, {
 } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
+  // основной адрес: ссылки с метками рекламы поисковик склеит с ним
+  alternates: { canonical: "/ru/soglasie" },
   title: "Согласие на обработку персональных данных | Volento",
 }
 

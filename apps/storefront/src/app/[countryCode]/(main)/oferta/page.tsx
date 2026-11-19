@@ -10,6 +10,8 @@ import PageLayout, {
 } from "@modules/content/components/page-layout"
 
 export const metadata: Metadata = {
+  // основной адрес: ссылки с метками рекламы поисковик склеит с ним
+  alternates: { canonical: "/ru/oferta" },
   title: "Публичная оферта | Volento",
 }
 
