@@ -19,16 +19,25 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
     _currentState: Record<string, unknown>,
     formData: FormData
   ) => {
+    // имя и фамилию печатают на посылке: пробелы по краям убираем,
+    // пустое и слишком длинное не принимаем
     const customer = {
-      first_name: formData.get("first_name") as string,
-      last_name: formData.get("last_name") as string,
+      first_name: String(formData.get("first_name") ?? "").trim(),
+      last_name: String(formData.get("last_name") ?? "").trim(),
+    }
+    if (!customer.first_name || !customer.last_name) {
+      return { success: false, error: "Нужны имя и фамилия" }
+    }
+    if (customer.first_name.length > 60 || customer.last_name.length > 60) {
+      return { success: false, error: "Слишком длинно. Уложитесь в 60 знаков" }
     }
 
     try {
       await updateCustomer(customer)
       return { success: true, error: null }
     } catch (error) {
-      return { success: false, error: String(error) }
+      console.error(error)
+      return { success: false, error: "Не получилось сохранить. Попробуйте ещё раз" }
     }
   }
 
@@ -52,6 +61,7 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
         currentInfo={`${customer.first_name} ${customer.last_name}`}
         isSuccess={successState}
         isError={!!state?.error}
+        errorMessage={state?.error || undefined}
         clearState={clearState}
         data-testid="account-name-editor"
       >

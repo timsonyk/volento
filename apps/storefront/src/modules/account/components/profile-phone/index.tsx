@@ -7,6 +7,7 @@ import Input from "@modules/common/components/input"
 import AccountInfo from "../account-info"
 import { HttpTypes } from "@medusajs/types"
 import { updateCustomer } from "@lib/data/customer"
+import { разобратьТелефон, телефономСМаской } from "@lib/util/polya-znakomstva"
 
 type MyInformationProps = {
   customer: HttpTypes.StoreCustomer
@@ -19,15 +20,19 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     _currentState: Record<string, unknown>,
     formData: FormData
   ) => {
-    const customer = {
-      phone: formData.get("phone") as string,
+    // та же проверка, что при знакомстве: раньше сюда можно было сохранить
+    // любые буквы, и номер с ошибкой уезжал на посылку
+    const разбор = разобратьТелефон(String(formData.get("phone") ?? ""))
+    if (!разбор.годится) {
+      return { success: false, error: разбор.ошибка }
     }
 
     try {
-      await updateCustomer(customer)
+      await updateCustomer({ phone: разбор.значение })
       return { success: true, error: null }
     } catch (error) {
-      return { success: false, error: String(error) }
+      console.error(error)
+      return { success: false, error: "Не получилось сохранить. Попробуйте ещё раз" }
     }
   }
 
@@ -35,6 +40,8 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     error: null as string | null,
     success: false,
   })
+
+  const [телефон, setТелефон] = React.useState(телефономСМаской(customer.phone ?? ""))
 
   const clearState = () => {
     setSuccessState(false)
@@ -48,7 +55,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     <form action={formAction} className="w-full">
       <AccountInfo
         label="Телефон"
-        currentInfo={`${customer.phone}`}
+        currentInfo={customer.phone ? телефономСМаской(customer.phone) : "Не указан"}
         isSuccess={successState}
         isError={!!state.error}
         errorMessage={state.error || undefined}
@@ -62,8 +69,9 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            required
-            defaultValue={customer.phone ?? ""}
+            обязательно
+            value={телефон}
+            onChange={(e) => setТелефон(телефономСМаской(e.target.value))}
             data-testid="phone-input"
           />
         </div>
