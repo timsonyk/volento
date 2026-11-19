@@ -61,6 +61,9 @@ const проверить = (поля: Поля): Partial<Record<Ключ, string
     о.телефон = "Укажите телефон — на него служба доставки сообщит, когда заказ приедет"
   } else if (цифры.length !== 11) {
     о.телефон = "В номере должно быть 11 цифр. Пример: +7 900 123-45-67"
+  } else if (!/^[78]/.test(цифры)) {
+    // 11 случайных цифр доставка не примет: номер российский, с +7 или 8
+    о.телефон = "Номер начинается с +7 или 8. Пример: +7 900 123-45-67"
   }
 
   return о
@@ -163,6 +166,7 @@ const Recipient = ({
           label="Фамилия"
           name="recipient.last_name"
           autoComplete="family-name"
+          maxLength={60}
           value={поля.фамилия}
           onChange={менять("фамилия")}
           onBlur={ушёлИз("фамилия")}
@@ -174,6 +178,7 @@ const Recipient = ({
           label="Имя"
           name="recipient.first_name"
           autoComplete="given-name"
+          maxLength={60}
           value={поля.имя}
           onChange={менять("имя")}
           onBlur={ушёлИз("имя")}
@@ -214,6 +219,7 @@ const Recipient = ({
         <Input
           label="Комментарий к заказу"
           name="recipient.comment"
+          maxLength={300}
           value={поля.комментарий}
           onChange={менять("комментарий")}
           onBlur={ушёлИз("комментарий")}
