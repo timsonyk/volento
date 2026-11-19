@@ -59,8 +59,9 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
           <Input
             label="Телефон"
             name="phone"
-            type="phone"
-            autoComplete="phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             required
             defaultValue={customer.phone ?? ""}
             data-testid="phone-input"

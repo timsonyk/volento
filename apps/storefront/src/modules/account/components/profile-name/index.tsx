@@ -59,6 +59,7 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
           <Input
             label="Имя"
             name="first_name"
+            autoComplete="given-name"
             required
             defaultValue={customer.first_name ?? ""}
             data-testid="first-name-input"
@@ -66,6 +67,7 @@ const ProfileName: React.FC<MyInformationProps> = ({ customer }) => {
           <Input
             label="Фамилия"
             name="last_name"
+            autoComplete="family-name"
             required
             defaultValue={customer.last_name ?? ""}
             data-testid="last-name-input"

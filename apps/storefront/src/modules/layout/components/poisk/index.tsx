@@ -124,6 +124,8 @@ export default function Поиск({
                   onChange={(e) => setЗапрос(e.target.value)}
                   placeholder="Поиск"
                   aria-label="Что ищете"
+                  enterKeyHint="search"
+                  autoComplete="off"
                   className="min-w-0 flex-1 bg-transparent text-lg text-ink outline-none placeholder:text-muted"
                   data-testid="poisk-pole"
                 />

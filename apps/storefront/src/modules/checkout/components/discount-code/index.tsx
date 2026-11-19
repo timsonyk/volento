@@ -80,6 +80,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
                   id="promotion-input"
                   name="code"
                   type="text"
+                  autoComplete="off"
                   autoFocus={false}
                   data-testid="discount-input"
                 />
