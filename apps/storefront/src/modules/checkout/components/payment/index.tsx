@@ -1,4 +1,5 @@
 "use client"
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { RadioGroup } from "@headlessui/react"
 import { isStripeLike, isTochka, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
@@ -100,7 +101,7 @@ const Payment = ({
     initiatePaymentSession(cart, { provider_id: selectedPaymentMethod })
       .catch((err) => {
         if (!отменено) {
-          setError(err instanceof Error ? err.message : String(err))
+          setError(текстСбоя(err))
         }
       })
       .finally(() => {

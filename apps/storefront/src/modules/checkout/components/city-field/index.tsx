@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { updateCheckoutFields } from "@lib/data/cart"
@@ -81,7 +82,7 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
   }, [подходит, сбой, отметить])
 
   const ошибка = сбой
-    ? `Не удалось сохранить город: ${сбой}`
+    ? `Не удалось сохранить город. ${сбой}`
     : нетРядом
       ? нетРядом
       : !трогали || подходит
@@ -155,7 +156,7 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
       })
     } catch (e) {
       прошлый.current = ""
-      setСбой((e as Error).message)
+      setСбой(текстСбоя(e))
     }
   }
 
@@ -188,7 +189,7 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
         setПосёлок({ имя: п.имя, город: итог.город, км: итог.км })
       }
     } catch (e) {
-      setСбой((e as Error).message)
+      setСбой(текстСбоя(e))
     }
   }
 

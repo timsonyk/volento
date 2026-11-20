@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { цветСЁ } from "@lib/util/cvet-s-yo"
 import { Table, Text, clx } from "@modules/common/components/ui"
 import { updateLineItem } from "@lib/data/cart"
@@ -95,7 +96,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         router.refresh()
       })
       .catch((err: Error) => {
-        setError(поЧеловечески(err.message, остаток))
+        setError(текстСбоя(поЧеловечески(err.message, остаток), "Не получилось изменить количество. Попробуйте ещё раз"))
       })
       .finally(() => {
         setUpdating(false)

@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { Badge, Heading, Input, Label, Text } from "@modules/common/components/ui"
 import React from "react"
 
@@ -45,7 +46,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     try {
       await applyPromotions(codes)
     } catch (e) {
-      setErrorMessage(e instanceof Error ? e.message : String(e))
+      setErrorMessage(текстСбоя(e, "Не получилось применить промокод. Проверьте его и попробуйте ещё раз"))
     }
 
     if (input) {

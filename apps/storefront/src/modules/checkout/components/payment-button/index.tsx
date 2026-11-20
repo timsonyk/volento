@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { isManual, isStripeLike, isTochka } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { проверитьНаличие, словамиОНехватке } from "@lib/data/nalichie"
@@ -104,7 +105,7 @@ const StripePaymentButton = ({
   const onPaymentCompleted = async () => {
     await placeOrder()
       .catch((err) => {
-        setErrorMessage(err.message)
+        setErrorMessage(текстСбоя(err, "Не получилось оформить заказ. Попробуйте ещё раз"))
       })
       .finally(() => {
         setSubmitting(false)
@@ -281,7 +282,7 @@ const ManualTestPaymentButton = ({
   const onPaymentCompleted = async () => {
     await placeOrder()
       .catch((err) => {
-        setErrorMessage(err.message)
+        setErrorMessage(текстСбоя(err, "Не получилось оформить заказ. Попробуйте ещё раз"))
       })
       .finally(() => {
         setSubmitting(false)

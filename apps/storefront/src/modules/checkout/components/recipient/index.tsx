@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { useEffect, useRef, useState } from "react"
 
 import { updateCheckoutFields } from "@lib/data/cart"
@@ -146,7 +147,7 @@ const Recipient = ({
       })
     } catch (e) {
       прошлое.current = ""
-      setСбой((e as Error).message)
+      setСбой(текстСбоя(e))
     }
   }
 
@@ -229,7 +230,7 @@ const Recipient = ({
 
       {сбой && (
         <p className="mt-3 text-sm text-red-600" data-testid="recipient-error">
-          Не удалось сохранить: {сбой}
+          Не удалось сохранить. {сбой}
         </p>
       )}
     </div>

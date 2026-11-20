@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod, removeShippingMethodFromCart } from "@lib/data/cart"
 import {
@@ -293,7 +294,7 @@ const Shipping: React.FC<ShippingProps> = ({
       .catch((err) => {
         setShippingMethodId(currentId)
 
-        setError(err.message)
+        setError(текстСбоя(err))
       })
       .finally(() => {
         setIsLoading(false)

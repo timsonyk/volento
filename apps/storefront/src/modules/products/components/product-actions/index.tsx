@@ -304,7 +304,8 @@ export default function ProductActions({
       return true
     } catch (e) {
       setОшибка(
-        e instanceof Error && e.message
+        // английский текст сервера покупателю не показываем
+        e instanceof Error && /[а-яё]/i.test(e.message)
           ? `Не получилось добавить в корзину: ${e.message}`
           : "Не получилось добавить в корзину. Попробуйте ещё раз."
       )
