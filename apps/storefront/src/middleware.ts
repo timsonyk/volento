@@ -108,7 +108,16 @@ export async function middleware(request: NextRequest) {
   const cacheIdCookie = request.cookies.get("_medusa_cache_id")
   const cacheId = cacheIdCookie?.value || crypto.randomUUID()
 
-  const regionMap = await getRegionMap(cacheId)
+  // Магазин не ответил: берём страны, которые запомнили раньше, а если их
+  // нет, идём дальше со страной по умолчанию. Раньше здесь всё падало, и
+  // покупатель видел голую строку «Internal Server Error».
+  let regionMap: Map<string, HttpTypes.StoreRegion | number>
+  try {
+    regionMap = await getRegionMap(cacheId)
+  } catch (e) {
+    console.error("middleware: магазин не отдал страны", e)
+    regionMap = regionMapCache.regionMap
+  }
   const countryCode = await getCountryCode(request, regionMap)
 
   // if the country code is available, use it, otherwise use the default region

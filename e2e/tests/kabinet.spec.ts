@@ -42,3 +42,15 @@ test.describe("кабинет: правка профиля", () => {
     await expect(блок.locator('[data-testid="current-info"]')).toHaveText(было)
   })
 })
+
+test.describe("сбой страницы", () => {
+  test("покупатель видит нашу заглушку с дорогой на главную", async ({ page }) => {
+    await page.goto("/ru/proverka-sboya")
+    const заглушка = page.locator('[data-testid="stranica-sboya"]')
+    await expect(заглушка).toBeVisible()
+    await expect(заглушка.locator("h1")).toHaveText("Не получилось открыть страницу")
+    await expect(page.locator("body")).not.toContainText("Application error")
+    await заглушка.getByRole("link", { name: "На главную" }).click()
+    await expect(page).toHaveURL(/\/ru$/)
+  })
+})
