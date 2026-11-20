@@ -7,6 +7,7 @@ import Input from "@modules/common/components/input"
 import AccountInfo from "../account-info"
 import { HttpTypes } from "@medusajs/types"
 import { updateCustomer } from "@lib/data/customer"
+import { useRouter } from "next/navigation"
 import { разобратьТелефон, телефономСМаской } from "@lib/util/polya-znakomstva"
 
 type MyInformationProps = {
@@ -47,9 +48,16 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     setSuccessState(false)
   }
 
+  const router = useRouter()
+
   useEffect(() => {
     setSuccessState(state.success)
-  }, [state])
+    // Ответ на сохранение изредка не обновляет страницу: данные записаны,
+    // а на экране прежнее значение до перезагрузки (ловилось сценарием
+    // примерно раз на шесть прогонов). Просим свежую страницу сами, как в
+    // корзине после смены количества.
+    if (state.success) router.refresh()
+  }, [state, router])
 
   return (
     <form action={formAction} className="w-full">
