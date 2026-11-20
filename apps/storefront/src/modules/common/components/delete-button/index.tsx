@@ -23,6 +23,9 @@ const DeleteButton = ({
   "data-testid"?: string
 }) => {
   const [isDeleting, setIsDeleting] = useState(false)
+  // удаление не прошло (нет связи, магазин не ответил): раньше значок
+  // просто переставал крутиться, и было непонятно, что случилось
+  const [сбой, setСбой] = useState(false)
   const router = useRouter()
 
   // Строка удалена, а на экране осталась с крутящимся значком: свежую
@@ -42,19 +45,21 @@ const DeleteButton = ({
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true)
+    setСбой(false)
     await deleteLineItem(id)
       // как и после «В корзину»: без этого строка иногда оставалась на
       // месте до перезагрузки страницы
       .then(() => router.refresh())
       .catch((_err) => {
         setIsDeleting(false)
+        setСбой(true)
       })
   }
 
   return (
     <div
       className={clx(
-        "flex items-center justify-between text-small-regular",
+        "relative flex flex-wrap items-center justify-between text-small-regular",
         className
       )}
     >
@@ -69,6 +74,23 @@ const DeleteButton = ({
         {isDeleting ? <Spinner className="animate-spin" /> : <Trash />}
         <span>{children}</span>
       </button>
+      {сбой && (
+        <p
+          role="alert"
+          // с подписью кнопка стоит в широком блоке, текст идёт строкой
+          // ниже; без подписи это узкая ячейка у края, там текст вешаем
+          // под значком и тянем влево, иначе он сложился бы по букве
+          className={clx(
+            "text-xs leading-snug text-red-600",
+            children
+              ? "mt-2 basis-full"
+              : "absolute right-0 top-full mt-1 whitespace-nowrap"
+          )}
+          data-testid="udalenie-sboy"
+        >
+          Не получилось удалить. Попробуйте ещё раз
+        </p>
+      )}
     </div>
   )
 }

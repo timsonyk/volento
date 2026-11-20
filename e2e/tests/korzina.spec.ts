@@ -52,3 +52,27 @@ test.describe("корзина", () => {
     expect(await выбратьРазмерВНаличии(page)).toBe(true)
   })
 })
+
+test.describe("сбой в корзине", () => {
+  test("удаление не прошло: строка на месте, под значком понятный текст", async ({ page }) => {
+    await положитьВКорзину(page)
+    await page.goto("/ru/cart")
+    const строка = page.locator('[data-testid="product-row"]:visible').first()
+    await expect(строка).toBeVisible()
+
+    // обрываем связь только для действий (они идут POST на адрес страницы)
+    await page.route("**/ru/cart**", (r) =>
+      r.request().method() === "POST" ? r.abort() : r.continue()
+    )
+    await строка.locator('[data-testid="product-delete-button"]').click()
+    await expect(строка.locator('[data-testid="udalenie-sboy"]')).toBeVisible()
+    await expect(строка).toBeVisible()
+    const ширина = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth])
+    expect(ширина[0]).toBeLessThanOrEqual(ширина[1] + 1)
+
+    // связь вернулась: удаление проходит
+    await page.unroute("**/ru/cart**")
+    await строка.locator('[data-testid="product-delete-button"]').click()
+    await expect(page.locator('[data-testid="empty-cart-message"]')).toBeVisible()
+  })
+})
