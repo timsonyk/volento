@@ -97,6 +97,12 @@ test.describe("адреса и пустые страницы", () => {
 })
 
 test.describe("кривые адреса каталога", () => {
+  test("поиск с повторённым словом в адресе не падает", async ({ page }) => {
+    await page.goto("/ru/search?q=bryuki&q=yubki")
+    await expect(page.locator("h1")).toContainText("Поиск: bryuki")
+    await expect(page.locator('[data-testid="stranica-sboya"]')).toHaveCount(0)
+  })
+
   test("неизвестная сортировка открывает обычный список", async ({ page }) => {
     await page.goto("/ru/categories/bryuki?sortBy=abc")
     await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()

@@ -39,7 +39,10 @@ export default async function SearchPage(props: {
 }) {
   const { countryCode } = await props.params
   const searchParams = await props.searchParams
-  const запрос = (searchParams.q ?? "").trim()
+  // «?q=a&q=b» приходит списком: раньше страница на этом падала.
+  // Берём первое слово и не длиннее 100 знаков.
+  const сырой = searchParams.q as string | string[] | undefined
+  const запрос = (Array.isArray(сырой) ? сырой[0] : сырой ?? "").trim().slice(0, 100)
 
   const фильтры = await прочитатьФильтры(searchParams)
 
