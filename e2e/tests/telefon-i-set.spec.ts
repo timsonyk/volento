@@ -43,3 +43,14 @@ test.describe("медленная сеть", () => {
     await expect(page).toHaveURL(/\/ru\/?$/, { timeout: 30_000 })
   })
 })
+
+test.describe("поля на телефоне", () => {
+  test("текст в полях не мельче 16 px, иначе айфон приближает страницу", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "только телефон")
+    await page.goto("/ru/account")
+    const поле = page.locator('[data-testid="vhod-pochta"]')
+    await expect(поле).toBeVisible()
+    const размер = await поле.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))
+    expect(размер).toBeGreaterThanOrEqual(16)
+  })
+})
