@@ -50,7 +50,7 @@ test.describe("сбой страницы", () => {
     await expect(заглушка).toBeVisible()
     await expect(заглушка.locator("h1")).toHaveText("Не получилось открыть страницу")
     await expect(page.locator("body")).not.toContainText("Application error")
-    await заглушка.getByRole("link", { name: "На главную" }).click()
+    await заглушка.getByRole("link", { name: "На главную", exact: true }).click()
     await expect(page).toHaveURL(/\/ru$/)
   })
 })
