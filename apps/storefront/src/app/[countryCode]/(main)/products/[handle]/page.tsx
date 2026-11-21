@@ -107,7 +107,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   // в выдаче описание вместо повтора названия; адрес без ?v_id —
   // размер в адресе не делает страницу другой
   const описание = описаниеДляПоиска(product)
+  // скрытый товар («Проверка оплаты») открывается по прямой ссылке, но
+  // поисковикам его показывать незачем
+  const скрытый = product.tags?.some((t) => t.value === "skryt")
   return {
+    ...(скрытый ? { robots: { index: false, follow: false } } : {}),
     title: `${цветСЁ(product.title)} | Volento`,
     description: описание,
     alternates: { canonical: `/${params.countryCode}/products/${handle}` },

@@ -71,6 +71,16 @@ test.describe("навигация", () => {
     expect(адрес).toContain("/products/")
   })
 
+  test("скрытый товар закрыт от поисковиков, обычный открыт", async ({ page }) => {
+    const ответ = await page.goto("/ru/products/proverka-oplaty")
+    test.skip(ответ?.status() !== 200, "скрытого товара в каталоге нет")
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/)
+    await page.goto("/ru/store")
+    await page.locator('a[href*="/products/"]:visible').first().click()
+    await expect(page).toHaveURL(/\/products\//)
+    await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0)
+  })
+
   test("назад и вперёд в браузере", async ({ page }) => {
     await page.goto("/ru/store")
     await page.locator('a[href*="/products/"]:visible').first().click()
