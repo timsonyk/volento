@@ -115,8 +115,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       title: `${цветСЁ(product.title)} | Volento`,
       description: описание,
       type: "website",
-      images: product.thumbnail ? [product.thumbnail] : [],
+      url: `/${params.countryCode}/products/${handle}`,
+      ...(product.thumbnail ? { images: [product.thumbnail] } : {}),
     },
+    // Без этого в карточке ссылки для X и части мессенджеров стояла общая
+    // картинка сайта, а не фото вещи.
+    ...(product.thumbnail
+      ? {
+          twitter: {
+            card: "summary_large_image" as const,
+            title: `${цветСЁ(product.title)} | Volento`,
+            description: описание,
+            images: [product.thumbnail],
+          },
+        }
+      : {}),
   }
 }
 

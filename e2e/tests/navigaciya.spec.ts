@@ -58,6 +58,19 @@ test.describe("навигация", () => {
     }
   })
 
+  test("карточка ссылки на товар: фото вещи, а не общая картинка сайта", async ({ page }) => {
+    await page.goto("/ru/store")
+    await page.locator('a[href*="/products/"]:visible').first().click()
+    await expect(page).toHaveURL(/\/products\//)
+    const og = await page.locator('meta[property="og:image"]').first().getAttribute("content")
+    const tw = await page.locator('meta[name="twitter:image"]').first().getAttribute("content")
+    expect(og).toBeTruthy()
+    expect(og).not.toContain("opengraph-image")
+    expect(tw).toBe(og)
+    const адрес = await page.locator('meta[property="og:url"]').first().getAttribute("content")
+    expect(адрес).toContain("/products/")
+  })
+
   test("назад и вперёд в браузере", async ({ page }) => {
     await page.goto("/ru/store")
     await page.locator('a[href*="/products/"]:visible').first().click()
