@@ -54,3 +54,20 @@ test.describe("сбой страницы", () => {
     await expect(page).toHaveURL(/\/ru$/)
   })
 })
+
+test.describe("ссылка на заказ из письма", () => {
+  test("гостю предлагают войти, а не «страница не найдена»", async ({ page }) => {
+    await page.goto("/ru/order/order_net_takogo/confirmed")
+    await expect(page.locator('[data-testid="zakaz-nuzhen-vhod"]')).toBeVisible()
+    await expect(page.locator("h1")).toHaveText("Войдите, чтобы открыть заказ")
+    await expect(page.locator('[data-testid="vhod-pochta"]')).toBeVisible()
+  })
+
+  test("вошедшему чужой или несуществующий заказ не показывается", async ({ page }) => {
+    test.skip(!входДоступен(), "нужны E2E_PK и E2E_KLYUCH")
+    await войтиПокупателем(page)
+    await page.goto("/ru/order/order_net_takogo/confirmed")
+    await expect(page.locator('[data-testid="zakaz-nuzhen-vhod"]')).toHaveCount(0)
+    await expect(page.locator("h1")).toContainText("не найдена")
+  })
+})
