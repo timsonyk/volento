@@ -80,6 +80,7 @@ export function текстПисьма(d: ДанныеПисьма) {
     ...(d.способДоставки ? ["", `Способ доставки: ${d.способДоставки}`] : []),
     ...(d.адрес ? [`Адрес: ${d.адрес}`] : []),
     "",
+    ...(d.ссылка ? [`Посмотреть заказ: ${d.ссылка}`, ""] : []),
     "Мы соберём заказ и пришлём номер для отслеживания.",
     "Если что-то нужно поменять — просто ответьте на это письмо.",
     "",
@@ -157,7 +158,7 @@ export function письмо(d: ДанныеПисьма) {
         ${
           d.ссылка
             ? `<tr><td style="padding:24px 28px 0;">
-                <a href="${d.ссылка}" style="display:inline-block;background:#0B0B0B;color:#FFFFFF;text-decoration:none;padding:14px 28px;font-size:14px;">Посмотреть заказ</a>
+                <a href="${экранировать(d.ссылка).replace(/"/g, "&quot;")}" style="display:inline-block;background:#0B0B0B;color:#FFFFFF;text-decoration:none;padding:14px 28px;font-size:14px;">Посмотреть заказ</a>
               </td></tr>`
             : ""
         }
