@@ -46,6 +46,18 @@ test.describe("навигация", () => {
     await expect(page).toHaveURL(/\/ru\/?$/)
   })
 
+  test("несуществующий файл: 404, а не главная страница", async ({ request }) => {
+    for (const адрес of ["/apple-touch-icon.png", "/takogo-fayla-net.png", "/manifest.webmanifest"]) {
+      const ответ = await request.get(адрес)
+      expect(ответ.status(), адрес).toBe(404)
+    }
+    // настоящие файлы сайта при этом отдаются
+    for (const адрес of ["/icon.png", "/volento-logo.png", "/favicon.ico", "/robots.txt"]) {
+      const ответ = await request.get(адрес)
+      expect(ответ.status(), адрес).toBe(200)
+    }
+  })
+
   test("назад и вперёд в браузере", async ({ page }) => {
     await page.goto("/ru/store")
     await page.locator('a[href*="/products/"]:visible').first().click()
