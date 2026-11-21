@@ -62,12 +62,19 @@ export default async function заказОтправлен({
     const ключСлужбы =
       (заказ.shipping_methods ?? [])[0]?.data?.apishipData?.tariff?.providerKey ?? null
 
+    // Пункт выдачи лежит в выборе ApiShip. Его нет — заказ едет до двери.
+    const естьПункт = (заказ.shipping_methods ?? []).some(
+      (с: any) => с?.data?.apishipData?.point
+    )
+    const естьВыбор = (заказ.shipping_methods ?? []).some((с: any) => с?.data?.apishipData)
+
     const данные = {
       номер: `№ ${заказ.display_id}`,
       имя: заказ.shipping_address?.first_name,
       служба: названиеСлужбы(ключСлужбы),
       трек: метка.tracking_number,
       ссылка: ссылкаОтслеживания(ключСлужбы, метка.tracking_number, метка.tracking_url || null),
+      курьером: естьВыбор && !естьПункт,
     }
 
     await отправить(container, {
