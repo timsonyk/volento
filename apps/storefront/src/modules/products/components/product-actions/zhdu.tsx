@@ -4,36 +4,19 @@ import { ждатьРазмер } from "@lib/data/zhdu"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useEffect, useState } from "react"
 
-const КЛЮЧ = "volento_obrazec_zhdu"
-
 /**
- * ОБРАЗЕЦ. Виден только тому, кто хоть раз открыл сайт с ?obrazec=zhdu
- * (отметка лежит в браузере). Покупатели его не видят.
+ * «Сообщить, когда появится»: покупатель выбрал размер, которого нет.
+ * Просьбу записывает lib/data/zhdu.ts, письмо шлёт бэкенд
+ * (lib/postuplenie.ts), когда размер появится.
  */
-export const образецВключён = (): boolean => {
-  if (typeof window === "undefined") return false
-  try {
-    if (new URLSearchParams(window.location.search).get("obrazec") === "zhdu") {
-      window.localStorage.setItem(КЛЮЧ, "1")
-    }
-    return window.localStorage.getItem(КЛЮЧ) === "1"
-  } catch {
-    return false
-  }
-}
-
 export default function СообщитьОПоступлении({ variantId }: { variantId: string }) {
-  const [виден, setВиден] = useState(false)
   const [идёт, setИдёт] = useState(false)
   const [итог, setИтог] = useState<
     null | { вид: "записали"; почта: string } | { вид: "нужен-вход" } | { вид: "сбой" }
   >(null)
 
-  useEffect(() => setВиден(образецВключён()), [])
   // другой размер: прошлый ответ к нему не относится
   useEffect(() => setИтог(null), [variantId])
-
-  if (!виден) return null
 
   const нажали = async () => {
     setИдёт(true)

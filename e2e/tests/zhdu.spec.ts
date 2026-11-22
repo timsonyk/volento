@@ -2,20 +2,17 @@ import { expect, Page, test } from "@playwright/test"
 
 import { войтиПокупателем, входДоступен } from "./pomoshniki"
 
-/**
- * ОБРАЗЕЦ «Сообщить, когда появится». Виден только после захода с
- * ?obrazec=zhdu, обычный покупатель блока не видит.
- */
+/** «Сообщить, когда появится» у размера, которого нет. */
 
 /** Открывает товар и выбирает размер, которого нет. false, если такого не нашлось. */
-async function выбратьРазмерКоторогоНет(page: Page, сОбразцом: boolean): Promise<boolean> {
+async function выбратьРазмерКоторогоНет(page: Page): Promise<boolean> {
   await page.goto("/ru/store")
   const адреса = await page
     .locator('a[href*="/products/"]:visible')
     .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 8))
 
   for (const адрес of адреса) {
-    await page.goto(адрес + (сОбразцом ? "?obrazec=zhdu" : ""))
+    await page.goto(адрес)
     await page.waitForLoadState("networkidle")
     const нет = page.locator('[data-testid="option-button"].line-through').first()
     if (!(await нет.count())) continue
@@ -34,14 +31,16 @@ async function выбратьРазмерКоторогоНет(page: Page, сО
   return false
 }
 
-test.describe("образец: сообщить, когда появится", () => {
-  test("без включения образца блока нет", async ({ page }) => {
-    test.skip(!(await выбратьРазмерКоторогоНет(page, false)), "нет размера без наличия")
+test.describe("сообщить, когда появится", () => {
+  test("размер в наличии: блока нет", async ({ page }) => {
+    await page.goto("/ru/store")
+    await page.locator('a[href*="/products/"]:visible').first().click()
+    await expect(page).toHaveURL(/\/products\//)
     await expect(page.locator('[data-testid="zhdu"]')).toHaveCount(0)
   })
 
   test("гостю предлагают войти", async ({ page }) => {
-    test.skip(!(await выбратьРазмерКоторогоНет(page, true)), "нет размера без наличия")
+    test.skip(!(await выбратьРазмерКоторогоНет(page)), "нет размера без наличия")
     await page.locator('[data-testid="zhdu-knopka"]').click()
     await expect(page.locator('[data-testid="zhdu-vhod"]')).toBeVisible()
   })
@@ -49,7 +48,7 @@ test.describe("образец: сообщить, когда появится", (
   test("вошедшему пишем, что запомнили, и страница не шире экрана", async ({ page }) => {
     test.skip(!входДоступен(), "нет ключей для входа")
     await войтиПокупателем(page)
-    test.skip(!(await выбратьРазмерКоторогоНет(page, true)), "нет размера без наличия")
+    test.skip(!(await выбратьРазмерКоторогоНет(page)), "нет размера без наличия")
     await page.locator('[data-testid="zhdu-knopka"]').click()
     await expect(page.locator('[data-testid="zhdu-zapisali"]')).toContainText("Запомнили")
     const шире = await page.evaluate(
