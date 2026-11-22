@@ -25,22 +25,27 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     // любые буквы, и номер с ошибкой уезжал на посылку
     const разбор = разобратьТелефон(String(formData.get("phone") ?? ""))
     if (!разбор.годится) {
-      return { success: false, error: разбор.ошибка }
+      return { success: false, error: разбор.ошибка, сохранён: null }
     }
 
     try {
       await updateCustomer({ phone: разбор.значение })
-      return { success: true, error: null }
+      return { success: true, error: null, сохранён: разбор.значение }
     } catch (error) {
       console.error(error)
-      return { success: false, error: "Не получилось сохранить. Попробуйте ещё раз" }
+      return { success: false, error: "Не получилось сохранить. Попробуйте ещё раз", сохранён: null }
     }
   }
 
   const [state, formAction] = useActionState(updateCustomerPhone, {
     error: null as string | null,
     success: false,
+    сохранён: null as string | null,
   })
+
+  // последнее удачно сохранённое значение; до первого сохранения из страницы
+  const [сохранён, setСохранён] = React.useState<string | null>(null)
+  const номер = сохранён ?? customer.phone
 
   const [телефон, setТелефон] = React.useState(телефономСМаской(customer.phone ?? ""))
 
@@ -52,10 +57,12 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
 
   useEffect(() => {
     setSuccessState(state.success)
-    // Ответ на сохранение изредка не обновляет страницу: данные записаны,
-    // а на экране прежнее значение до перезагрузки (ловилось сценарием
-    // примерно раз на шесть прогонов). Просим свежую страницу сами, как в
-    // корзине после смены количества.
+    if (state.success && state.сохранён) setСохранён(state.сохранён)
+    // Свежую страницу просим, чтобы обновилось и остальное (приветствие в
+    // шапке кабинета). Но показ нового значения от неё не зависит:
+    // примерно в одном случае из десяти сервер присылает страницу с новым
+    // значением, а витрина её не перерисовывает (проверено записью ответов
+    // 22.11). Поэтому сохранённое значение форма показывает сама.
     if (state.success) router.refresh()
   }, [state, router])
 
@@ -63,7 +70,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     <form action={formAction} className="w-full">
       <AccountInfo
         label="Телефон"
-        currentInfo={customer.phone ? телефономСМаской(customer.phone) : "Не указан"}
+        currentInfo={номер ? телефономСМаской(номер) : "Не указан"}
         isSuccess={successState}
         isError={!!state.error}
         errorMessage={state.error || undefined}
