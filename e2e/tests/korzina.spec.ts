@@ -31,6 +31,8 @@ test.describe("корзина", () => {
 
   test("перечёркнутый размер не даёт купить", async ({ page }) => {
     await page.goto("/ru/store")
+    // каталог приходит потоком: без ожидания список адресов бывал пустым
+    await page.locator('a[href*="/products/"]:visible').first().waitFor()
     const адреса = await page
       .locator('a[href*="/products/"]:visible')
       .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 8))
