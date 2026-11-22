@@ -29,18 +29,18 @@ export const retrieveCustomer =
       ...authHeaders,
     }
 
-    const next = {
-      ...(await getCacheOptions("customers")),
-    }
-
     return await sdk.client
       .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
         method: "GET",
         // заказы покупателя здесь не просим: их никто не читал, а запрос
         // с ними шёл на каждой странице (список заказов — lib/data/orders)
         headers,
-        next,
-        cache: "force-cache",
+        // Покупателя не кэшируем. С кэшем правка профиля изредка не
+        // появлялась на экране: страница, начатая до сохранения, дописывала
+        // в кэш старые данные уже после его сброса (сценарий кабинета падал
+        // примерно раз на шесть прогонов). Запрос лёгкий, около 10 мс, и
+        // в пределах одной страницы повторные вызовы склеиваются сами.
+        cache: "no-store",
       })
       .then(({ customer }) => customer)
       .catch(() => null)
