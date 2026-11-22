@@ -116,7 +116,7 @@ const ProductGrid = ({
         className="grid w-full grid-cols-2 gap-x-2 gap-y-7 small:grid-cols-4 small:gap-y-8 medium:grid-cols-5"
         data-testid="products-list"
       >
-        {товары.map((p) => (
+        {товары.map((p, номер) => (
           <li key={p.id} className="h-full">
             <ProductPreview
               product={p}
@@ -126,6 +126,9 @@ const ProductGrid = ({
               // экране: по общей мерке (68 % экрана) телефон качал снимки
               // в полтора раза крупнее, чем показывал.
               sizes="(max-width: 1023px) 48vw, (max-width: 1279px) 24vw, 17vw"
+              // Первый ряд виден сразу: его обложки грузим без очереди,
+              // остальные по мере прокрутки.
+              срочно={номер < 5}
             />
           </li>
         ))}

@@ -23,7 +23,10 @@ export default function PreviewGallery({
   images,
   alt,
   sizes = "(max-width: 576px) 68vw, (max-width: 1024px) 44vw, 23vw",
+  срочно = false,
 }: {
+  /** Обложка видна на первом экране: грузим её сразу и с приоритетом. */
+  срочно?: boolean
   images: string[]
   alt: string
   /**
@@ -88,7 +91,7 @@ export default function PreviewGallery({
         <>
           {/* Обложка лежит снизу и видна всегда: пока второй снимок
               грузится, на её месте не зияет пустота. */}
-          <Image {...общие} src={images[0]} className={слой} />
+          <Image {...общие} src={images[0]} className={слой} priority={срочно} />
 
           {/* Верхний слой — текущий снимок. На обложке он невидим, и
               тогда это та же картинка: лишнего запроса не будет. */}

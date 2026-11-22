@@ -32,7 +32,10 @@ export default function ProductPreview({
   colors,
   region: _region,
   sizes,
+  срочно,
 }: {
+  /** обложку грузить сразу, не дожидаясь прокрутки (первый ряд каталога) */
+  срочно?: boolean
   /** ширина карточки на экране, см. gallery.tsx */
   sizes?: string
   product: HttpTypes.StoreProduct
@@ -85,6 +88,7 @@ export default function ProductPreview({
           images={photos}
           alt={stripColor(product.title, color)}
           sizes={sizes}
+          срочно={срочно}
         />
 
         {/* Текст под фото по замерам референса: на телефоне 12 px с
