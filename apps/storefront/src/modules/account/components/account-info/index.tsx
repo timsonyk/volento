@@ -113,7 +113,10 @@ const AccountInfo = ({
             "transition-[max-height,opacity] duration-300 ease-in-out overflow-visible",
             {
               "max-h-[1000px] opacity-100": state,
-              "max-h-0 opacity-0": !state,
+              // Свёрнутая форма невидима, но раньше продолжала лежать
+              // поверх того, что ниже: перехватывала нажатия (ссылка на
+              // почту под именем не нажималась) и ловила клавишу Tab.
+              "max-h-0 opacity-0 invisible pointer-events-none": !state,
             }
           )}
         >

@@ -28,6 +28,16 @@ test.describe("кабинет: правка профиля", () => {
     await expect(блок.locator('[data-testid="current-info"]')).toHaveText("+7 912 000-00-00")
   })
 
+  test("свёрнутая форма не перекрывает то, что под ней", async ({ page }) => {
+    await войтиПокупателем(page)
+    await page.goto("/ru/account/profile")
+    const ссылка = page.locator('[data-testid="account-email"] a[href^="mailto:"]')
+    await expect(ссылка).toBeVisible()
+    // trial: проверяем, что нажатие дошло бы до ссылки, но почту не открываем
+    await ссылка.click({ trial: true, timeout: 5000 })
+    await expect(page.locator('[data-testid="save-button"]:visible')).toHaveCount(0)
+  })
+
   test("имя: пустое не сохраняется", async ({ page }) => {
     await войтиПокупателем(page)
     await page.goto("/ru/account/profile")
