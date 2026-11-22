@@ -410,7 +410,11 @@ export default function ProductActions({
           </Button>
         </div>
         {selectedVariant && isValidVariant && !inStock && !disabled && (
-          <СообщитьОПоступлении variantId={selectedVariant.id} />
+          <СообщитьОПоступлении
+            variantId={selectedVariant.id}
+            название={[product.title, selectedVariant.title].filter(Boolean).join(", ")}
+            адрес={product.handle ?? undefined}
+          />
         )}
         {ошибка && (
           <p className="text-sm text-red-600" role="alert" data-testid="add-to-cart-error">

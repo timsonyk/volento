@@ -55,5 +55,23 @@ test.describe("сообщить, когда появится", () => {
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
     )
     expect(шире).toBe(false)
+
+    // просьба видна в кабинете, и её можно снять
+    await page.goto("/ru/account/profile")
+    const список = page.locator('[data-testid="zhdu-spisok"]')
+    await expect(список).toBeVisible()
+    await expect(список.locator('[data-testid="zhdu-stroka"] a').last()).toHaveAttribute(
+      "href",
+      /\/products\/.+v_id=variant_/
+    )
+    const строки = список.locator('[data-testid="zhdu-stroka"]')
+    for (let осталось = await строки.count(); осталось > 0; осталось--) {
+      await строки.first().locator('[data-testid="zhdu-ubrat"]').click()
+      await expect(строки).toHaveCount(осталось - 1)
+    }
+    await expect(список).toHaveCount(0)
+    await page.reload()
+    await expect(page.locator('[data-testid="profile-page-wrapper"]')).toBeVisible()
+    await expect(page.locator('[data-testid="zhdu-spisok"]')).toHaveCount(0)
   })
 })

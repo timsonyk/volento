@@ -2,6 +2,7 @@ import { Metadata } from "next"
 
 import ProfilePhone from "@modules/account//components/profile-phone"
 import ProfileName from "@modules/account/components/profile-name"
+import ЖдуПоступления, { Просьба } from "@modules/account/components/zhdu-spisok"
 import { notFound } from "next/navigation"
 import { retrieveCustomer } from "@lib/data/customer"
 
@@ -16,6 +17,16 @@ export default async function Profile() {
   if (!customer) {
     notFound()
   }
+
+  // размеры, о поступлении которых просили сообщить (lib/data/zhdu.ts)
+  const сырые = (customer.metadata as any)?.zhdu
+  const ждёт: Просьба[] = (Array.isArray(сырые) ? сырые : [])
+    .filter((о: any) => о && typeof о.v === "string")
+    .map((о: any) => ({
+      v: о.v,
+      n: typeof о.n === "string" ? о.n : undefined,
+      h: typeof о.h === "string" ? о.h : undefined,
+    }))
 
   return (
     <div className="w-full" data-testid="profile-page-wrapper">
@@ -44,6 +55,12 @@ export default async function Profile() {
         </div>
         <Divider />
         <ProfilePhone customer={customer} />
+        {ждёт.length > 0 && (
+          <>
+            <Divider />
+            <ЖдуПоступления просьбы={ждёт} />
+          </>
+        )}
         {/* Пароля нет — вход по коду из письма. Адрес плательщика не
             нужен: платят картой или по СБП, счёт на адрес не выставляем. */}
       </div>

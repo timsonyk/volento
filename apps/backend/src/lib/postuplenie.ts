@@ -15,7 +15,7 @@ import { отправить } from "./pochta"
  * Просьбу снимаем ДО отправки: если письмо не уйдёт, покупатель потеряет
  * одно письмо, а не получит одно и то же каждые 15 минут.
  */
-export type Ожидание = { v: string; t: string }
+export type Ожидание = { v: string; t: string; n?: string; h?: string }
 
 export type Размер = { id: string; название: string; вариант: string; адрес: string }
 
@@ -30,7 +30,14 @@ export function разобратьОжидания(metadata: unknown): Ожид�
   if (!Array.isArray(сырые)) return []
   return сырые
     .filter((о) => о && typeof о.v === "string" && ПОХОЖЕ_НА_ID.test(о.v))
-    .map((о) => ({ v: о.v, t: typeof о.t === "string" ? о.t : "" }))
+    .map((о) => ({
+      v: о.v,
+      t: typeof о.t === "string" ? о.t : "",
+      // название и адрес товара для списка в кабинете: не теряем их,
+      // когда переписываем оставшиеся просьбы
+      ...(typeof о.n === "string" ? { n: о.n.slice(0, 160) } : {}),
+      ...(typeof о.h === "string" ? { h: о.h.slice(0, 200) } : {}),
+    }))
     .slice(-30)
 }
 
@@ -209,7 +216,7 @@ export async function проверитьПоступления(container: Medusa
       }
     }
 
-    if (писем) logger.info(`Поступления: отправлено писем — ${писем}`)
+    if (писем) logger.info(`Поступления: обработано покупателей с появившимися размерами — ${писем}`)
   } catch (ошибка: any) {
     logger.error(`Поступления: проверка не прошла — ${ошибка?.message}`)
   }

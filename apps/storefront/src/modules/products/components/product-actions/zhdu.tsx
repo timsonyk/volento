@@ -9,7 +9,16 @@ import { useEffect, useState } from "react"
  * Просьбу записывает lib/data/zhdu.ts, письмо шлёт бэкенд
  * (lib/postuplenie.ts), когда размер появится.
  */
-export default function СообщитьОПоступлении({ variantId }: { variantId: string }) {
+export default function СообщитьОПоступлении({
+  variantId,
+  название,
+  адрес,
+}: {
+  variantId: string
+  /** «Брюки палаццо, чёрный, 42 / 170»: так просьба названа в кабинете */
+  название?: string
+  адрес?: string
+}) {
   const [идёт, setИдёт] = useState(false)
   const [итог, setИтог] = useState<
     null | { вид: "записали"; почта: string } | { вид: "нужен-вход" } | { вид: "сбой" }
@@ -21,7 +30,7 @@ export default function СообщитьОПоступлении({ variantId }: 
   const нажали = async () => {
     setИдёт(true)
     try {
-      const ответ = await ждатьРазмер(variantId)
+      const ответ = await ждатьРазмер(variantId, название, адрес)
       setИтог(
         ответ.итог === "записали"
           ? { вид: "записали", почта: ответ.почта }
