@@ -15,6 +15,8 @@ async function выбратьРазмерКоторогоНет(page: Page): Pro
     await page.goto(адрес)
     await page.waitForLoadState("networkidle")
     const нет = page.locator('[data-testid="option-button"].line-through').first()
+    // зачёркивание приходит отдельным запросом о наличии, даём ему время
+    await нет.waitFor({ timeout: 3000 }).catch(() => {})
     if (!(await нет.count())) continue
     await нет.click()
     const кнопка = page.locator('[data-testid="add-product-button"]')
