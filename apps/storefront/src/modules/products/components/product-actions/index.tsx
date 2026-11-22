@@ -9,6 +9,7 @@ import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import ProductPrice from "../product-price"
+import СообщитьОПоступлении from "./zhdu"
 import { useRouter } from "next/navigation"
 import { сообщитьОКорзине } from "@lib/util/sobytie-korziny"
 
@@ -408,6 +409,9 @@ export default function ProductActions({
             Купить сейчас
           </Button>
         </div>
+        {selectedVariant && isValidVariant && !inStock && !disabled && (
+          <СообщитьОПоступлении variantId={selectedVariant.id} />
+        )}
         {ошибка && (
           <p className="text-sm text-red-600" role="alert" data-testid="add-to-cart-error">
             {ошибка}
