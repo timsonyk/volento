@@ -11,6 +11,10 @@ import ChevronDown from "@modules/common/icons/chevron-down"
 import Package from "@modules/common/icons/package"
 import User from "@modules/common/icons/user"
 
+const СТРОКА =
+  "flex items-center justify-between py-4 border-b border-gray-200"
+const ЗНАЧОК = "flex h-5 w-5 shrink-0 items-center justify-center"
+
 const AccountNav = ({
   customer,
 }: {
@@ -43,31 +47,64 @@ const AccountNav = ({
               Здравствуйте, {customer?.first_name}
             </div>
             <div className="text-base-regular">
+              {/* Строки начинаются от того же края, что и заголовок;
+                  значки одной ширины, чтобы подписи стояли в одну линию. */}
               <ul>
                 <li>
                   <LocalizedClientLink
                     href="/account/profile"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className={СТРОКА}
                     data-testid="profile-link"
                   >
-                    <>
-                      <div className="flex items-center gap-x-2">
+                    <div className="flex items-center gap-x-3">
+                      <span className={ЗНАЧОК}>
                         <User size={20} />
-                        <span>Профиль</span>
-                      </div>
-                      <ChevronDown className="transform -rotate-90" />
-                    </>
+                      </span>
+                      <span>Профиль</span>
+                    </div>
+                    <ChevronDown className="transform -rotate-90" />
                   </LocalizedClientLink>
                 </li>
                 <li>
                   <LocalizedClientLink
                     href="/account/orders"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8"
+                    className={СТРОКА}
                     data-testid="orders-link"
                   >
-                    <div className="flex items-center gap-x-2">
-                      <Package size={20} />
+                    <div className="flex items-center gap-x-3">
+                      <span className={ЗНАЧОК}>
+                        <Package size={20} />
+                      </span>
                       <span>Заказы</span>
+                    </div>
+                    <ChevronDown className="transform -rotate-90" />
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  {/* На телефоне сердечка в шапке нет, до избранного
+                      иначе только через боковое меню. */}
+                  <LocalizedClientLink
+                    href="/izbrannoe"
+                    className={СТРОКА}
+                    data-testid="izbrannoe-link"
+                  >
+                    <div className="flex items-center gap-x-3">
+                      <span className={ЗНАЧОК}>
+                        <svg
+                          aria-hidden
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z" />
+                        </svg>
+                      </span>
+                      <span>Избранное</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />
                   </LocalizedClientLink>
@@ -75,12 +112,14 @@ const AccountNav = ({
                 <li>
                   <button
                     type="button"
-                    className="flex items-center justify-between py-4 border-b border-gray-200 px-8 w-full"
+                    className={clx(СТРОКА, "w-full text-left")}
                     onClick={handleLogout}
                     data-testid="logout-button"
                   >
-                    <div className="flex items-center gap-x-2">
-                      <ArrowRightOnRectangle />
+                    <div className="flex items-center gap-x-3">
+                      <span className={ЗНАЧОК}>
+                        <ArrowRightOnRectangle />
+                      </span>
                       <span>Выйти</span>
                     </div>
                     <ChevronDown className="transform -rotate-90" />

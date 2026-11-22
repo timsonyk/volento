@@ -38,6 +38,20 @@ test.describe("кабинет: правка профиля", () => {
     await expect(page.locator('[data-testid="save-button"]:visible')).toHaveCount(0)
   })
 
+  test("телефон: из меню кабинета можно попасть в избранное", async ({ page }, info) => {
+    test.skip(info.project.name !== "telefon", "на компьютере сердечко есть в шапке")
+    await войтиПокупателем(page)
+    await page.goto("/ru/account")
+    const меню = page.locator('[data-testid="mobile-account-nav"]')
+    // подписи строк стоят в одну линию
+    const лево = await меню
+      .locator("li span:last-child")
+      .evaluateAll((э) => э.map((x) => Math.round(x.getBoundingClientRect().left)))
+    expect(new Set(лево).size).toBe(1)
+    await меню.locator('[data-testid="izbrannoe-link"]').click()
+    await expect(page).toHaveURL(/\/izbrannoe/)
+  })
+
   test("имя: пустое не сохраняется", async ({ page }) => {
     await войтиПокупателем(page)
     await page.goto("/ru/account/profile")
