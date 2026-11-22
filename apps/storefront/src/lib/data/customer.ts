@@ -12,7 +12,6 @@ import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import {
   getAuthHeaders,
-  getCacheOptions,
   getCacheTag,
   getCartId,
   removeAuthToken,
@@ -56,9 +55,11 @@ export const updateCustomer = async (body: HttpTypes.StoreUpdateCustomer) => {
     .then(({ customer }) => customer)
     .catch(medusaError)
 
-  const cacheTag = await getCacheTag("customers")
-  revalidateTag(cacheTag)
-
+  // Кэш здесь не сбрасываем нарочно. Покупатель больше не кэшируется
+  // (см. retrieveCustomer), а сброс заставлял сервер прислать в ответе
+  // заново всю страницу, и витрина примерно в одном случае из восьми этот
+  // ответ не применяла: данные записаны, а кнопка навсегда «Загрузка...».
+  // Свежую страницу вызывающий просит сам через router.refresh().
   return updateRes
 }
 
