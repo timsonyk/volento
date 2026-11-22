@@ -60,7 +60,7 @@ export default function PreviewSizes({ sizes }: { sizes: Размер[] }) {
 
   return (
     <span
-      className="flex shrink-0 items-center gap-x-2 text-xs text-muted"
+      className="flex min-w-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-0.5 text-xs text-muted"
       data-testid="preview-sizes"
       aria-hidden
     >

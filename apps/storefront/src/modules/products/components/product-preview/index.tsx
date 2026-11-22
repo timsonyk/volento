@@ -112,7 +112,7 @@ export default function ProductPreview({
           )}
 
           {размеры.length > 0 && (
-            <span className="hidden xsmall:group-hover:flex">
+            <span className="hidden min-w-0 xsmall:group-hover:flex">
               <PreviewSizes sizes={размеры} />
             </span>
           )}
