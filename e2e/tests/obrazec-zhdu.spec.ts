@@ -9,13 +9,13 @@ import { войтиПокупателем, входДоступен } from "./po
 
 /** Открывает товар и выбирает размер, которого нет. false, если такого не нашлось. */
 async function выбратьРазмерКоторогоНет(page: Page, сОбразцом: boolean): Promise<boolean> {
-  await page.goto("/ru/store" + (сОбразцом ? "?obrazec=zhdu" : ""))
+  await page.goto("/ru/store")
   const адреса = await page
     .locator('a[href*="/products/"]:visible')
     .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 8))
 
   for (const адрес of адреса) {
-    await page.goto(адрес)
+    await page.goto(адрес + (сОбразцом ? "?obrazec=zhdu" : ""))
     await page.waitForLoadState("networkidle")
     const нет = page.locator('[data-testid="option-button"].line-through').first()
     if (!(await нет.count())) continue

@@ -9,7 +9,7 @@ import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import ProductPrice from "../product-price"
-import СообщитьОПоступлении from "./zhdu"
+import СообщитьОПоступлении, { образецВключён } from "./zhdu"
 import { useRouter } from "next/navigation"
 import { сообщитьОКорзине } from "@lib/util/sobytie-korziny"
 
@@ -47,6 +47,12 @@ export default function ProductActions({
   // «Мой размер»: что подставили сами, чтобы сказать об этом покупателю
   const [подставлен, setПодставлен] = useState<string | null>(null)
   const countryCode = useParams().countryCode as string
+
+  // образец включается адресом ?obrazec=zhdu: запоминаем сразу, пока
+  // выбор размера не переписал адрес
+  useEffect(() => {
+    образецВключён()
+  }, [])
 
   // If there is only 1 variant, preselect the options
   useEffect(() => {
