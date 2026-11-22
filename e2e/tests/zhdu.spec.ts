@@ -58,6 +58,9 @@ test.describe("сообщить, когда появится", () => {
 
     // просьба видна в кабинете, и её можно снять
     await page.goto("/ru/account/profile")
+    // на телефоне полоса про cookie лежит поверх низа страницы
+    const принять = page.getByRole("button", { name: /^Принять$/ })
+    if (await принять.count()) await принять.first().click()
     const список = page.locator('[data-testid="zhdu-spisok"]')
     await expect(список).toBeVisible()
     await expect(список.locator('[data-testid="zhdu-stroka"] a').last()).toHaveAttribute(
