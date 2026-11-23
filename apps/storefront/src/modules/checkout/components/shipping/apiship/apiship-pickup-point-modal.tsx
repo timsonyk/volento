@@ -163,6 +163,7 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
               points={points}
               tariffsByPointId={tariffsByPointId}
               isLoading={isLoadingPoints}
+              город={cart.shipping_address?.city}
               selectedPointId={selectedPointId}
               selectedTariffKey={selectedTariffKey}
               isPanelOpen={isPanelOpen}

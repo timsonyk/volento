@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, Heading, Text, clx, IconButton } from "@modules/common/components/ui"
 import { Loader, XMark } from "@medusajs/icons"
+import { короткийАдрес } from "./utils/adres"
 import { Radio, RadioGroup } from "@headlessui/react"
 import MedusaRadio from "@modules/common/components/radio"
 import {
@@ -62,6 +63,8 @@ type ApishipMapProps = {
   onChoose: (payload: { point: ApishipPoint; tariff: ApishipTariff }) => void
   chosen?: { pointId?: string; tariffKey?: string } | null
   providersMap: Record<string, string>
+  /** город из корзины: по нему укорачиваем адреса в списке */
+  город?: string | null
 }
 
 const ДНИ_НЕДЕЛИ = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"] as const
@@ -129,7 +132,8 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   onSelectTariff,
   onChoose,
   chosen,
-  providersMap
+  providersMap,
+  город
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<any>(null)
@@ -487,10 +491,11 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
         .map((p) => {
           const цены = годныеТарифы(tariffsByPointId[p.id] ?? []).map(ценаТарифа)
           const от = цены.filter((ц) => typeof ц === "number").sort((а, б) => а - б)[0]
-          return { p, от }
+          return { p, от, адрес: короткийАдрес(p.address, город) }
         })
-        .sort((а, б) => (а.p.address ?? "").localeCompare(б.p.address ?? "", "ru")),
-    [points, tariffsByPointId]
+        // по улицам, а не по индексам
+        .sort((а, б) => а.адрес.localeCompare(б.адрес, "ru")),
+    [points, tariffsByPointId, город]
   )
 
   // В Москве пунктов больше четырёх тысяч: листать такой список до своей
@@ -557,7 +562,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                 Пунктов: {найденные.length}. Показаны первые {СТРОК_В_СПИСКЕ}: введите улицу, чтобы найти свой.
               </li>
             )}
-            {найденные.slice(0, СТРОК_В_СПИСКЕ).map(({ p, от }) => (
+            {найденные.slice(0, СТРОК_В_СПИСКЕ).map(({ p, от, адрес }) => (
               <li key={p.id} className="border-b border-rule">
                 <button
                   type="button"
@@ -565,7 +570,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                   className="flex w-full items-start justify-between gap-x-4 py-3 text-left hover:bg-mist"
                 >
                   <span className="flex flex-col">
-                    <span className="txt-medium text-ui-fg-base">{p.address}</span>
+                    <span className="txt-medium text-ui-fg-base">{адрес}</span>
                     <span className="txt-small text-ui-fg-subtle">
                       {[providersMap?.[String(p.providerKey ?? "")], p.name, примерочная(p)].filter(Boolean).join(" · ")}
                     </span>
