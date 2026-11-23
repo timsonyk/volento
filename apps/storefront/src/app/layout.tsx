@@ -1,4 +1,5 @@
 import { getBaseURL } from "@lib/util/env"
+import Budilnik from "@modules/common/components/budilnik"
 import { Metadata } from "next"
 import "styles/globals.css"
 
@@ -12,6 +13,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body className="bg-paper font-sans text-ink antialiased">
         {/* clip, а не hidden: hidden ломает липкую шапку */}
         <main className="relative overflow-x-clip">{props.children}</main>
+        <Budilnik />
       </body>
     </html>
   )
