@@ -44,7 +44,10 @@ test.describe("корзина", () => {
     const итог = page.locator('[data-testid="cart-subtotal"]')
     for (let шаг = 0; шаг < 14; шаг++) {
       const до = await итог.innerText()
-      await количество.selectOption(шаг % 2 === 0 ? "2" : "1")
+      const надо = шаг % 2 === 0 ? "2" : "1"
+      await количество.selectOption(надо)
+      // выбранное число видно сразу, без возврата к прежнему
+      expect(await количество.inputValue()).toBe(надо)
       await expect(итог).not.toHaveText(до, { timeout: 1900 })
       await expect(строка.locator("svg.animate-spin")).toHaveCount(0)
     }

@@ -74,6 +74,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
       if (++раз > 4) {
         clearInterval(t)
         setЖдём(null)
+        setВыбрано(null)
         return
       }
       router.refresh()
@@ -81,9 +82,18 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
     return () => clearInterval(t)
   }, [ждём, item.quantity, router])
 
+  // Выбранное число показываем сразу. Раньше список на долю секунды (а на
+  // медленной связи дольше) возвращался к прежнему числу и только потом
+  // перескакивал: выглядело, будто выбор не принят.
+  const [выбрано, setВыбрано] = useState<number | null>(null)
+  useEffect(() => {
+    if (выбрано !== null && item.quantity === выбрано) setВыбрано(null)
+  }, [выбрано, item.quantity])
+
   const changeQuantity = async (quantity: number) => {
     setError(null)
     setUpdating(true)
+    setВыбрано(quantity)
 
     await updateLineItem({
       lineId: item.id,
@@ -96,6 +106,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
         router.refresh()
       })
       .catch((err: Error) => {
+        setВыбрано(null)
         setError(текстСбоя(поЧеловечески(err.message, остаток), "Не получилось изменить количество. Попробуйте ещё раз"))
       })
       .finally(() => {
@@ -168,7 +179,7 @@ const Item = ({ item, type = "full", currencyCode, остаток }: ItemProps) 
           <div className="flex gap-2 items-center w-28">
             <CartItemSelect
               disabled={!живая}
-              value={item.quantity}
+              value={выбрано ?? item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
               className="w-14 h-10 p-4"
               aria-label="Количество"
