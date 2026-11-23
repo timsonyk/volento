@@ -29,6 +29,27 @@ test.describe("корзина", () => {
     await expect(page.locator('[data-testid="empty-cart-message"]')).toBeVisible()
   })
 
+  // Раньше примерно каждая седьмая смена количества ждала три секунды:
+  // React терял сигнал о готовых данных, и выручал только запасной повтор
+  // через две секунды. Теперь страницу будит «будильник» в корневом макете.
+  test("смена количества не зависает на запасном повторе", async ({ page }) => {
+    test.setTimeout(120000)
+    await положитьВКорзину(page)
+    await page.goto("/ru/cart")
+    const строка = page.locator('[data-testid="product-row"]:visible').first()
+    await expect(строка).toBeVisible()
+    const количество = строка.locator('[data-testid="product-select-button"]')
+    test.skip((await количество.locator("option").count()) < 2, "в наличии одна штука")
+    await expect(количество).toBeEnabled()
+    const итог = page.locator('[data-testid="cart-subtotal"]')
+    for (let шаг = 0; шаг < 14; шаг++) {
+      const до = await итог.innerText()
+      await количество.selectOption(шаг % 2 === 0 ? "2" : "1")
+      await expect(итог).not.toHaveText(до, { timeout: 1900 })
+      await expect(строка.locator("svg.animate-spin")).toHaveCount(0)
+    }
+  })
+
   test("перечёркнутый размер не даёт купить", async ({ page }) => {
     await page.goto("/ru/store")
     // каталог приходит потоком: без ожидания список адресов бывал пустым
