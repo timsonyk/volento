@@ -72,7 +72,8 @@ const Schedule = ({ worktime }: { worktime: Record<string, string> }) => {
     <div className="flex flex-col gap-[1px]">
       {Object.keys(worktime).map((day) => {
         const label = ДНИ_НЕДЕЛИ[Number(day) - 1]
-        const time = worktime[day]
+        // служба присылает «09:00/21:00» — показываем привычным тире
+        const time = String(worktime[day] ?? "").replace("/", "–")
         return (
           <div className="flex flex-row justify-between" key={day}>
             <Text className="txt-medium text-ui-fg-subtle">
@@ -192,6 +193,15 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     if (!selectedTariffKey) return null
     return activeTariffs.find((t) => t.key === selectedTariffKey) ?? null
   }, [activeTariffs, selectedTariffKey])
+
+  // Тариф один — выбирать не из чего, отмечаем его сами. Раньше покупатель
+  // должен был нажать на единственную строку, иначе кнопка «Выбрать»
+  // оставалась серой без объяснений.
+  useEffect(() => {
+    if (activeTariffs.length === 1 && !selectedTariffKey) {
+      onSelectTariff(activeTariffs[0].key)
+    }
+  }, [activeTariffs, selectedTariffKey, onSelectTariff])
 
   const clearMarkers = useCallback(() => {
     const map = mapRef.current
