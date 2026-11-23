@@ -59,6 +59,10 @@ test.describe("оформление", () => {
     // шаги идут по порядку: город, доставка, получатель — третий под замком
     await expect(page.locator('[data-testid="recipient-email-input"]')).toBeDisabled()
     await expect(page.locator('[data-testid="cart-shipping"]')).toHaveText("после выбора доставки")
+    // у закрытого пункта нет галочки «пройден», согласия тоже под замком
+    await expect(page.locator('[data-testid="шаг-3"] svg[aria-label="пункт пройден"]')).toHaveCount(0)
+    await expect(page.locator('[data-testid="consent-checkbox"]')).toBeDisabled()
+    await expect(page.locator('[data-testid="замок-итог"]')).toBeVisible()
     // кнопка оплаты есть, но нажать её нельзя
     await expect(page.locator('[data-testid="submit-order-button"]')).toBeDisabled()
   })
