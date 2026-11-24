@@ -147,6 +147,9 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   // телефон) — показываем те же пункты списком. Раньше в этом случае окно
   // оставалось пустым: пункт не выбрать, купить нельзя.
   const [картаНеВышла, setКартаНеВышла] = useState(false)
+  // Список можно открыть и самому: на карте нет поиска по улице, а в
+  // большом городе найти свой пункт среди сотен меток трудно.
+  const [хочуСписок, setХочуСписок] = useState(false)
   // поиск по списку пунктов, когда карты нет
   const [искать, setИскать] = useState("")
 
@@ -524,18 +527,41 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
           <Text className="text-ui-fg-muted">Для этого способа доставки пунктов выдачи не нашлось.</Text>
         </div>
       )}
-      {картаНеВышла && !isLoading && !showNoPoints && (
+      {!картаНеВышла && !хочуСписок && !isLoading && !showNoPoints && !(activePoint && isPanelOpen) && (
+        <button
+          type="button"
+          onClick={() => setХочуСписок(true)}
+          className="absolute left-3 top-3 z-[60] border border-rule bg-white px-4 py-2 text-sm text-ink shadow-sm hover:bg-mist"
+          data-testid="pvz-spiskom"
+        >
+          Списком
+        </button>
+      )}
+      {(картаНеВышла || хочуСписок) && !isLoading && !showNoPoints && (
         <div
-          className="absolute inset-0 z-[65] flex flex-col bg-white"
+          // ниже крестика окна (z-60): раньше список его закрывал, и окно
+          // со списком нельзя было закрыть, не выбрав пункт
+          className="absolute inset-0 z-[55] flex flex-col bg-white"
           data-testid="pvz-spisok"
         >
-          <div className="p-6 pb-3 small:p-[35px] small:pb-4">
+          <div className="p-6 pb-3 pr-14 small:p-[35px] small:pb-4 small:pr-16">
             <Heading level="h2" className="text-2xl-regular">
               Пункты выдачи
             </Heading>
-            <Text className="mt-1 text-ui-fg-muted txt-medium">
-              Карта не загрузилась — выберите пункт из списка.
-            </Text>
+            {картаНеВышла ? (
+              <Text className="mt-1 text-ui-fg-muted txt-medium">
+                Карта не загрузилась — выберите пункт из списка.
+              </Text>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setХочуСписок(false)}
+                className="mt-1 text-sm text-ink underline underline-offset-4"
+                data-testid="pvz-na-karte"
+              >
+                Показать на карте
+              </button>
+            )}
           </div>
           {списком.length > 10 && (
             <div className="px-6 pb-3 small:px-[35px]">
@@ -674,7 +700,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                 onChoose({ point: activePoint, tariff: selectedTariff })
               }}
               disabled={!selectedTariff || isSameAsChosen}
-              className="mb-[16px] h-14 w-full !rounded-full text-base !overflow-visible"
+              className="mb-[16px] h-14 w-full shrink-0 !rounded-full text-base !overflow-visible"
             >
               Выбрать
             </Button>
