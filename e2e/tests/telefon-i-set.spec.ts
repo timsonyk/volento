@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test"
 
+import { положитьВКорзину } from "./pomoshniki"
+
 test.describe("телефон", () => {
   test.skip(({ isMobile }) => !isMobile, "только телефон")
 
@@ -10,6 +12,15 @@ test.describe("телефон", () => {
     await expect(шторка).toBeVisible()
     await шторка.locator('a[href*="/categories/"]').first().click()
     await expect(page).toHaveURL(/\/categories\//)
+  })
+
+  test("после нажатия кнопка «В корзину» снова чёрная, а не серая", async ({ page }) => {
+    // наведение на сенсорном экране залипало: кнопка оставалась серой,
+    // будто выключена
+    await положитьВКорзину(page)
+    const кнопка = page.locator('[data-testid="add-product-button"]')
+    await expect(кнопка).toBeEnabled()
+    await expect(кнопка).toHaveCSS("background-color", "rgb(11, 11, 11)")
   })
 
   test("страница не шире экрана", async ({ page }) => {

@@ -2,6 +2,10 @@ const path = require("path")
 
 module.exports = {
   darkMode: "class",
+  // Наведение работает только там, где есть мышь. На сенсорном экране
+  // оно «залипало» после нажатия: чёрная кнопка «В корзину» оставалась
+  // серой и выглядела выключенной, пока не тронешь экран в другом месте.
+  future: { hoverOnlyWhenSupported: true },
   presets: [require("@medusajs/ui-preset")],
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx}",
