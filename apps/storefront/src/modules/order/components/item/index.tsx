@@ -36,7 +36,7 @@ const Item = ({ item, currencyCode }: ItemProps) => {
           {/* одна штука — цена за штуку повторяла бы итог строки */}
           <span className={item.quantity > 1 ? "flex gap-x-1" : "hidden"}>
             <Text className="text-ui-fg-muted">
-              <span data-testid="product-quantity">{item.quantity}</span>x{" "}
+              <span data-testid="product-quantity">{item.quantity}</span> ×{" "}
             </Text>
             <LineItemUnitPrice
               item={item}

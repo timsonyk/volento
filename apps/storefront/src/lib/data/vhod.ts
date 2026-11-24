@@ -2,6 +2,7 @@
 
 import { sdk } from "@lib/config"
 import { revalidateTag } from "next/cache"
+import { headers } from "next/headers"
 
 import {
   разобратьДату,
@@ -82,6 +83,9 @@ const сНашимиСловами = (e: any, запасной: string): string 
   return запасной
 }
 
+const адресПокупателя = (заголовки: { get(имя: string): string | null }): string =>
+  (заголовки.get("x-forwarded-for") ?? "").split(",").pop()!.trim()
+
 /** Шаг первый: просим прислать код на почту. */
 export async function запроситьКод(почта: string): Promise<ШагВхода> {
   const адрес = почта.trim().toLowerCase()
@@ -93,7 +97,14 @@ export async function запроситьКод(почта: string): Promise<Ша
   try {
     const ответ = await sdk.client.fetch<{ отправлено: boolean; живёт: number }>(
       "/store/vhod",
-      { method: "POST", body: { email: адрес } }
+      {
+        method: "POST",
+        body: { email: адрес },
+        // Сервер считает письма по адресу покупателя в сети, а наш
+        // запрос приходит к нему изнутри. Последний адрес в списке
+        // дописал nginx, ему и верим.
+        headers: { "x-pokupatel-ip": адресПокупателя(await headers()) },
+      }
     )
     return { шаг: "код", почта: адрес, живёт: ответ?.живёт ?? 10 }
   } catch (e: any) {

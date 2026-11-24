@@ -10,6 +10,7 @@ import {
   почтаКлючом,
 } from "../../../lib/kod-vhoda"
 import { отправить } from "../../../lib/pochta"
+import { Сторож, ктоПросит } from "../../../lib/chastota"
 
 /**
  * Выдаёт код для входа: придумывает число, кладёт его отпечаток личности
@@ -29,6 +30,9 @@ import { отправить } from "../../../lib/pochta"
 // Примитивная проверка: поймать опечатку, а не пересказать стандарт.
 const ПОХОЖЕ_НА_ПОЧТУ = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
+// Один на процесс: считает письма с кодом по тому, кто просит.
+const сторож = new Сторож()
+
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const logger = req.scope.resolve("logger")
   const почта = почтаКлючом(String((req.body as any)?.email ?? ""))
@@ -37,8 +41,27 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(400).json({ ошибка: "Проверьте адрес почты", message: "Проверьте адрес почты" })
   }
 
+  // Автотесты (e2e/) ходят с ключом и писем не шлют, их не считаем.
+  const ключТестов = process.env.E2E_KLYUCH
+  const этоТест =
+    !!ключТестов &&
+    почта.endsWith("@example.com") &&
+    String(req.headers["x-e2e-klyuch"] ?? "") === ключТестов
+
+  // Письма на разные адреса с одного места: не даём рассылать коды
+  // незнакомым людям нашим именем (см. lib/chastota).
+  if (!этоТест) {
+    const кто = ктоПросит(req.headers as Record<string, unknown>)
+    const ждать = сторож.пропустить(кто)
+    if (ждать) {
+      logger.warn(`Вход по коду: слишком часто просят письма (${кто || "изнутри"}), ждать ${ждать} с`)
+      const минут = Math.ceil(ждать / 60)
+      const текст = `Слишком много писем с кодом. Попробуйте через ${минут} мин.`
+      return res.status(429).json({ ошибка: текст, message: текст, черезСекунд: ждать })
+    }
+  }
+
   const auth = req.scope.resolve(Modules.AUTH)
-  const notification = req.scope.resolve(Modules.NOTIFICATION)
 
   // Личность нужна до кода: положить отпечаток некуда, пока её нет.
   const заведена = await auth.register(ПРОВАЙДЕР, { body: { email: почта } } as any)
@@ -72,12 +95,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   // Автотесты (e2e/): код вместо письма. Только для @example.com — чужую
   // почту так не взять, — и только с ключом E2E_KLYUCH, который знает
   // сервер. Ключ не задан — лазейки нет вовсе.
-  const ключТестов = process.env.E2E_KLYUCH
-  if (
-    ключТестов &&
-    почта.endsWith("@example.com") &&
-    String(req.headers["x-e2e-klyuch"] ?? "") === ключТестов
-  ) {
+  if (этоТест) {
     return res.json({ отправлено: true, живёт: минут, код })
   }
 

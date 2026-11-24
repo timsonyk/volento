@@ -95,3 +95,33 @@ test.describe("ссылка на заказ из письма", () => {
     await expect(page.locator("h1")).toContainText("не найдена")
   })
 })
+
+test.describe("письма с кодом входа", () => {
+  test.skip(({ isMobile }) => isMobile, "проверка сервера, одного раза хватит")
+  test.skip(!process.env.E2E_PK, "нужен E2E_PK")
+
+  test("с одного адреса в сети нельзя разослать коды по многим почтам", async () => {
+    const API = process.env.E2E_API || "http://127.0.0.1:9000"
+    // адрес из учебного диапазона, свой на каждый прогон
+    const откуда = `203.0.113.${1 + Math.floor(Math.random() * 250)}`
+    const метка = Date.now()
+    const просить = (i: number) =>
+      fetch(`${API}/store/vhod`, {
+        method: "POST",
+        headers: {
+          "x-publishable-api-key": process.env.E2E_PK!,
+          "Content-Type": "application/json",
+          "X-Forwarded-For": откуда,
+        },
+        // письма на @example.com сервер не отправляет
+        body: JSON.stringify({ email: `e2e-chastota-${метка}-${i}@example.com` }),
+      })
+
+    for (let i = 0; i < 8; i++) {
+      expect((await просить(i)).status).toBe(200)
+    }
+    const отказ = await просить(8)
+    expect(отказ.status).toBe(429)
+    expect((await отказ.json()).message).toContain("Слишком много писем")
+  })
+})
