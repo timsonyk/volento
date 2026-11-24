@@ -48,3 +48,20 @@ export function имяПункта(имя?: string | null): string {
   if (/^[A-Z]{2,6}\d+\b/.test(чистое)) return ""
   return чистое
 }
+
+/** «55.9,49.3» из заметок корзины: где находится посёлок покупателя. */
+export function точкаИзСтроки(строка?: string | null): { ш: number; д: number } | null {
+  const [ш, д] = (строка ?? "").split(",").map(Number)
+  if (!Number.isFinite(ш) || !Number.isFinite(д) || !ш || !д) return null
+  if (Math.abs(ш) > 90 || Math.abs(д) > 180) return null
+  return { ш, д }
+}
+
+/** Расстояние по прямой между двумя точками, км. */
+export function кмМежду(ш1: number, д1: number, ш2: number, д2: number): number {
+  const р = Math.PI / 180
+  const h =
+    Math.sin(((ш2 - ш1) * р) / 2) ** 2 +
+    Math.cos(ш1 * р) * Math.cos(ш2 * р) * Math.sin(((д2 - д1) * р) / 2) ** 2
+  return 6371 * 2 * Math.asin(Math.sqrt(h))
+}

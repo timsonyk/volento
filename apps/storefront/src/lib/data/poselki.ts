@@ -161,7 +161,9 @@ export const выбратьПосёлок = async (id: string): Promise<Выбр
 
   await updateCheckoutFields({
     адрес: { city: рядом.город, country_code: "ru" },
-    заметки: { poselok: имя, poselok_adres: найден.value },
+    // Координаты нужны окну выбора пункта: по ним список пунктов города
+    // встаёт от ближайшего к посёлку, а не по алфавиту улиц.
+    заметки: { poselok: имя, poselok_adres: найден.value, poselok_gde: `${ш},${дол}` },
   })
 
   return { имя, город: рядом.город, км: Math.max(1, Math.round(рядом.км)) }

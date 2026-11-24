@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, Heading, Text, clx, IconButton } from "@modules/common/components/ui"
 import { Loader, XMark } from "@medusajs/icons"
-import { имяПункта, короткийАдрес } from "./utils/adres"
+import { имяПункта, кмМежду, короткийАдрес, точкаИзСтроки } from "./utils/adres"
 import { Radio, RadioGroup } from "@headlessui/react"
 import MedusaRadio from "@modules/common/components/radio"
 import {
@@ -65,6 +65,9 @@ type ApishipMapProps = {
   providersMap: Record<string, string>
   /** город из корзины: по нему укорачиваем адреса в списке */
   город?: string | null
+  /** покупатель из посёлка: его название и координаты «широта,долгота» */
+  посёлок?: string | null
+  посёлокГде?: string | null
 }
 
 const ДНИ_НЕДЕЛИ = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"] as const
@@ -133,7 +136,9 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   onChoose,
   chosen,
   providersMap,
-  город
+  город,
+  посёлок,
+  посёлокГде
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<any>(null)
@@ -153,6 +158,8 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   // поиск по списку пунктов, когда карты нет
   const [искать, setИскать] = useState("")
 
+  const откуда = useMemo(() => точкаИзСтроки(посёлокГде), [посёлокГде])
+
   const isSameAsChosen =
     !!chosen?.pointId &&
     !!chosen?.tariffKey &&
@@ -168,9 +175,21 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     if (!points?.length) {
       return null
     }
-    let зап = points[0].lng, вост = points[0].lng
-    let сев = points[0].lat, юг = points[0].lat
-    for (const p of points) {
+    // Покупатель из посёлка: показываем посёлок и десяток ближайших к нему
+    // пунктов, а не весь город, до дальнего конца которого ему не ехать.
+    let видимые = points
+    if (откуда) {
+      видимые = [...points]
+        .sort(
+          (а, б) =>
+            кмМежду(откуда.ш, откуда.д, а.lat, а.lng) -
+            кмМежду(откуда.ш, откуда.д, б.lat, б.lng)
+        )
+        .slice(0, 10)
+    }
+    let зап = откуда?.д ?? видимые[0].lng, вост = зап
+    let сев = откуда?.ш ?? видимые[0].lat, юг = сев
+    for (const p of видимые) {
       зап = Math.min(зап, p.lng); вост = Math.max(вост, p.lng)
       юг = Math.min(юг, p.lat); сев = Math.max(сев, p.lat)
     }
@@ -181,7 +200,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
       [зап - пх, сев + пв],
       [вост + пх, юг - пв],
     ] as [[number, number], [number, number]]
-  }, [points])
+  }, [points, откуда])
 
   охватРеф.current = охват
 
@@ -508,11 +527,16 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
         .map((p) => {
           const цены = годныеТарифы(tariffsByPointId[p.id] ?? []).map(ценаТарифа)
           const от = цены.filter((ц) => typeof ц === "number").sort((а, б) => а - б)[0]
-          return { p, от, адрес: короткийАдрес(p.address, город) }
+          const км = откуда ? кмМежду(откуда.ш, откуда.д, p.lat, p.lng) : null
+          return { p, от, км, адрес: короткийАдрес(p.address, город) }
         })
-        // по улицам, а не по индексам
-        .sort((а, б) => а.адрес.localeCompare(б.адрес, "ru")),
-    [points, tariffsByPointId, город]
+        // из посёлка: от ближайшего; из города: по улицам, а не по индексам
+        .sort((а, б) =>
+          а.км !== null && б.км !== null
+            ? а.км - б.км
+            : а.адрес.localeCompare(б.адрес, "ru")
+        ),
+    [points, tariffsByPointId, город, откуда]
   )
 
   // В Москве пунктов больше четырёх тысяч: листать такой список до своей
@@ -532,7 +556,9 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     <div className="relative w-full h-full">
       {/* под списком карту прячем: её кнопка «Открыть Яндекс Карты»
           просвечивала поверх списка */}
-      <div ref={containerRef} className={clx("w-full h-full", хочуСписок && "invisible")} />
+      {/* свой слой (relative z-0): без него кнопки самой карты вылезали
+          поверх карточки пункта */}
+      <div ref={containerRef} className={clx("relative z-0 w-full h-full", хочуСписок && "invisible")} />
       {isLoading && (
         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
           <Loader />
@@ -604,7 +630,12 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                 Пунктов: {найденные.length}. Показаны первые {СТРОК_В_СПИСКЕ}: введите улицу, чтобы найти свой.
               </li>
             )}
-            {найденные.slice(0, СТРОК_В_СПИСКЕ).map(({ p, от, адрес }) => (
+            {откуда && посёлок && найденные.length > 1 && (
+              <li className="py-3 txt-small text-ui-fg-subtle" data-testid="pvz-blizhe">
+                Сначала ближайшие к «{посёлок}». Расстояние по прямой.
+              </li>
+            )}
+            {найденные.slice(0, СТРОК_В_СПИСКЕ).map(({ p, от, км, адрес }) => (
               <li key={p.id} className="border-b border-rule">
                 <button
                   type="button"
@@ -614,7 +645,12 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                   <span className="flex flex-col">
                     <span className="txt-medium text-ui-fg-base">{адрес}</span>
                     <span className="txt-small text-ui-fg-subtle">
-                      {[providersMap?.[String(p.providerKey ?? "")], имяПункта(p.name), примерочная(p)].filter(Boolean).join(" · ")}
+                      {[
+                        км !== null && `около ${Math.max(1, Math.round(км))} км`,
+                        providersMap?.[String(p.providerKey ?? "")],
+                        имяПункта(p.name),
+                        примерочная(p),
+                      ].filter(Boolean).join(" · ")}
                     </span>
                   </span>
                   {typeof от === "number" && (

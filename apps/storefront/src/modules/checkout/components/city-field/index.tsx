@@ -152,7 +152,7 @@ const CityField = ({ cart }: { cart: HttpTypes.StoreCart | null }) => {
       // Выбран город — прежний посёлок из заметок корзины стираем
       await updateCheckoutFields({
         адрес: { city: чистое, country_code: "ru" },
-        заметки: { poselok: "", poselok_adres: "" },
+        заметки: { poselok: "", poselok_adres: "", poselok_gde: "" },
       })
     } catch (e) {
       прошлый.current = ""
