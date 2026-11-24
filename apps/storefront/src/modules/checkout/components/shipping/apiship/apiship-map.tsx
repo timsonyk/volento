@@ -516,7 +516,9 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
   return (
     <div className="relative w-full h-full">
-      <div ref={containerRef} className="w-full h-full" />
+      {/* под списком карту прячем: её кнопка «Открыть Яндекс Карты»
+          просвечивала поверх списка */}
+      <div ref={containerRef} className={clx("w-full h-full", хочуСписок && "invisible")} />
       {isLoading && (
         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
           <Loader />
