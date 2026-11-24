@@ -67,6 +67,23 @@ test.describe("оформление", () => {
     await expect(page.locator('[data-testid="submit-order-button"]')).toBeDisabled()
   })
 
+  test("вошедший: оформление не обращается к чужим адресам", async ({ page }) => {
+    test.skip(!входДоступен(), "нужны E2E_PK и E2E_KLYUCH")
+    // шаблон магазина тянул сюда скрипт js.stripe.com, хотя Stripe не используется
+    const свой = new URL(process.env.E2E_BASE || "http://127.0.0.1:8000").hostname
+    const чужие = new Set<string>()
+    page.on("request", (r) => {
+      const u = new URL(r.url())
+      if (u.protocol.startsWith("http") && u.hostname !== свой) чужие.add(u.hostname)
+    })
+    await войтиПокупателем(page)
+    await положитьВКорзину(page)
+    await page.goto("/ru/checkout")
+    await expect(page.locator('[data-testid="delivery-city-input"]')).toBeVisible()
+    await page.waitForLoadState("networkidle")
+    expect([...чужие]).toEqual([])
+  })
+
   test("вошёл после того, как собрал корзину, — корзина та же", async ({ page }) => {
     test.skip(!входДоступен(), "нужны E2E_PK и E2E_KLYUCH")
     await положитьВКорзину(page)

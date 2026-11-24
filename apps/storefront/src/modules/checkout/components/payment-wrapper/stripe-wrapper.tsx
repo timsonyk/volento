@@ -1,6 +1,6 @@
 "use client"
 
-import { Stripe, StripeElementsOptions } from "@stripe/stripe-js"
+import type { Stripe, StripeElementsOptions } from "@stripe/stripe-js"
 import { Elements } from "@stripe/react-stripe-js"
 import { HttpTypes } from "@medusajs/types"
 import { createContext } from "react"

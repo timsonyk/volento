@@ -1,6 +1,10 @@
 "use client"
 
-import { loadStripe } from "@stripe/stripe-js"
+// Берём «чистый» вход: обычный при одном только подключении тянет скрипт
+// с js.stripe.com на каждую страницу оформления и кабинета, хотя Stripe в
+// магазине не используется. Чужой скрипт на странице оплаты не нужен, а
+// у части покупателей этот адрес ещё и долго не отвечает.
+import { loadStripe } from "@stripe/stripe-js/pure"
 import React from "react"
 import StripeWrapper from "./stripe-wrapper"
 import { HttpTypes } from "@medusajs/types"
