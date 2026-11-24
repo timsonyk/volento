@@ -93,7 +93,7 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               вместо неё ряд разделов с раскрывающейся панелью.
               Поиск на телефоне остался слева, у шторки, а на компьютере
               переехал вправо, к кабинету и корзине */}
-          <div className="flex flex-1 basis-0 items-center gap-x-6 text-ink max-[359px]:gap-x-4">
+          <div className="flex flex-1 basis-0 items-center gap-x-6 text-ink max-[359px]:gap-x-3">
             <div className="small:hidden">
               <SideMenu
                 regions={regions}
@@ -135,12 +135,12 @@ export default async function Nav({ countryCode }: { countryCode: string }) {
               priority
               // на самых узких телефонах (320) значки поиска и кабинета
               // вставали к логотипу вплотную
-              className="h-[34px] w-auto max-[359px]:h-[28px] small:h-[62px]"
+              className="h-[34px] w-auto max-[359px]:h-[26px] small:h-[62px]"
             />
           </LocalizedClientLink>
 
           {/* справа: кабинет и корзина */}
-          <div className="flex flex-1 basis-0 items-center justify-end gap-x-5 text-ink max-[359px]:gap-x-4">
+          <div className="flex flex-1 basis-0 items-center justify-end gap-x-5 text-ink max-[359px]:gap-x-3">
             <Поиск
               countryCode={countryCode}
               region={регион}
