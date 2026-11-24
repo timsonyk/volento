@@ -130,10 +130,26 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
     }
   }, [cart.id, shippingOptionId, onPriceRef])
 
+  // Esc закрывает сначала карточку пункта, потом само окно, как крестик.
+  useEffect(() => {
+    if (!open) return
+    const поКлавише = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      if (isPanelOpen) {
+        setIsPanelOpen(false)
+        setSelectedPointId(null)
+      } else {
+        onClose(initialChosen ? false : true)
+      }
+    }
+    window.addEventListener("keydown", поКлавише)
+    return () => window.removeEventListener("keydown", поКлавише)
+  }, [open, isPanelOpen, initialChosen, onClose])
+
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Выбор пункта выдачи">
       <div
         className="absolute inset-0 bg-black/50"
       />

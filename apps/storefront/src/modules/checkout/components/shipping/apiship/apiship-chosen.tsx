@@ -3,6 +3,7 @@
 import { Heading, Text } from "@modules/common/components/ui"
 import { Chosen } from "./types"
 import { имяТарифа, примерочная, срокТарифа, ценаСтрокой, ценаТарифа } from "./utils"
+import { имяПункта } from "./utils/adres"
 
 type ApishipChosenProps = {
   chosen: Chosen
@@ -55,9 +56,17 @@ export const ApishipChosen: React.FC<ApishipChosenProps> = ({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-4 small:w-[60%]">
             <div className="flex flex-col">
-              <Text>{chosen.point?.name}</Text>
+              {имяПункта(chosen.point?.name) && (
+                <Text>{имяПункта(chosen.point?.name)}</Text>
+              )}
               {chosen.point?.address && (
-                <Text className="text-ui-fg-muted">{chosen.point.address}</Text>
+                <Text
+                  className={
+                    имяПункта(chosen.point?.name) ? "text-ui-fg-muted" : undefined
+                  }
+                >
+                  {chosen.point.address}
+                </Text>
               )}
               {chosen.point?.timetable && (
                 <Text className="text-ui-fg-muted">{chosen.point.timetable}</Text>

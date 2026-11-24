@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Button, Heading, Text, clx, IconButton } from "@modules/common/components/ui"
 import { Loader, XMark } from "@medusajs/icons"
-import { короткийАдрес } from "./utils/adres"
+import { имяПункта, короткийАдрес } from "./utils/adres"
 import { Radio, RadioGroup } from "@headlessui/react"
 import MedusaRadio from "@modules/common/components/radio"
 import {
@@ -210,6 +210,18 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     }
   }, [activeTariffs, selectedTariffKey, onSelectTariff])
 
+  // Пункт в городе один (Анадырь) — искать его на карте незачем, сразу
+  // открываем его карточку. Только один раз на каждый набор пунктов:
+  // закрыл карточку, значит хочет посмотреть карту.
+  const открытЕдинственный = useRef<string | null>(null)
+  useEffect(() => {
+    if (isLoading || points.length !== 1 || selectedPointId) return
+    const id = points[0].id
+    if (открытЕдинственный.current === id) return
+    открытЕдинственный.current = id
+    onSelectPointRef.current(id)
+  }, [isLoading, points, selectedPointId, onSelectPointRef])
+
   const clearMarkers = useCallback(() => {
     const map = mapRef.current
     // Метки кластеризатора принадлежат ему: снимать их с карты руками
@@ -245,15 +257,16 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
       // Выбранный пункт заливаем чёрным, как всё остальное в магазине:
       // синий был из стандартной темы Medusa и выбивался из гаммы.
+      // Невыбранная метка тоже с чёрной обводкой: с серой полупрозрачной
+      // она терялась на светлой карте, в городе с одним пунктом его было
+      // не найти.
       el.style.background = sel ? "#0B0B0B" : "white"
-      el.style.border = sel ? "2px solid #0B0B0B" : "2px solid rgba(0,0,0,0.25)"
+      el.style.border = "2px solid #0B0B0B"
 
       const dot = el.firstElementChild as HTMLElement | null
       if (dot) {
-        dot.style.background = sel ? "#0B0B0B" : "white"
-        dot.style.border = sel
-          ? "2px solid rgba(255,255,255,0.95)"
-          : "2px solid rgba(0,0,0,0.25)"
+        dot.style.background = sel ? "white" : "#0B0B0B"
+        dot.style.border = "0"
       }
     }
   }, [selectedPointId])
@@ -332,15 +345,16 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   /** Метка одного пункта: белая капля с точкой внутри. */
   const сделатьМетку = useCallback((p: ApishipPoint) => {
     const el = document.createElement("div")
-    const SIZE = 18
+    const SIZE = 24
 
     el.style.width = `${SIZE}px`
     el.style.height = `${SIZE}px`
     el.style.background = "white"
-    el.style.border = "2px solid rgba(0,0,0,0.25)"
+    el.style.border = "2px solid #0B0B0B"
+    el.style.boxSizing = "border-box"
     el.style.borderRadius = "50% 50% 50% 0"
     el.style.transform = "rotate(-45deg)"
-    el.style.boxShadow = "0 2px 2px rgba(0,0,0,0.18)"
+    el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.3)"
     el.style.cursor = "pointer"
     el.style.position = "relative"
     el.style.transformOrigin = "50% 50%"
@@ -348,8 +362,8 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
     const dot = document.createElement("div")
     dot.style.width = "8px"
     dot.style.height = "8px"
-    dot.style.background = "white"
-    dot.style.border = "2px solid rgba(0,0,0,0.25)"
+    dot.style.background = "#0B0B0B"
+    dot.style.border = "0"
     dot.style.borderRadius = "9999px"
     dot.style.position = "absolute"
     dot.style.left = "50%"
@@ -600,7 +614,7 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                   <span className="flex flex-col">
                     <span className="txt-medium text-ui-fg-base">{адрес}</span>
                     <span className="txt-small text-ui-fg-subtle">
-                      {[providersMap?.[String(p.providerKey ?? "")], p.name, примерочная(p)].filter(Boolean).join(" · ")}
+                      {[providersMap?.[String(p.providerKey ?? "")], имяПункта(p.name), примерочная(p)].filter(Boolean).join(" · ")}
                     </span>
                   </span>
                   {typeof от === "number" && (
@@ -638,10 +652,18 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
 
           <div className="flex-1 min-h-0 overflow-y-auto p-[35px] pt-[18px] flex flex-col gap-[18px]">
             <div className="flex flex-col">
-              <Text className="font-medium txt-medium text-ui-fg-base">
-                {activePoint.name}
-              </Text>
-              <Text className="text-ui-fg-muted txt-medium">
+              {имяПункта(activePoint.name) && (
+                <Text className="font-medium txt-medium text-ui-fg-base">
+                  {имяПункта(activePoint.name)}
+                </Text>
+              )}
+              <Text
+                className={
+                  имяПункта(activePoint.name)
+                    ? "text-ui-fg-muted txt-medium"
+                    : "font-medium txt-medium text-ui-fg-base"
+                }
+              >
                 {activePoint.address}
               </Text>
               <Text className="mt-2 txt-small text-ui-fg-subtle" data-testid="pvz-primerochnaya">
