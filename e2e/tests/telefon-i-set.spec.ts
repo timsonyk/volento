@@ -23,6 +23,17 @@ test.describe("телефон", () => {
     await expect(кнопка).toHaveCSS("background-color", "rgb(11, 11, 11)")
   })
 
+  test("самый узкий телефон (320): значки шапки не липнут к логотипу", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    await page.goto("/ru")
+    const рамка = async (отбор: string) => (await page.locator(отбор).boundingBox())!
+    const лого = await рамка('[data-testid="nav-home-link"]')
+    const поиск = await рамка('[data-testid="nav-search-link-mobile"]')
+    const кабинет = await рамка('[data-testid="nav-account-link"]')
+    expect(лого.x - (поиск.x + поиск.width)).toBeGreaterThanOrEqual(8)
+    expect(кабинет.x - (лого.x + лого.width)).toBeGreaterThanOrEqual(8)
+  })
+
   test("страница не шире экрана", async ({ page }) => {
     for (const адрес of ["/ru", "/ru/store", "/ru/cart", "/ru/dostavka"]) {
       await page.goto(адрес)
