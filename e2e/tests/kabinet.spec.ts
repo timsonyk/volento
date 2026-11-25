@@ -124,4 +124,32 @@ test.describe("письма с кодом входа", () => {
     expect(отказ.status).toBe(429)
     expect((await отказ.json()).message).toContain("Слишком много писем")
   })
+
+  test("с сайта: считаем по адресу покупателя, а не всех вместе", async ({ browser }) => {
+    test.setTimeout(240_000)
+    // витрина ходит к серверу через nginx с той же машины: без поправки
+    // все покупатели считались одним адресом, и вход закрывался для всех
+    const форма = async (откуда: string) => {
+      const ctx = await browser.newContext({ extraHTTPHeaders: { "X-Forwarded-For": откуда } })
+      return ctx.newPage()
+    }
+    const просить = async (page: import("@playwright/test").Page, i: number) => {
+      await page.goto("/ru/account")
+      await page.locator('[data-testid="vhod-pochta"]').fill(`e2e-ui-ch-${Date.now()}-${i}@example.com`)
+      await page.getByRole("button", { name: "Прислать код" }).click()
+    }
+
+    const первый = await форма(`7.7.7.7, 198.51.100.${1 + Math.floor(Math.random() * 250)}`)
+    for (let i = 0; i < 8; i++) {
+      await просить(первый, i)
+      await expect(первый.locator('[data-testid="vhod-kod"]')).toBeVisible()
+    }
+    await просить(первый, 8)
+    await expect(первый.getByText("Слишком много писем с кодом")).toBeVisible()
+
+    // другой покупатель при этом входит как обычно
+    const второй = await форма(`198.51.101.${1 + Math.floor(Math.random() * 250)}`)
+    await просить(второй, 9)
+    await expect(второй.locator('[data-testid="vhod-kod"]')).toBeVisible()
+  })
 })
