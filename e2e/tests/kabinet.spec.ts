@@ -153,3 +153,26 @@ test.describe("письма с кодом входа", () => {
     await expect(второй.locator('[data-testid="vhod-kod"]')).toBeVisible()
   })
 })
+
+test.describe("вход в админку", () => {
+  test.skip(({ isMobile }) => isMobile, "проверка сервера, одного раза хватит")
+
+  test("пароль нельзя подбирать без остановки", async () => {
+    const API = process.env.E2E_API || "http://127.0.0.1:9000"
+    const откуда = `203.0.113.${1 + Math.floor(Math.random() * 250)}`
+    // учётной записи с такой почтой нет, пароль выдуманный
+    const пробовать = () =>
+      fetch(`${API}/auth/user/emailpass`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": откуда },
+        body: JSON.stringify({ email: "e2e-net-takogo@example.com", password: "ne-tot-parol" }),
+      })
+
+    for (let i = 0; i < 10; i++) {
+      expect((await пробовать()).status).toBe(401)
+    }
+    const отказ = await пробовать()
+    expect(отказ.status).toBe(429)
+    expect((await отказ.json()).message).toContain("Слишком много попыток входа")
+  })
+})

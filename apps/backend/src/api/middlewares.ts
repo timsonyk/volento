@@ -2,6 +2,7 @@ import { authenticate, defineMiddlewares } from "@medusajs/framework/http"
 
 import { пускатьТолькоГотовые } from "../lib/pravilo-publikacii"
 import { пускатьСклад } from "../lib/sklad-dostup"
+import { сторожитьВходВАдминку } from "../lib/storozh-adminki"
 import { корзинаВошедшего, оплатаВошедшего, сессияВошедшего } from "../lib/tolko-pokupatel"
 import { пометитьПередОформлением, пускатьТолькоВитрину } from "../lib/zamok-zakazov"
 
@@ -13,6 +14,12 @@ import { пометитьПередОформлением, пускатьТол�
  */
 export default defineMiddlewares({
   routes: [
+    {
+      // Подбор пароля к админке (lib/storozh-adminki.ts)
+      matcher: "/auth/user/emailpass",
+      method: "POST",
+      middlewares: [сторожитьВходВАдминку],
+    },
     {
       // Обмен со складом. Ключ отдельный от админского: складу нужны
       // четыре действия, а админский ключ открывает весь магазин.
