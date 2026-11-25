@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   // основной адрес: ссылки с метками рекламы поисковик склеит с ним
   alternates: { canonical: "/ru/soglashenie" },
   title: "Пользовательское соглашение | Volento",
+  description: "Правила пользования сайтом магазина Volento.",
 }
 
 /** Дата последней редакции. Менять при любой правке текста. */

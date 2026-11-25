@@ -175,7 +175,7 @@ export default async function Footer({
           <span className="label-type text-paper/50">
             © {new Date().getFullYear()} Volento
           </span>
-          <span className="label-type text-paper/40">Россия</span>
+          <span className="label-type text-paper/50">Россия</span>
         </div>
       </div>
     </footer>
