@@ -34,6 +34,24 @@ test.describe("телефон", () => {
     expect(кабинет.x - (лого.x + лого.width)).toBeGreaterThanOrEqual(8)
   })
 
+  test("самый узкий телефон (320): плашка про cookie занимает не больше трети экрана", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    await page.goto("/ru")
+    const плашка = page.locator('[data-testid="cookie-notice"]')
+    await expect(плашка).toBeVisible()
+    const рамка = (await плашка.boundingBox())!
+    expect(рамка.height).toBeLessThanOrEqual(568 / 3)
+    // обе кнопки целиком на экране и в них удобно попасть пальцем
+    for (const имя of ["cookie-necessary", "cookie-accept"]) {
+      const кнопка = (await page.locator(`[data-testid="${имя}"]`).boundingBox())!
+      expect(кнопка.x, имя).toBeGreaterThanOrEqual(0)
+      expect(кнопка.x + кнопка.width, имя).toBeLessThanOrEqual(320)
+      expect(кнопка.height, имя).toBeGreaterThanOrEqual(40)
+    }
+    await page.locator('[data-testid="cookie-accept"]').click()
+    await expect(плашка).toBeHidden()
+  })
+
   test("страница не шире экрана", async ({ page }) => {
     for (const адрес of ["/ru", "/ru/store", "/ru/cart", "/ru/dostavka"]) {
       await page.goto(адрес)

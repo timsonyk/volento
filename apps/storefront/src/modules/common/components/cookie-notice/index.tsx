@@ -79,26 +79,31 @@ const CookieNotice = () => {
     <div
       role="dialog"
       aria-label="Использование файлов cookie"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-rule bg-paper px-4 py-5 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] small:px-[50px]"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-rule bg-paper px-3 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] xsmall:px-4 xsmall:py-5 small:px-[50px]"
       data-testid="cookie-notice"
     >
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-4 small:flex-row small:items-center small:justify-between">
-        <p className="max-w-[62ch] text-sm leading-relaxed text-ink">
-          Мы используем файлы cookie, чтобы работали корзина и вход, и чтобы
+      <div className="mx-auto flex max-w-[1100px] flex-col gap-3 xsmall:gap-4 small:flex-row small:items-center small:justify-between">
+        {/* На телефоне плашка закрывала почти половину экрана: текст
+            короче и мельче, поля уже, кнопки делят ширину поровну. */}
+        <p className="max-w-[62ch] text-[13px] leading-snug text-ink xsmall:text-sm xsmall:leading-relaxed">
+          Мы используем cookie, чтобы работали корзина и вход и чтобы
           понимать, как пользуются сайтом. Нажимая «Принять», вы соглашаетесь
-          на все cookie; «Только необходимые» — только на те, без которых
-          не работают корзина и вход. Подробнее — в{" "}
-          <LocalizedClientLink href="/politika" className="underline">
-            политике конфиденциальности
+          на все cookie, «Только необходимые» оставит те, без которых сайт
+          не работает.{" "}
+          <LocalizedClientLink
+            href="/politika"
+            className="underline"
+            aria-label="Подробнее в политике конфиденциальности"
+          >
+            Подробнее
           </LocalizedClientLink>
-          .
         </p>
 
-        <div className="flex shrink-0 gap-3">
+        <div className="flex shrink-0 gap-2 xsmall:gap-3">
           <button
             type="button"
             onClick={() => решить("только необходимые")}
-            className="border border-rule px-5 py-2.5 text-sm text-ink transition-colors hover:bg-mist"
+            className="flex-1 whitespace-nowrap border border-rule px-3 py-2.5 text-sm text-ink transition-colors hover:bg-mist xsmall:flex-none xsmall:px-5"
             data-testid="cookie-necessary"
           >
             Только необходимые
@@ -106,7 +111,7 @@ const CookieNotice = () => {
           <button
             type="button"
             onClick={() => решить("принято")}
-            className="bg-ink px-5 py-2.5 text-sm text-paper transition-opacity hover:opacity-85"
+            className="flex-1 whitespace-nowrap bg-ink px-3 py-2.5 text-sm text-paper transition-opacity hover:opacity-85 xsmall:flex-none xsmall:px-5"
             data-testid="cookie-accept"
           >
             Принять
