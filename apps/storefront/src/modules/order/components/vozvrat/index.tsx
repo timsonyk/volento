@@ -181,7 +181,7 @@ const Возврат = ({ idЗаказа, сведения: начальные }
               onChange={(e) => setКомментарий(e.target.value)}
               maxLength={1000}
               rows={3}
-              className="border border-rule p-3 text-sm text-ink outline-none focus:border-ink"
+              className="border border-rule p-3 text-sm text-ink outline-none placeholder:text-muted focus:border-ink"
               placeholder={причина === "Брак" ? "Что не так с вещью — опишите, пожалуйста" : "Например: велики в талии"}
               data-testid="vozvrat-kommentariy"
             />

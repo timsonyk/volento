@@ -87,7 +87,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           >
             {label}
             {(required || обязательно) && (
-              <span className="text-rose-500">*</span>
+              <span className="text-red-600">*</span>
             )}
           </label>
           {type === "password" && (
