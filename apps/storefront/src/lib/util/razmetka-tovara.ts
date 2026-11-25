@@ -27,7 +27,9 @@ const естьВНаличии = (product: HttpTypes.StoreProduct) =>
 
 /**
  * Разметка schema.org/Product: по ней Яндекс и Google показывают в выдаче
- * цену и наличие. Цена — самая низкая из размеров, в рублях.
+ * цену и наличие. Если размеры стоят одинаково, отдаём одну цену. Если
+ * по-разному (большие размеры дороже), отдаём вилку «от и до»: одна
+ * низшая цена обещала бы в выдаче то, чего у большинства размеров нет.
  */
 export function разметкаТовара(
   product: HttpTypes.StoreProduct,
@@ -38,6 +40,14 @@ export function разметкаТовара(
     .filter((s): s is string => !!s)
     .filter((s, i, все) => все.indexOf(s) === i)
     .slice(0, 6)
+  const цены = (product.variants ?? [])
+    .map((v) => Number((v as any).calculated_price?.calculated_amount))
+    .filter((ц) => Number.isFinite(ц) && ц > 0)
+  const низшая = цены.length ? Math.min(...цены) : 0
+  const высшая = цены.length ? Math.max(...цены) : 0
+  const наличие = естьВНаличии(product)
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock"
   const артикул = product.metadata?.article
   const цвет = product.metadata?.color
 
@@ -52,15 +62,24 @@ export function разметкаТовара(
     brand: { "@type": "Brand", name: "Volento" },
     ...(cheapestPrice
       ? {
-          offers: {
-            "@type": "Offer",
-            url: адрес,
-            priceCurrency: (cheapestPrice.currency_code ?? "rub").toUpperCase(),
-            price: cheapestPrice.calculated_price_number,
-            availability: естьВНаличии(product)
-              ? "https://schema.org/InStock"
-              : "https://schema.org/OutOfStock",
-          },
+          offers:
+            высшая > низшая
+              ? {
+                  "@type": "AggregateOffer",
+                  url: адрес,
+                  priceCurrency: (cheapestPrice.currency_code ?? "rub").toUpperCase(),
+                  lowPrice: низшая,
+                  highPrice: высшая,
+                  offerCount: цены.length,
+                  availability: наличие,
+                }
+              : {
+                  "@type": "Offer",
+                  url: адрес,
+                  priceCurrency: (cheapestPrice.currency_code ?? "rub").toUpperCase(),
+                  price: cheapestPrice.calculated_price_number,
+                  availability: наличие,
+                },
         }
       : {}),
   }

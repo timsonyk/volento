@@ -97,3 +97,31 @@ test.describe("навигация", () => {
     await expect(page.locator('a[href*="/products/"]').first()).toBeVisible()
   })
 })
+
+test.describe("разметка товара для поисковиков", () => {
+  test.skip(({ isMobile }) => isMobile, "разметка одна на оба экрана")
+
+  test("цена в разметке настоящая: одна или вилка от и до", async ({ page }) => {
+    await page.goto("/ru/store")
+    const ссылки = await page
+      .locator('a[href*="/products/"]:visible')
+      .evaluateAll((a) => [...new Set(a.map((x) => x.getAttribute("href")!))].slice(0, 4))
+
+    for (const адрес of ссылки) {
+      await page.goto(адрес)
+      const сырое = await page.locator('script[type="application/ld+json"]').first().textContent()
+      const р = JSON.parse(сырое!)
+      expect(р["@type"]).toBe("Product")
+      expect(String(р.name).length).toBeGreaterThan(3)
+      expect(р.offers.priceCurrency).toBe("RUB")
+      if (р.offers["@type"] === "AggregateOffer") {
+        expect(р.offers.lowPrice).toBeGreaterThan(0)
+        expect(р.offers.highPrice).toBeGreaterThan(р.offers.lowPrice)
+        expect(р.offers.offerCount).toBeGreaterThan(1)
+      } else {
+        expect(р.offers["@type"]).toBe("Offer")
+        expect(р.offers.price).toBeGreaterThan(0)
+      }
+    }
+  })
+})
