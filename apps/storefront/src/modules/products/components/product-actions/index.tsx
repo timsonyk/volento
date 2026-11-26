@@ -4,6 +4,7 @@ import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@modules/common/components/ui"
 import OptionSelect from "@modules/products/components/product-actions/option-select"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import ТаблицаРазмеров from "@modules/products/components/tablica-razmerov"
 import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
@@ -362,6 +363,15 @@ export default function ProductActions({
                   Подставили ваш прошлый выбор: {подставлен}. Его можно сменить.
                 </p>
               )}
+              {/* Образец идеи (ждёт решения Тимофея): примерка в пункте
+                  выдачи уже работает, но на странице товара о ней ни слова */}
+              <p className="border-l-2 border-ink pl-3 text-sm leading-snug text-ink" data-testid="dva-razmera">
+                Сомневаетесь в размере? Закажите два, примерьте в пункте
+                выдачи и заберите тот, что подошёл. За второй вернём деньги.{" "}
+                <LocalizedClientLink href="/dostavka" className="underline">
+                  Как это работает
+                </LocalizedClientLink>
+              </p>
             </div>
           )}
         </div>
