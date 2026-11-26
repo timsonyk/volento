@@ -81,13 +81,25 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
     setIsPanelOpen(false)
   }, [shippingOptionId])
 
+  // Служба доставки не ответила: говорим об этом прямо и даём повторить.
+  // Раньше окно писало «пунктов выдачи не нашлось», будто их тут нет.
+  const [сбойЗагрузки, setСбойЗагрузки] = useState(false)
+  const [попытка, setПопытка] = useState(0)
+
   useAsyncEffect(async (isCancelled) => {
     if (!open || !shippingOptionId) return
 
     setIsLoadingPoints(true)
+    setСбойЗагрузки(false)
     try {
       const calculation = await retrieveCalculation(cart.id, shippingOptionId)
       if (isCancelled()) return
+      if (!calculation) {
+        setСбойЗагрузки(true)
+        setPoints([])
+        setTariffsByPointId({})
+        return
+      }
       const tariffsMap = buildTariffsByPointId(calculation)
       setTariffsByPointId(tariffsMap)
 
@@ -104,16 +116,17 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
       )
       if (isCancelled()) return
 
+      if (!pointAddresses) setСбойЗагрузки(true)
       setPoints(pointAddresses?.points ?? [])
     } catch (e: any) {
       console.error(e)
-      onErrorRef.current?.(e?.message ?? "Не удалось загрузить пункты выдачи")
+      if (!isCancelled()) setСбойЗагрузки(true)
       setPoints([])
       setTariffsByPointId({})
     } finally {
       if (!isCancelled()) setIsLoadingPoints(false)
     }
-  }, [open, shippingOptionId, cart.id])
+  }, [open, shippingOptionId, cart.id, попытка])
 
   const persistChosen = useCallback(async (next: Chosen) => {
     if (!shippingOptionId) return
@@ -179,6 +192,8 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
               points={points}
               tariffsByPointId={tariffsByPointId}
               isLoading={isLoadingPoints}
+              сбой={сбойЗагрузки}
+              onПовтор={() => setПопытка((п) => п + 1)}
               город={cart.shipping_address?.city}
               посёлок={(cart.metadata?.poselok as string) || null}
               посёлокГде={(cart.metadata?.poselok_gde as string) || null}

@@ -54,6 +54,9 @@ type ApishipMapProps = {
   points: ApishipPoint[]
   tariffsByPointId: Record<string, ApishipTariff[]>
   isLoading?: boolean
+  /** Пункты не загрузились (служба не ответила), а не «их нет» */
+  сбой?: boolean
+  onПовтор?: () => void
   selectedPointId: string | null
   selectedTariffKey: string | null
   isPanelOpen: boolean
@@ -127,6 +130,8 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   points,
   tariffsByPointId,
   isLoading,
+  сбой,
+  onПовтор,
   selectedPointId,
   selectedTariffKey,
   isPanelOpen,
@@ -564,7 +569,27 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
           <Loader />
         </div>
       )}
-      {showNoPoints && (
+      {showNoPoints && сбой && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/90 p-6 text-center"
+          role="alert"
+          data-testid="pvz-sboy"
+        >
+          <Text className="text-ink">
+            Не получилось загрузить пункты выдачи: служба доставки не
+            ответила. Попробуйте ещё раз через минуту.
+          </Text>
+          <button
+            type="button"
+            onClick={() => onПовтор?.()}
+            className="border border-ink px-4 py-2 text-sm text-ink transition-colors hover:bg-mist"
+            data-testid="pvz-povtor"
+          >
+            Загрузить ещё раз
+          </button>
+        </div>
+      )}
+      {showNoPoints && !сбой && (
         <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
           <Text className="text-ui-fg-muted">Для этого способа доставки пунктов выдачи не нашлось.</Text>
         </div>

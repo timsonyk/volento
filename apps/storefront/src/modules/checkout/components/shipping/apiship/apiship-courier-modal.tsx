@@ -51,6 +51,8 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
 
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingCalc, setIsLoadingCalc] = useState(false)
+  const [сбойРасчёта, setСбойРасчёта] = useState(false)
+  const [попытка, setПопытка] = useState(0)
 
   const [calculation, setCalculation] = useState<ApishipCalculation | null>(null)
   const [selectedTariffKey, setSelectedTariffKey] = useState<string | null>(null)
@@ -87,19 +89,22 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
 
     setIsLoadingCalc(true)
     setCalculation(null)
+    setСбойРасчёта(false)
 
     try {
       const calculation = await retrieveCalculation(cart.id, shippingOptionId)
       if (isCancelled()) return
+      // null значит «служба не ответила», а не «курьер сюда не ездит»
+      if (!calculation) setСбойРасчёта(true)
       setCalculation(calculation)
     } catch (e: any) {
       console.error(e)
-      onErrorRef.current?.(e?.message ?? "Не удалось рассчитать доставку")
+      if (!isCancelled()) setСбойРасчёта(true)
       setCalculation(null)
     } finally {
       if (!isCancelled()) setIsLoadingCalc(false)
     }
-  }, [open, shippingOptionId, cart.id])
+  }, [open, shippingOptionId, cart.id, попытка])
 
   const doorGroups = useMemo(() => {
     return calculation?.deliveryToDoor ?? []
@@ -195,6 +200,20 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
               {isLoadingCalc ? (
                 <div className="h-full w-full flex items-center justify-center">
                   <Loader />
+                </div>
+              ) : сбойРасчёта ? (
+                <div className="flex flex-col items-start gap-4" role="alert" data-testid="kurier-sboy">
+                  <Text className="text-ink">
+                    Не получилось посчитать курьерскую доставку: служба
+                    доставки не ответила. Попробуйте ещё раз через минуту.
+                  </Text>
+                  <button
+                    type="button"
+                    onClick={() => setПопытка((п) => п + 1)}
+                    className="border border-ink px-4 py-2 text-sm text-ink transition-colors hover:bg-mist"
+                  >
+                    Посчитать ещё раз
+                  </button>
                 </div>
               ) : doorGroups.length === 0 ? (
                 <Text className="text-ui-fg-muted">Курьерская доставка сюда недоступна</Text>
