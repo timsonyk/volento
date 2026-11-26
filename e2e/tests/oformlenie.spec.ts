@@ -84,6 +84,35 @@ test.describe("оформление", () => {
     expect([...чужие]).toEqual([])
   })
 
+  test("служба доставки не ответила: понятное сообщение и кнопка «Посчитать ещё раз»", async ({ page }) => {
+    test.skip(!входДоступен(), "нужны E2E_PK и E2E_KLYUCH")
+    // Расчёт цены — серверное действие с телом ["so_…","cart_…"]. Обрываем
+    // только его: наружу, в службу доставки, запрос не уходит вовсе.
+    let оборвано = 0
+    await page.route("**/checkout**", (route) => {
+      const запрос = route.request()
+      if (запрос.method() === "POST" && /^\["so_/.test(запрос.postData() || "")) {
+        оборвано += 1
+        return route.abort()
+      }
+      return route.continue()
+    })
+    await войтиПокупателем(page)
+    await положитьВКорзину(page)
+    await page.goto("/ru/checkout")
+    const город = page.locator('[data-testid="delivery-city-input"]')
+    await город.fill("Москва")
+    await город.blur()
+    const сбой = page.locator('[data-testid="delivery-raschet-sboy"]')
+    await expect(сбой).toBeVisible({ timeout: 30_000 })
+    await expect(сбой).toContainText("Не получилось узнать цену доставки")
+    const было = оборвано
+    expect(было).toBeGreaterThan(0)
+    await page.locator('[data-testid="delivery-raschet-povtor"]').click()
+    await expect.poll(() => оборвано).toBeGreaterThan(было)
+    await expect(сбой).toBeVisible()
+  })
+
   test("вошёл после того, как собрал корзину, — корзина та же", async ({ page }) => {
     test.skip(!входДоступен(), "нужны E2E_PK и E2E_KLYUCH")
     await положитьВКорзину(page)

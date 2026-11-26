@@ -72,6 +72,8 @@ const Shipping: React.FC<ShippingProps> = ({
     Record<string, number>
   >({})
   const [error, setError] = useState<string | null>(null)
+  // Растёт по кнопке «Посчитать ещё раз» и заново запускает расчёт цен
+  const [попытка, setПопытка] = useState(0)
   const [shippingMethodId, setShippingMethodId] = useState<string | null>(
     cart.shipping_methods?.at(-1)?.shipping_option_id || null,
   )
@@ -269,7 +271,27 @@ const Shipping: React.FC<ShippingProps> = ({
     // остаётся серым. Оформление одностраничное, город вводят уже после
     // того, как блок доставки отрисовался, — поэтому пересчитываем на
     // каждую смену города, а не один раз при загрузке.
-  }, [availableShippingMethods, cart.shipping_address?.city, cart.id])
+  }, [availableShippingMethods, cart.shipping_address?.city, cart.id, попытка])
+
+  // Город есть, расчёт закончился, а цены нет ни у одного способа: служба
+  // доставки не ответила. Раньше покупатель видел только серые строки
+  // с прочерком и не понимал, что делать дальше.
+  const расчётСорвался = useMemo(() => {
+    const считаемые = (_shippingMethods ?? []).filter(
+      (sm) => sm.price_type === "calculated"
+    )
+    return (
+      !isLoadingPrices &&
+      Boolean((cart.shipping_address?.city ?? "").trim()) &&
+      считаемые.length > 0 &&
+      считаемые.every((sm) => typeof calculatedPricesMap[sm.id] !== "number")
+    )
+  }, [
+    _shippingMethods,
+    isLoadingPrices,
+    calculatedPricesMap,
+    cart.shipping_address?.city,
+  ])
 
   const handleSetShippingMethod = async (
     id: string,
@@ -555,6 +577,27 @@ const Shipping: React.FC<ShippingProps> = ({
                   </RadioGroup>
                 </div>
               </div>
+            </div>
+          )}
+
+          {расчётСорвался && (
+            <div
+              className="mt-2 flex flex-col items-start gap-3 border border-rule p-4"
+              role="alert"
+              data-testid="delivery-raschet-sboy"
+            >
+              <p className="text-sm text-ink">
+                Не получилось узнать цену доставки: служба доставки не
+                ответила. Попробуйте ещё раз через минуту.
+              </p>
+              <button
+                type="button"
+                onClick={() => setПопытка((п) => п + 1)}
+                className="border border-ink px-4 py-2 text-sm text-ink transition-colors hover:bg-mist"
+                data-testid="delivery-raschet-povtor"
+              >
+                Посчитать ещё раз
+              </button>
             </div>
           )}
 
