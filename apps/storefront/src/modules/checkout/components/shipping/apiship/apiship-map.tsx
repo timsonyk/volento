@@ -57,6 +57,10 @@ type ApishipMapProps = {
   /** Пункты не загрузились (служба не ответила), а не «их нет» */
   сбой?: boolean
   onПовтор?: () => void
+  /** Выбранный пункт сохраняется в заказ */
+  сохраняю?: boolean
+  /** Сохранить пункт не получилось: текст для покупателя */
+  ошибкаВыбора?: string | null
   selectedPointId: string | null
   selectedTariffKey: string | null
   isPanelOpen: boolean
@@ -132,6 +136,8 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
   isLoading,
   сбой,
   onПовтор,
+  сохраняю,
+  ошибкаВыбора,
   selectedPointId,
   selectedTariffKey,
   isPanelOpen,
@@ -784,11 +790,17 @@ export const ApishipMap: React.FC<ApishipMapProps> = ({
                 if (!activePoint || !selectedTariff) return
                 onChoose({ point: activePoint, tariff: selectedTariff })
               }}
-              disabled={!selectedTariff || isSameAsChosen}
+              disabled={!selectedTariff || isSameAsChosen || сохраняю}
               className="mb-[16px] h-14 w-full shrink-0 !rounded-full text-base !overflow-visible"
+              data-testid="pvz-vybrat"
             >
-              Выбрать
+              {сохраняю ? "Сохраняем…" : "Выбрать"}
             </Button>
+            {ошибкаВыбора && (
+              <p className="mb-4 text-sm text-red-600" role="alert" data-testid="pvz-oshibka-vybora">
+                {ошибкаВыбора}
+              </p>
+            )}
             {activePoint.worktime && (
               <div className="flex flex-col">
                 <Text className="font-medium txt-medium text-ui-fg-base">

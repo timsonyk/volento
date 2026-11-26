@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { IconButton } from "@modules/common/components/ui"
 import { XMark } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
@@ -85,6 +86,10 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
   // Раньше окно писало «пунктов выдачи не нашлось», будто их тут нет.
   const [сбойЗагрузки, setСбойЗагрузки] = useState(false)
   const [попытка, setПопытка] = useState(0)
+  // Сохранение выбранного пункта: ошибку показываем в самом окне, рядом
+  // с кнопкой. Раньше она писалась на странице под окном и её не видели.
+  const [сохраняю, setСохраняю] = useState(false)
+  const [ошибкаВыбора, setОшибкаВыбора] = useState<string | null>(null)
 
   useAsyncEffect(async (isCancelled) => {
     if (!open || !shippingOptionId) return
@@ -204,7 +209,10 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
                 setIsPanelOpen(false)
                 setSelectedPointId(null)
               }}
+              сохраняю={сохраняю}
+              ошибкаВыбора={ошибкаВыбора}
               onSelectPoint={(pid) => {
+                setОшибкаВыбора(null)
                 setSelectedPointId(pid)
                 setSelectedTariffKey(null)
                 setIsPanelOpen(true)
@@ -221,12 +229,19 @@ export const ApishipPickupPointModal: React.FC<ApishipPickupPointModalProps> = (
                   tariff,
                   point
                 }
+                if (сохраняю) return
+                setСохраняю(true)
+                setОшибкаВыбора(null)
                 try {
                   await persistChosen(chosen)
                   onChosenChange(chosen)
                   onClose()
                 } catch (e: any) {
-                  onErrorRef.current?.(e?.message ?? "Не удалось сохранить выбранный тариф")
+                  setОшибкаВыбора(
+                    текстСбоя(e, "Не получилось сохранить пункт выдачи. Попробуйте ещё раз")
+                  )
+                } finally {
+                  setСохраняю(false)
                 }
               }}
               providersMap={providersMap}

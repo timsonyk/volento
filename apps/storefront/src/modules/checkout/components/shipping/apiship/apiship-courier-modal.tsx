@@ -1,5 +1,6 @@
 "use client"
 
+import { текстСбоя } from "@lib/util/tekst-sboya"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button, clx, Heading, IconButton, Text } from "@modules/common/components/ui"
 import MedusaRadio from "@modules/common/components/radio"
@@ -53,6 +54,7 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
   const [isLoadingCalc, setIsLoadingCalc] = useState(false)
   const [сбойРасчёта, setСбойРасчёта] = useState(false)
   const [попытка, setПопытка] = useState(0)
+  const [ошибкаВыбора, setОшибкаВыбора] = useState<string | null>(null)
 
   const [calculation, setCalculation] = useState<ApishipCalculation | null>(null)
   const [selectedTariffKey, setSelectedTariffKey] = useState<string | null>(null)
@@ -133,6 +135,7 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
     if (!shippingOptionId || !selectedTariff) return
 
     setIsLoading(true)
+    setОшибкаВыбора(null)
     try {
       const next: Chosen = {
         deliveryType: 1,
@@ -153,7 +156,10 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
       onChosenChange(next)
       onClose()
     } catch (e: any) {
-      onErrorRef.current?.(e?.message ?? "Не удалось сохранить тариф курьера")
+      // в самом окне: под окном ошибку не видно
+      setОшибкаВыбора(
+        текстСбоя(e, "Не получилось сохранить доставку курьером. Попробуйте ещё раз")
+      )
     } finally {
       setIsLoading(false)
     }
@@ -274,6 +280,11 @@ export const ApishipCourierModal: React.FC<ApishipCourierModalProps> = ({
               )}
             </div>
             <div className="p-[35px] pt-[18px] bg-white">
+              {ошибкаВыбора && (
+                <p className="mb-3 text-sm text-red-600" role="alert">
+                  {ошибкаВыбора}
+                </p>
+              )}
               <Button
                 size="large"
                 onClick={persistChosen}
