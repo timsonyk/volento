@@ -170,18 +170,20 @@ test.describe("названия цветов", () => {
 })
 
 test.describe("поиск прощает неточности", () => {
-  for (const запрос of ["юпка", "блуска", "брюки 44", "штаны"]) {
+  for (const запрос of ["юпка", "блуска", "брюки 44", "штаны", "bryuki", "yubka", "арт 6120"]) {
     test(`«${запрос}» находит товары`, async ({ page }) => {
       await page.goto("/ru/search?" + new URLSearchParams({ q: запрос }))
       await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
     })
   }
 
-  test("того, чего в каталоге нет, не находит", async ({ page }) => {
-    await page.goto("/ru/search?" + new URLSearchParams({ q: "платье" }))
-    await expect(page.locator('[data-testid="poisk-pusto"]')).toBeVisible()
-    await expect(page.locator('[data-testid="product-wrapper"]')).toHaveCount(0)
-  })
+  for (const запрос of ["платье", "dress", "zara"]) {
+    test(`«${запрос}»: того, чего в каталоге нет, не находит`, async ({ page }) => {
+      await page.goto("/ru/search?" + new URLSearchParams({ q: запрос }))
+      await expect(page.locator('[data-testid="poisk-pusto"]')).toBeVisible()
+      await expect(page.locator('[data-testid="product-wrapper"]')).toHaveCount(0)
+    })
+  }
 })
 
 test.describe("пустой раздел", () => {
