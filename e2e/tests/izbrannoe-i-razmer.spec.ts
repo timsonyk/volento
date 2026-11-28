@@ -195,3 +195,15 @@ test.describe("пустой раздел", () => {
     await expect(page.locator('[data-testid="product-wrapper"]').first()).toBeVisible()
   })
 })
+
+test.describe("примерка на странице товара", () => {
+  test("под размерами сказано про примерку двух размеров, ссылка ведёт на «Доставку»", async ({ page }) => {
+    await page.goto(await первыйТовар(page))
+    const строка = page.locator('[data-testid="dva-razmera"]')
+    await expect(строка).toBeVisible()
+    await expect(строка).toContainText("с примерочной")
+    await строка.getByRole("link", { name: "Как это работает" }).click()
+    await expect(page).toHaveURL(/\/dostavka/)
+    await expect(page.getByRole("heading", { name: "Примерка" })).toBeVisible()
+  })
+})
